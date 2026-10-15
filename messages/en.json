@@ -179,5 +179,92 @@
     "wed": "Wednesday",
     "thu": "Thursday",
     "fri": "Friday"
+  },
+  "register": {
+    "title": "Sign up",
+    "subtitle": "Two minutes and you're in",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Mobile phone",
+    "password": "Password (at least 8 characters)",
+    "confirm": "Confirm password",
+    "submit": "Continue",
+    "haveAccount": "Already registered? Sign in",
+    "stepOf": "Step {n} of {total}",
+    "step": {
+      "academic": "Personal and academic details",
+      "prefs": "Preferences and availability",
+      "bank": "Bank account for payment"
+    },
+    "back": "Back",
+    "next": "Continue",
+    "finish": "Finish registration",
+    "errors": {
+      "email_taken": "This email is already registered. Sign in or reset your password",
+      "weak_password": "Password too short (min 8) or confirmation doesn't match",
+      "bad_phone": "Invalid phone number",
+      "bad_name": "Name is required",
+      "no_org": "Registration is closed right now",
+      "generic": "Something went wrong. Try again in a moment"
+    }
+  },
+  "profile": {
+    "title": "My profile",
+    "sections": {
+      "academic": "Personal and academic details",
+      "prefs": "Preferences and availability",
+      "bank": "Bank account"
+    },
+    "save": "Save",
+    "track": "Track",
+    "targetHours": "Hours target",
+    "academicYear": "Academic year",
+    "coordinator": "My coordinator",
+    "notSet": "Not set yet",
+    "more": "Additional details",
+    "nationalId": "National ID",
+    "dateOfBirth": "Date of birth",
+    "city": "City",
+    "institution": "Institution",
+    "degreeType": "Degree type",
+    "degreeYear": "Year of study",
+    "fieldOfStudy": "Field of study",
+    "preferredTypes": "Which areas interest you?",
+    "preferredActivities": "Preferred activities",
+    "availableDays": "Available days",
+    "availableHours": "Available hours",
+    "generalPreferences": "General preferences",
+    "studentNotes": "Anything we should know",
+    "bankName": "Bank",
+    "bankBranch": "Branch",
+    "bankAccount": "Account number",
+    "accountOwner": "Account holder",
+    "errors": {
+      "bad_id": "Invalid national ID",
+      "bad_date": "Invalid date of birth",
+      "bad_bank": "Invalid bank details (digits only)",
+      "incomplete": "Required: national ID, institution and degree type",
+      "forbidden": "You don't have permission to do that",
+      "cf_required": "A required field is missing",
+      "cf_invalid": "One of the additional fields is invalid",
+      "generic": "Something went wrong. Try again in a moment"
+    }
+  },
+  "degreeTypes": {
+    "bachelor": "Bachelor's",
+    "master": "Master's",
+    "practical_engineer": "Practical engineer",
+    "other": "Other"
+  },
+  "degreeYears": {
+    "a": "Year 1",
+    "b": "Year 2",
+    "c": "Year 3",
+    "d_plus": "Year 4+"
+  },
+  "student": {
+    "withCoordinator": "Your coordinator: {name}",
+    "waiting": "Registration received. Now we wait for an interviewer to contact you"
   }
 }

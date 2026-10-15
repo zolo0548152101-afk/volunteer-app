@@ -1,0 +1,9 @@
+import { getTranslations } from "next-intl/server";
+
+const CODES = ["bad_id", "bad_date", "bad_bank", "incomplete", "forbidden", "cf_required", "cf_invalid", "generic"];
+
+export async function ProfileError({ code }: { code?: string }) {
+  if (!code || !CODES.includes(code)) return null;
+  const t = await getTranslations("profile.errors");
+  return <p role="alert" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(code)}</p>;
+}

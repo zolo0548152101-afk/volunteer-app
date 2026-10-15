@@ -179,5 +179,92 @@
     "wed": "רביעי",
     "thu": "חמישי",
     "fri": "שישי"
+  },
+  "register": {
+    "title": "הרשמה למלגאים",
+    "subtitle": "שתי דקות, ואתם בפנים",
+    "firstName": "שם פרטי",
+    "lastName": "שם משפחה",
+    "email": "אימייל",
+    "phone": "טלפון נייד",
+    "password": "סיסמה (לפחות 8 תווים)",
+    "confirm": "אימות סיסמה",
+    "submit": "המשך",
+    "haveAccount": "כבר רשומים? כניסה",
+    "stepOf": "שלב {n} מתוך {total}",
+    "step": {
+      "academic": "פרטים אישיים ולימודים",
+      "prefs": "העדפות וזמינות",
+      "bank": "חשבון בנק לתשלום"
+    },
+    "back": "חזרה",
+    "next": "המשך",
+    "finish": "סיום ההרשמה",
+    "errors": {
+      "email_taken": "האימייל כבר רשום. אולי כבר נרשמתם? אפשר להתחבר או לאפס סיסמה",
+      "weak_password": "הסיסמה קצרה מדי (לפחות 8 תווים) או שהאימות לא תואם",
+      "bad_phone": "מספר הטלפון לא תקין",
+      "bad_name": "חסר שם",
+      "no_org": "ההרשמה סגורה כרגע",
+      "generic": "משהו השתבש. נסו שוב בעוד רגע"
+    }
+  },
+  "profile": {
+    "title": "הפרופיל שלי",
+    "sections": {
+      "academic": "פרטים אישיים ולימודים",
+      "prefs": "העדפות וזמינות",
+      "bank": "חשבון בנק"
+    },
+    "save": "שמירה",
+    "track": "מסלול",
+    "targetHours": "יעד שעות",
+    "academicYear": "שנה אקדמית",
+    "coordinator": "הרכז שלי",
+    "notSet": "עוד לא נקבע",
+    "more": "פרטים נוספים",
+    "nationalId": "תעודת זהות",
+    "dateOfBirth": "תאריך לידה",
+    "city": "עיר מגורים",
+    "institution": "מוסד לימודים",
+    "degreeType": "סוג תואר",
+    "degreeYear": "שנת לימודים",
+    "fieldOfStudy": "תחום לימוד",
+    "preferredTypes": "באילו תחומים תרצו להתנדב?",
+    "preferredActivities": "פעילויות מועדפות",
+    "availableDays": "ימים פנויים",
+    "availableHours": "שעות פנויות",
+    "generalPreferences": "העדפות כלליות",
+    "studentNotes": "משהו שחשוב שנדע",
+    "bankName": "בנק",
+    "bankBranch": "סניף",
+    "bankAccount": "מספר חשבון",
+    "accountOwner": "שם בעל החשבון",
+    "errors": {
+      "bad_id": "מספר תעודת הזהות לא תקין",
+      "bad_date": "תאריך הלידה לא תקין",
+      "bad_bank": "פרטי הבנק לא תקינים (ספרות בלבד)",
+      "incomplete": "חסרים פרטים חובה: תעודת זהות, מוסד לימודים וסוג תואר",
+      "forbidden": "אין לך הרשאה לפעולה הזו",
+      "cf_required": "חסר שדה חובה",
+      "cf_invalid": "אחד השדות הנוספים לא תקין",
+      "generic": "משהו השתבש. נסו שוב בעוד רגע"
+    }
+  },
+  "degreeTypes": {
+    "bachelor": "תואר ראשון",
+    "master": "תואר שני",
+    "practical_engineer": "הנדסאי",
+    "other": "אחר"
+  },
+  "degreeYears": {
+    "a": "שנה א׳",
+    "b": "שנה ב׳",
+    "c": "שנה ג׳",
+    "d_plus": "שנה ד׳ ומעלה"
+  },
+  "student": {
+    "withCoordinator": "הרכז שלך: {name}",
+    "waiting": "ההרשמה התקבלה. עכשיו מחכים שמראיין ייצור איתך קשר"
   }
 }
