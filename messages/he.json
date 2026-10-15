@@ -72,5 +72,47 @@
     "generic": "משהו השתבש. נסו שוב בעוד רגע",
     "forbidden": "אין לך הרשאה לפעולה הזו",
     "required": "שדה חובה"
+  },
+  "users": {
+    "title": "משתמשים",
+    "inviteTitle": "הזמנת משתמש",
+    "bulkTitle": "שיוך סטודנטים לרכז",
+    "listTitle": "כל המשתמשים ({count})",
+    "firstName": "שם פרטי",
+    "lastName": "שם משפחה",
+    "email": "אימייל",
+    "phone": "טלפון",
+    "roles": "תפקידים",
+    "coordinator": "רכז",
+    "noCoordinator": "ללא רכז",
+    "unassigned": "לא משויך",
+    "invite": "שליחת הזמנה",
+    "invited": "ההזמנה נשלחה. עכשיו רק לחכות שיפתחו את המייל",
+    "pickStudents": "בחירת סטודנטים",
+    "noStudents": "אין עדיין סטודנטים",
+    "assign": "שיוך",
+    "assigned": "השיוך נשמר",
+    "saveRoles": "שמירת תפקידים",
+    "resendInvite": "שליחת הזמנה מחדש",
+    "sendReset": "שליחת איפוס סיסמה",
+    "activate": "הפעלה",
+    "deactivate": "השבתה",
+    "status": {
+      "active": "פעיל",
+      "invited": "הוזמן",
+      "inactive": "מושבת"
+    },
+    "errors": {
+      "forbidden": "אין לך הרשאה לפעולה הזו",
+      "not_found": "המשתמש לא נמצא",
+      "email_taken": "האימייל כבר רשום בארגון",
+      "bad_roles": "צריך לבחור לפחות תפקיד אחד",
+      "bad_coordinator": "הרכז שנבחר לא תקף",
+      "not_student": "אפשר לשייך לרכז רק סטודנט",
+      "last_manager": "חייב להישאר לפחות מנהל פעיל אחד",
+      "self_lockout": "אי אפשר להשבית את עצמך",
+      "required": "חסרים שדות חובה",
+      "generic": "משהו השתבש. נסו שוב בעוד רגע"
+    }
   }
 }

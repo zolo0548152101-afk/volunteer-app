@@ -48,7 +48,7 @@ export type SessionUser = {
 export type Subject = {
   organizationId?: string;
   ownerId?: string;
-  /** סטודנט יכול להיות משויך לכמה רכזים */
+  /** מזהי הרכזים של הרשומה (בפועל רכז אחד לסטודנט, PRD 5.1) */
   coordinatorIds?: string[];
 };
 

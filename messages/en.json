@@ -72,5 +72,47 @@
     "generic": "Something went wrong. Try again in a moment",
     "forbidden": "You don't have permission to do that",
     "required": "Required field"
+  },
+  "users": {
+    "title": "Users",
+    "inviteTitle": "Invite a user",
+    "bulkTitle": "Assign students to a coordinator",
+    "listTitle": "All users ({count})",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "roles": "Roles",
+    "coordinator": "Coordinator",
+    "noCoordinator": "No coordinator",
+    "unassigned": "Unassigned",
+    "invite": "Send invitation",
+    "invited": "Invitation sent",
+    "pickStudents": "Pick students",
+    "noStudents": "No students yet",
+    "assign": "Assign",
+    "assigned": "Assignment saved",
+    "saveRoles": "Save roles",
+    "resendInvite": "Resend invitation",
+    "sendReset": "Send password reset",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "status": {
+      "active": "Active",
+      "invited": "Invited",
+      "inactive": "Inactive"
+    },
+    "errors": {
+      "forbidden": "You don't have permission to do that",
+      "not_found": "User not found",
+      "email_taken": "This email is already registered",
+      "bad_roles": "Pick at least one role",
+      "bad_coordinator": "The selected coordinator isn't valid",
+      "not_student": "Only students can be assigned to a coordinator",
+      "last_manager": "At least one active manager must remain",
+      "self_lockout": "You can't deactivate yourself",
+      "required": "Required fields are missing",
+      "generic": "Something went wrong. Try again in a moment"
+    }
   }
 }
