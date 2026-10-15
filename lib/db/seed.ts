@@ -9,6 +9,7 @@ import {
   hourReports,
   interviews,
   lookups,
+  notificationRules,
   organizations,
   placements,
   placeTimeWindows,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/password";
 import { writeAudit } from "@/lib/services/audit";
+import { DEFAULT_RULES, type RuleKind } from "@/lib/services/reminders";
 
 export const DEMO_PASSWORD = "demo1234";
 
@@ -61,6 +63,13 @@ export async function seedDemo(db: Db, opts: { orgName?: string } = {}) {
     const base = { organizationId };
 
     await tx.insert(settings).values({ organizationId });
+    await tx.insert(notificationRules).values(
+      (Object.entries(DEFAULT_RULES) as [RuleKind, (typeof DEFAULT_RULES)[RuleKind]][]).map(([kind, rule]) => ({
+        ...base,
+        kind,
+        ...rule,
+      })),
+    );
     await tx.insert(lookups).values([
       ...volunteerTypes.map(([key, he, en], i) => ({
         ...base,
@@ -321,6 +330,8 @@ export async function deleteOrganization(db: Db, organizationId: string) {
     // users מצביע על עצמו (coordinator_id): מנתקים לפני מחיקה
     await tx.execute(sql`UPDATE users SET coordinator_id = NULL WHERE organization_id = ${organizationId}`);
     for (const t of [
+      "notification_log",
+      "notification_rules",
       "audit_log",
       "custom_field_values",
       "custom_fields",

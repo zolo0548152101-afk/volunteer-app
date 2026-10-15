@@ -8,6 +8,13 @@
       "when": 1792089045057,
       "tag": "0000_lucky_vulcan",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792090240267,
+      "tag": "0001_aromatic_exiles",
+      "breakpoints": true
     }
   ]
 }

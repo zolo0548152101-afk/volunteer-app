@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { eq, sql } from "drizzle-orm";
 import { closeDb, db } from "@/lib/db";
-import { auditLog, placements, users } from "@/lib/db/schema";
+import { auditLog, notificationLog, notificationRules, placements, settings, users } from "@/lib/db/schema";
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { approvedHoursCurrentYearByPlace, loadActivePlacements, loadWindows, windowUsageRows } from "@/lib/db/queries/capacity";
 import { audited } from "@/lib/services/audit";
@@ -128,6 +128,46 @@ describe("אילוצים במסד", () => {
         lastName: "כפול",
       }),
     ).rejects.toThrow();
+  });
+});
+
+describe("הגדרות והתראות ניתנות לניהול", () => {
+  it("ל-seed יש חוקי ברירת מחדל והגדרת סף, וכולם ניתנים לעדכון", async () => {
+    const rules = await db().select().from(notificationRules).where(eq(notificationRules.organizationId, s.organizationId));
+    expect(rules.map((r) => r.kind).sort()).toEqual(["report_escalation", "student_inactivity"]);
+    const esc = rules.find((r) => r.kind === "report_escalation")!;
+    expect(esc).toMatchObject({ enabled: true, firstAfterDays: 7, maxSends: 1 });
+
+    await db().update(notificationRules).set({ enabled: false, firstAfterDays: 3, maxSends: 4, repeatEveryDays: 2 }).where(eq(notificationRules.id, esc.id));
+    const [after] = await db().select().from(notificationRules).where(eq(notificationRules.id, esc.id));
+    expect(after).toMatchObject({ enabled: false, firstAfterDays: 3, maxSends: 4, repeatEveryDays: 2 });
+
+    const [st] = await db().select().from(settings).where(eq(settings.organizationId, s.organizationId));
+    expect(st.capacityToleranceHours).toBe(1);
+    await db().update(settings).set({ capacityToleranceHours: 0.5 }).where(eq(settings.organizationId, s.organizationId));
+    const [st2] = await db().select().from(settings).where(eq(settings.organizationId, s.organizationId));
+    expect(st2.capacityToleranceHours).toBe(0.5);
+  });
+
+  it("ערכים לא הגיוניים נדחים במסד (מקסימום 0, ימים שליליים)", async () => {
+    await expect(
+      db().update(notificationRules).set({ maxSends: 0 }).where(eq(notificationRules.organizationId, s.organizationId)),
+    ).rejects.toThrow();
+    await expect(
+      db().update(notificationRules).set({ firstAfterDays: -1 }).where(eq(notificationRules.organizationId, s.organizationId)),
+    ).rejects.toThrow();
+  });
+
+  it("יומן שליחות נספר לפי רשומה: אפשר לדעת כמה פעמים נשלח ומתי אחרון", async () => {
+    const reportId = s.students[0].id; // כל uuid משמש כמזהה רשומה ביומן
+    await db().insert(notificationLog).values([
+      { organizationId: s.organizationId, kind: "report_escalation", entity: "hour_report", entityId: reportId, channel: "email", sentAt: new Date("2026-10-08T08:00:00Z") },
+      { organizationId: s.organizationId, kind: "report_escalation", entity: "hour_report", entityId: reportId, channel: "email", ok: false, error: "boom", sentAt: new Date("2026-10-09T08:00:00Z") },
+    ]);
+    const r = await db().execute<{ n: string; last: string }>(sql`
+      SELECT count(*) AS n, max(sent_at) AS last FROM notification_log
+      WHERE organization_id = ${s.organizationId} AND kind = 'report_escalation' AND entity_id = ${reportId} AND ok`);
+    expect(Number(r.rows[0].n)).toBe(1); // רק שליחות שהצליחו נספרות
   });
 });
 

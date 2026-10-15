@@ -375,15 +375,13 @@ export const hourReports = pgTable(
     submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     approvedBy: uuid("approved_by").references(() => users.id),
-    /** הסלמה אחת בלבד לדיווח */
-    escalationSentAt: timestamp("escalation_sent_at", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [
     index("hour_reports_org_idx").on(t.organizationId),
     index("hour_reports_student_idx").on(t.studentId, t.volunteerDate),
     index("hour_reports_coordinator_status_idx").on(t.coordinatorId, t.status),
-    index("hour_reports_escalation_idx").on(t.submittedAt).where(sql`${t.status} = 'pending' AND ${t.escalationSentAt} IS NULL`),
+    index("hour_reports_pending_idx").on(t.submittedAt).where(sql`${t.status} = 'pending'`),
     check("hour_reports_reported_chk", sql`${t.reportedHours} > 0`),
     check("hour_reports_approved_chk", sql`${t.approvedHours} >= 0`),
     check(
@@ -395,19 +393,72 @@ export const hourReports = pgTable(
 
 /* ───────────── 5.10 הגדרות, רשימות בחירה, לוג ───────────── */
 
-export const settings = pgTable("settings", {
-  organizationId: uuid("organization_id")
-    .primaryKey()
-    .references(() => organizations.id),
-  escalationDays: integer("escalation_days").notNull().default(7),
-  /** כיבוי ההסלמה / התזכורת לרכז */
-  coordinatorReminderEnabled: boolean("coordinator_reminder_enabled").notNull().default(true),
-  reminderChannels: channelEnum("reminder_channels").array().notNull().default(sql`ARRAY['email']::channel[]`),
-  languages: localeEnum("languages").array().notNull().default(sql`ARRAY['he','en']::locale[]`),
-  /** סטודנט שלא דיווח X שבועות: דגל + תזכורת (PRD 7.5) */
-  inactivityWeeks: integer("inactivity_weeks").notNull().default(3),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-});
+export const settings = pgTable(
+  "settings",
+  {
+    organizationId: uuid("organization_id")
+      .primaryKey()
+      .references(() => organizations.id),
+    languages: localeEnum("languages").array().notNull().default(sql`ARRAY['he','en']::locale[]`),
+    /**
+     * סף פער מיעד הסטודנט לפני אזהרת "חסר / חריגה" בשיבוץ (שעות). לא חוק קשיח: המנהל מגדיר.
+     * 0 = כל פער מתריע.
+     */
+    capacityToleranceHours: hours("capacity_tolerance_hours").notNull().default(1),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("settings_tolerance_chk", sql`${t.capacityToleranceHours} >= 0`)],
+);
+
+/**
+ * חוקי התראה שהמנהל מנהל מהממשק: האם נשלח, אחרי כמה ימים, כמה פעמים, כל כמה זמן
+ * חוזרים, באיזה ערוץ, והאם עותק למנהל. סוג חדש של התראה = שורה חדשה, בלי שינוי סכמה.
+ * kind: report_escalation (דיווח שממתין לאישור) | student_inactivity (סטודנט שלא מדווח)
+ */
+export const notificationRules = pgTable(
+  "notification_rules",
+  {
+    id: id(),
+    organizationId: orgId(),
+    kind: text("kind").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+    /** ימים מרגע האירוע המפעיל (הגשת הדיווח / הדיווח האחרון) עד השליחה הראשונה */
+    firstAfterDays: integer("first_after_days").notNull().default(7),
+    /** כמה פעמים לכל היותר, לכל רשומה */
+    maxSends: integer("max_sends").notNull().default(1),
+    /** כל כמה ימים חוזרים אחרי השליחה הראשונה (רלוונטי כש-maxSends > 1) */
+    repeatEveryDays: integer("repeat_every_days").notNull().default(7),
+    channels: channelEnum("channels").array().notNull().default(sql`ARRAY['email']::channel[]`),
+    /** עותק למנהל (בהסלמת דיווח) */
+    copyManager: boolean("copy_manager").notNull().default(false),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("notification_rules_org_kind_uq").on(t.organizationId, t.kind),
+    check(
+      "notification_rules_values_chk",
+      sql`${t.firstAfterDays} >= 0 AND ${t.maxSends} >= 1 AND ${t.repeatEveryDays} >= 1`,
+    ),
+  ],
+);
+
+/** יומן שליחות: ממנו נספר כמה פעמים נשלחה התראה לרשומה, ומתי נשלחה האחרונה */
+export const notificationLog = pgTable(
+  "notification_log",
+  {
+    id: id(),
+    organizationId: orgId(),
+    kind: text("kind").notNull(),
+    entity: text("entity").notNull(),
+    entityId: uuid("entity_id").notNull(),
+    recipientId: uuid("recipient_id").references(() => users.id),
+    channel: channelEnum("channel").notNull(),
+    ok: boolean("ok").notNull().default(true),
+    error: text("error"),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("notification_log_entity_idx").on(t.organizationId, t.kind, t.entityId, t.sentAt)],
+);
 
 /** סוגי התנדבות, מוסדות לימוד, סיבות היעדרות: המנהל עורך מהממשק */
 export const lookups = pgTable(
