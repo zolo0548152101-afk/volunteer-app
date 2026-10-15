@@ -22,8 +22,8 @@ test("סיסמה שגויה: הודעה עניינית ונשארים בכניס
 for (const [email, path, heading] of [
   ["manager@demo.test", "/manager", "מנהל"],
   ["coord1@demo.test", "/coordinator", "רכז"],
-  ["interviewer@demo.test", "/interviewer", "מראיין"],
-  ["student1@demo.test", "/student", "סטודנט"],
+  ["interviewer@demo.test", "/interviewer", "ממתינים לראיון"],
+  ["student1@demo.test", "/student", "שירה אביב"],
 ] as const) {
   test(`${email} נכנס לעמוד הבית של התפקיד שלו ואפשר לצאת`, async ({ page }) => {
     await login(page, email);
