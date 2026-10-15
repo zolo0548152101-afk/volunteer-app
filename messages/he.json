@@ -411,5 +411,107 @@
     "registered": "נרשם ב-{date}",
     "allStudents": "כל הסטודנטים",
     "places": "מקומות התנדבות"
+  },
+  "reportForm": {
+    "title": "דיווח שעות התנדבות",
+    "titleAbsence": "דיווח היעדרות",
+    "titleEdit": "תיקון דיווח",
+    "placement": "שיבוץ",
+    "absenceReason": "סיבת ההיעדרות",
+    "reasons": {
+      "reserve_duty": "מילואים",
+      "illness": "מחלה",
+      "security_situation": "מצב ביטחוני",
+      "other": "אחר"
+    },
+    "date": "תאריך",
+    "hours": "שעות",
+    "hoursHint": "מולא לפי החוזה שלך. אפשר לשנות",
+    "start": "שעת התחלה",
+    "end": "שעת סיום",
+    "notes": "הערות",
+    "submit": "שליחה לאישור",
+    "resubmit": "שליחה מחדש",
+    "noPlacements": "אין לך עדיין שיבוץ פעיל, אז אין מה לדווח. אחרי הראיון זה ייפתח",
+    "switchToVolunteer": "דיווח התנדבות רגיל",
+    "switchToAbsence": "דיווח היעדרות",
+    "myReports": "הדיווחים שלי",
+    "coordinatorAsked": "הרכז ביקש תיקון: {note}",
+    "locked": "הדיווח כבר טופל ואי אפשר לערוך אותו"
+  },
+  "reportErrors": {
+    "bad_date": "התאריך לא תקין",
+    "future_date": "אי אפשר לדווח על תאריך עתידי",
+    "outside_year": "התאריך מחוץ לשנה האקדמית הנוכחית",
+    "no_year": "לא הוגדרה שנה אקדמית נוכחית. פנו למנהל",
+    "bad_hours": "מספר השעות לא תקין",
+    "bad_time": "שעות ההתחלה והסיום לא תקינות (הסיום חייב להיות אחרי ההתחלה)",
+    "day_over_max": "סך השעות באותו יום עובר את התקרה היומית",
+    "duplicate": "כבר דיווחת על השיבוץ הזה באותו יום. אפשר לתקן את הדיווח הקיים",
+    "not_your_placement": "השיבוץ לא שלך או שאינו פעיל",
+    "not_editable": "הדיווח כבר טופל ואי אפשר לערוך אותו",
+    "reason_required": "נדרשת סיבה",
+    "bad_transition": "אי אפשר לבצע את הפעולה במצב הנוכחי של הדיווח. ייתכן שמישהו טיפל בו כבר",
+    "bad_reason": "צריך לבחור סיבת היעדרות",
+    "not_a_student": "הפעולה זמינה לסטודנטים בלבד",
+    "forbidden": "אין לך הרשאה לפעולה הזו",
+    "not_found": "לא נמצא",
+    "generic": "משהו השתבש. נסו שוב בעוד רגע"
+  },
+  "myReports": {
+    "title": "הדיווחים שלי",
+    "sent": "הדיווח נשלח לרכז. תודה שלא השארת לרגע האחרון",
+    "progress": "אושרו {approved} שעות. {pending} שעות ממתינות לאישור",
+    "newReport": "דיווח חדש",
+    "newAbsence": "דיווח היעדרות",
+    "empty": "עוד לא דיווחת על כלום. הכול לפניך",
+    "absence": "היעדרות",
+    "hours": "{n} ש'",
+    "approvedHours": "אושרו {n} ש'",
+    "status": {
+      "pending": "ממתין לאישור",
+      "approved": "אושר",
+      "rejected": "נדחה",
+      "needs_correction": "הרכז ביקש תיקון"
+    },
+    "coordinatorNote": "הערת הרכז: {note}",
+    "fix": "לתיקון",
+    "edit": "עריכה",
+    "back": "חזרה"
+  },
+  "inbox": {
+    "title": "דיווחי שעות",
+    "filter": "סינון לפי מצב",
+    "status": {
+      "pending": "ממתינים",
+      "needs_correction": "בתיקון",
+      "approved": "אושרו",
+      "rejected": "נדחו"
+    },
+    "empty": {
+      "pending": "אין דיווחים ממתינים. אפשר קפה",
+      "needs_correction": "אין דיווחים בתיקון",
+      "approved": "אין עדיין דיווחים מאושרים",
+      "rejected": "אין דיווחים שנדחו"
+    },
+    "absence": "היעדרות",
+    "reported": "דווח: {n} ש'",
+    "approved": "אושר: {n} ש'",
+    "studentNote": "הערת הסטודנט: {note}",
+    "coordinatorNote": "הערת הרכז: {note}",
+    "approvedHoursLabel": "שעות לאישור",
+    "countsTowardTarget": "נספר ליעד",
+    "approve": "אישור",
+    "notesLabel": "הערה (חובה בדחייה ובתיקון)",
+    "needsCorrection": "החזרה לתיקון",
+    "reject": "דחייה",
+    "unapproveReason": "סיבה לביטול האישור",
+    "unapprove": "ביטול אישור"
+  },
+  "nav2": {
+    "reports": "דיווחי שעות",
+    "students": "סטודנטים",
+    "myReports": "הדיווחים שלי",
+    "reportHours": "דיווח שעות"
   }
 }

@@ -8,8 +8,11 @@ export default async function Page() {
     <main className="p-4">
       <h1 className="text-xl font-semibold">{t("roles.coordinator")}</h1>
       <p className="mt-2 text-muted">{actor.name}</p>
-      <p className="mt-2 text-muted">{t("common.comingSoon")}</p>
-    <Link href="/places" className="mt-4 inline-block underline">{t("nav.places")}</Link>
+      <nav className="mt-4 flex flex-col gap-2">
+        <Link href="/reports" className="underline">{t("nav2.reports")}</Link>
+        <Link href="/students" className="underline">{t("nav2.students")}</Link>
+        <Link href="/places" className="underline">{t("nav.places")}</Link>
+      </nav>
     </main>
   );
 }

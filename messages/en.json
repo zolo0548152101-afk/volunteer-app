@@ -411,5 +411,107 @@
     "registered": "Registered {date}",
     "allStudents": "All students",
     "places": "Volunteer places"
+  },
+  "reportForm": {
+    "title": "Report volunteer hours",
+    "titleAbsence": "Report an absence",
+    "titleEdit": "Fix report",
+    "placement": "Placement",
+    "absenceReason": "Reason for absence",
+    "reasons": {
+      "reserve_duty": "Reserve duty",
+      "illness": "Illness",
+      "security_situation": "Security situation",
+      "other": "Other"
+    },
+    "date": "Date",
+    "hours": "Hours",
+    "hoursHint": "Pre-filled from your contract. You can change it",
+    "start": "Start time",
+    "end": "End time",
+    "notes": "Notes",
+    "submit": "Send for approval",
+    "resubmit": "Send again",
+    "noPlacements": "You have no active placement yet, so there is nothing to report. It opens after the interview",
+    "switchToVolunteer": "Regular volunteer report",
+    "switchToAbsence": "Report an absence",
+    "myReports": "My reports",
+    "coordinatorAsked": "The coordinator asked for a fix: {note}",
+    "locked": "This report was already handled and can't be edited"
+  },
+  "reportErrors": {
+    "bad_date": "Invalid date",
+    "future_date": "You can't report a future date",
+    "outside_year": "The date is outside the current academic year",
+    "no_year": "No current academic year is set. Contact the manager",
+    "bad_hours": "Invalid number of hours",
+    "bad_time": "Invalid start/end times (end must be after start)",
+    "day_over_max": "Total hours that day exceed the daily maximum",
+    "duplicate": "You already reported this placement on that day. You can fix the existing report",
+    "not_your_placement": "This placement isn't yours or isn't active",
+    "not_editable": "This report was already handled and can't be edited",
+    "reason_required": "A reason is required",
+    "bad_transition": "Can't do that in the report's current state. Someone may have handled it already",
+    "bad_reason": "Choose a reason for the absence",
+    "not_a_student": "This action is for students only",
+    "forbidden": "You don't have permission to do that",
+    "not_found": "Not found",
+    "generic": "Something went wrong. Try again in a moment"
+  },
+  "myReports": {
+    "title": "My reports",
+    "sent": "Report sent to your coordinator. Thanks for not leaving it to the last minute",
+    "progress": "{approved} hours approved. {pending} hours awaiting approval",
+    "newReport": "New report",
+    "newAbsence": "Report an absence",
+    "empty": "Nothing reported yet. It's all ahead of you",
+    "absence": "Absence",
+    "hours": "{n} h",
+    "approvedHours": "{n} h approved",
+    "status": {
+      "pending": "Awaiting approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "needs_correction": "Coordinator asked for a fix"
+    },
+    "coordinatorNote": "Coordinator's note: {note}",
+    "fix": "Fix it",
+    "edit": "Edit",
+    "back": "Back"
+  },
+  "inbox": {
+    "title": "Hour reports",
+    "filter": "Filter by status",
+    "status": {
+      "pending": "Pending",
+      "needs_correction": "Needs fix",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "empty": {
+      "pending": "No pending reports. Have a coffee",
+      "needs_correction": "No reports waiting for a fix",
+      "approved": "No approved reports yet",
+      "rejected": "No rejected reports"
+    },
+    "absence": "Absence",
+    "reported": "Reported: {n} h",
+    "approved": "Approved: {n} h",
+    "studentNote": "Student's note: {note}",
+    "coordinatorNote": "Coordinator's note: {note}",
+    "approvedHoursLabel": "Hours to approve",
+    "countsTowardTarget": "Counts toward target",
+    "approve": "Approve",
+    "notesLabel": "Note (required to reject or return)",
+    "needsCorrection": "Return for fix",
+    "reject": "Reject",
+    "unapproveReason": "Reason for un-approving",
+    "unapprove": "Un-approve"
+  },
+  "nav2": {
+    "reports": "Hour reports",
+    "students": "Students",
+    "myReports": "My reports",
+    "reportHours": "Report hours"
   }
 }

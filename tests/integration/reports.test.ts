@@ -1,0 +1,135 @@
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { and, eq } from "drizzle-orm";
+import { closeDb, db } from "@/lib/db";
+import { auditLog, hourReports, placements } from "@/lib/db/schema";
+import { deleteOrganization, seedDemo } from "@/lib/db/seed";
+import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
+import { decide, getMyReport, listInbox, listMyReports, myProgress, reportablePlacements, resubmitReport, submitReport, type SubmitInput } from "@/lib/services/reports";
+import { NotFoundError } from "@/lib/services/users";
+
+type Seed = Awaited<ReturnType<typeof seedDemo>>;
+let s: Seed;
+const act = (u: { id: string }, org: string, roles: Role[]): SessionUser => ({ id: u.id, organizationId: org, roles });
+let manager: SessionUser, c1: SessionUser, c2: SessionUser, interviewer: SessionUser, st: SessionUser, other: SessionUser, placementId: string;
+
+const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" });
+const vol = (over: Partial<SubmitInput> = {}): SubmitInput => ({ type: "volunteering", placementId, volunteerDate: daysAgo(1), reportedHours: 3, ...over });
+
+beforeAll(async () => {
+  s = await seedDemo(db(), { orgName: `דיווחים ${Date.now()}` });
+  manager = act(s.manager, s.organizationId, ["manager"]);
+  c1 = act(s.coordinators[0], s.organizationId, ["coordinator"]);
+  c2 = act(s.coordinators[1], s.organizationId, ["coordinator"]);
+  interviewer = act(s.interviewer, s.organizationId, ["interviewer"]);
+  st = act(s.students[0], s.organizationId, ["student"]);
+  other = act(s.students[2], s.organizationId, ["student"]);
+  const [p] = await db().select().from(placements).where(and(eq(placements.studentId, st.id), eq(placements.isActive, true)));
+  placementId = p.id;
+  await db().delete(hourReports).where(eq(hourReports.organizationId, s.organizationId)); // מתחילים נקי
+});
+afterAll(async () => {
+  if (s) await deleteOrganization(db(), s.organizationId);
+  await closeDb();
+});
+
+describe("הגשה", () => {
+  it("ברירות מחדל מהחוזה, והדיווח נשמר עם מצב pending ו-approved = reported", async () => {
+    const pls = await reportablePlacements(db(), st);
+    expect(pls).toHaveLength(1);
+    expect(pls[0].defaultHours).toBeGreaterThan(0);
+    const id = await submitReport(db(), st, vol({ reportedHours: 2.5 }));
+    const r = await getMyReport(db(), st, id);
+    expect(r).toMatchObject({ status: "pending", reportedHours: 2.5, approvedHours: 2.5, coordinatorId: c1.id });
+  });
+
+  it("כפילות לאותו שיבוץ ביום, תאריך עתידי, מחוץ לשנה, שעות לא תקינות, שיבוץ של מישהו אחר", async () => {
+    await expect(submitReport(db(), st, vol())).rejects.toMatchObject({ code: "duplicate" });
+    await expect(submitReport(db(), st, vol({ volunteerDate: "2999-01-01" }))).rejects.toMatchObject({ code: "future_date" });
+    await expect(submitReport(db(), st, vol({ volunteerDate: "2020-01-01" }))).rejects.toMatchObject({ code: "outside_year" });
+    await expect(submitReport(db(), st, vol({ volunteerDate: daysAgo(2), reportedHours: 0 }))).rejects.toMatchObject({ code: "bad_hours" });
+    await expect(submitReport(db(), st, vol({ volunteerDate: daysAgo(2), startTime: "12:00", endTime: "11:00" }))).rejects.toMatchObject({ code: "bad_time" });
+    await expect(submitReport(db(), other, vol({ volunteerDate: daysAgo(2) }))).rejects.toMatchObject({ code: "not_your_placement" });
+  });
+
+  it("תקרת שעות ליום מהמסלול (8)", async () => {
+    await expect(submitReport(db(), st, vol({ volunteerDate: daysAgo(3), reportedHours: 9 }))).rejects.toMatchObject({ code: "day_over_max" });
+  });
+
+  it("הגשות מקבילות לאותו יום: בדיוק אחת עוברת", async () => {
+    const results = await Promise.allSettled([1, 2, 3].map(() => submitReport(db(), st, vol({ volunteerDate: daysAgo(4) }))));
+    expect(results.filter((x) => x.status === "fulfilled")).toHaveLength(1);
+  });
+
+  it("היעדרות: סיבה חובה, בלי שיבוץ, ולא נספרת עד אישור", async () => {
+    await expect(submitReport(db(), st, { type: "absence", volunteerDate: daysAgo(5), reportedHours: 4 })).rejects.toMatchObject({ code: "bad_reason" });
+    const id = await submitReport(db(), st, { type: "absence", volunteerDate: daysAgo(5), reportedHours: 4, absenceReason: "reserve_duty" });
+    expect((await getMyReport(db(), st, id)).placementId).toBeNull();
+  });
+
+  it("רק סטודנט מגיש; רכז/מראיין נחסמים", async () => {
+    await expect(submitReport(db(), c1, vol({ volunteerDate: daysAgo(6) }))).rejects.toThrow();
+    await expect(submitReport(db(), interviewer, vol({ volunteerDate: daysAgo(6) }))).rejects.toThrow();
+  });
+});
+
+describe("תיבת רכז והחלטות", () => {
+  let id: string;
+  it("רכז רואה רק את הסטודנטים שלו; רכז אחר ומראיין לא", async () => {
+    id = (await listMyReports(db(), st)).find((r) => r.volunteerDate === daysAgo(1))!.id;
+    expect((await listInbox(db(), c1, { status: "pending" })).some((r) => r.id === id)).toBe(true);
+    expect((await listInbox(db(), c2)).some((r) => r.id === id)).toBe(false);
+    expect((await listInbox(db(), manager)).some((r) => r.id === id)).toBe(true);
+    await expect(listInbox(db(), interviewer)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(decide(db(), c2, id, { kind: "approve" })).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("אישור עם עריכת שעות: reported_hours נשאר, approved משתנה, נרשם בלוג, ורק approved נספר", async () => {
+    expect((await myProgress(db(), st)).approved).toBe(0);
+    await decide(db(), c1, id, { kind: "approve", approvedHours: 2 });
+    const [r] = await db().select().from(hourReports).where(eq(hourReports.id, id));
+    expect(r).toMatchObject({ status: "approved", reportedHours: 2.5, approvedHours: 2, approvedBy: c1.id });
+    expect(r.approvedAt).not.toBeNull();
+    expect((await myProgress(db(), st)).approved).toBe(2);
+    const log = await db().select().from(auditLog).where(and(eq(auditLog.entityId, id), eq(auditLog.action, "approve")));
+    expect(log).toHaveLength(1);
+  });
+
+  it("אי אפשר להחליט פעמיים; ביטול אישור דורש סיבה, מחזיר ל-pending ונרשם", async () => {
+    await expect(decide(db(), c1, id, { kind: "approve" })).rejects.toMatchObject({ code: "bad_transition" });
+    await expect(decide(db(), c1, id, { kind: "unapprove", reason: "  " })).rejects.toMatchObject({ code: "reason_required" });
+    await decide(db(), c1, id, { kind: "unapprove", reason: "טעות בספירה" });
+    const [r] = await db().select().from(hourReports).where(eq(hourReports.id, id));
+    expect(r).toMatchObject({ status: "pending", approvedBy: null });
+    expect((await myProgress(db(), st)).approved).toBe(0);
+    const [log] = await db().select().from(auditLog).where(and(eq(auditLog.entityId, id), eq(auditLog.action, "unapprove")));
+    expect(log.reason).toBe("טעות בספירה");
+  });
+
+  it("דחייה והחזרה לתיקון דורשות סיבה; סטודנט מתקן ומחזיר ל-pending; נדחה סופי", async () => {
+    await expect(decide(db(), c1, id, { kind: "needs_correction", notes: "" })).rejects.toMatchObject({ code: "reason_required" });
+    await decide(db(), c1, id, { kind: "needs_correction", notes: "חסרה שעת סיום" });
+    expect((await getMyReport(db(), st, id)).coordinatorNotes).toBe("חסרה שעת סיום");
+    await resubmitReport(db(), st, id, vol({ reportedHours: 3, startTime: "16:00", endTime: "19:00" }));
+    expect(await getMyReport(db(), st, id)).toMatchObject({ status: "pending", reportedHours: 3, approvedHours: 3 });
+    await decide(db(), c1, id, { kind: "reject", notes: "לא הגיע" });
+    await expect(resubmitReport(db(), st, id, vol())).rejects.toMatchObject({ code: "not_editable" });
+    expect((await myProgress(db(), st)).approved).toBe(0);
+  });
+
+  it("סטודנט אחר לא מתקן דיווח שאינו שלו; סטודנט לא מאשר", async () => {
+    await expect(resubmitReport(db(), other, id, vol())).rejects.toThrow();
+    await expect(decide(db(), st, id, { kind: "approve" })).rejects.toThrow();
+  });
+
+  it("היעדרות: אישור עם countsTowardTarget=false לא נספרת", async () => {
+    const abs = (await listMyReports(db(), st)).find((r) => r.reportType === "absence")!;
+    await decide(db(), c1, abs.id, { kind: "approve", countsTowardTarget: false });
+    expect((await myProgress(db(), st)).approved).toBe(0);
+  });
+
+  it("החלטות מקבילות על אותו דיווח: בדיוק אחת מצליחה", async () => {
+    const fresh = await submitReport(db(), st, vol({ volunteerDate: daysAgo(8) }));
+    const res = await Promise.allSettled([decide(db(), c1, fresh, { kind: "approve" }), decide(db(), manager, fresh, { kind: "reject", notes: "x" })]);
+    expect(res.filter((x) => x.status === "fulfilled")).toHaveLength(1);
+  });
+});
