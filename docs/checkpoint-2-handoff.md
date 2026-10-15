@@ -44,4 +44,4 @@
 - ערכים צפויים ב-seed: בוקר בבית האבות: 8 שעות מבוקשות, תקן אחד תפוס, 4 פנויות (ההיסטוריה של איתי לא נספרת). חצי תקן במרפאה: תפוס במלואו.
 
 ### פלט בדיקות
-typecheck ✓ · lint ✓ · unit 44 עברו (capacity 26, permissions 7, notify 3, i18n 3, password 3, + 2) · integration מול Neon 12 עברו · build ✓ · e2e (6) לא הורצו מחדש, בלי שינוי ב-UI.
+typecheck ✓ · lint ✓ · unit 44 עברו (capacity 26, permissions 9, notify 3, i18n 3, password 3) · integration מול Neon 12 עברו · build ✓ · e2e (6) לא הורצו מחדש, בלי שינוי ב-UI.
