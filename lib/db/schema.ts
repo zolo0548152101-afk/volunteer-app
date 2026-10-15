@@ -64,6 +64,7 @@ export const customFieldTypeEnum = pgEnum("custom_field_type", [
   "file",
   "boolean",
 ]);
+export const authTokenKindEnum = pgEnum("auth_token_kind", ["invite", "password_reset", "otp"]);
 export const channelEnum = pgEnum("channel", ["email", "sms", "whatsapp"]);
 
 /* ───────────── עזרים ───────────── */
@@ -534,5 +535,28 @@ export const auditLog = pgTable(
   (t) => [
     index("audit_log_org_created_idx").on(t.organizationId, t.createdAt),
     index("audit_log_entity_idx").on(t.entity, t.entityId),
+  ],
+);
+
+/** טוקנים חד-פעמיים: הזמנה, איפוס סיסמה, קוד SMS. נשמר רק hash, לעולם לא הערך עצמו. */
+export const authTokens = pgTable(
+  "auth_tokens",
+  {
+    id: id(),
+    organizationId: orgId(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: authTokenKindEnum("kind").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    attempts: integer("attempts").notNull().default(0),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("auth_tokens_hash_uq").on(t.tokenHash),
+    index("auth_tokens_user_kind_idx").on(t.userId, t.kind),
+    check("auth_tokens_attempts_chk", sql`${t.attempts} >= 0`),
   ],
 );

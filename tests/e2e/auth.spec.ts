@@ -1,0 +1,56 @@
+import { expect, test } from "@playwright/test";
+
+// דורש את ארגון הדמו על ענף הפיתוח (pnpm db:seed)
+const PASSWORD = "demo1234";
+
+async function login(page: import("@playwright/test").Page, email: string, password = PASSWORD) {
+  await page.goto("/login");
+  await page.getByLabel("אימייל").fill(email);
+  await page.getByLabel("סיסמה").fill(password);
+  await page.getByRole("button", { name: "כניסה" }).click();
+}
+
+test("סיסמה שגויה: הודעה עניינית ונשארים בכניסה", async ({ page }) => {
+  await login(page, "manager@demo.test", "wrong-password");
+  await expect(page.locator("p[role=alert]")).toHaveText("האימייל או הסיסמה לא נכונים");
+  await expect(page).toHaveURL(/\/login/);
+});
+
+for (const [email, path, heading] of [
+  ["manager@demo.test", "/manager", "מנהל"],
+  ["coord1@demo.test", "/coordinator", "רכז"],
+  ["interviewer@demo.test", "/interviewer", "מראיין"],
+  ["student1@demo.test", "/student", "סטודנט"],
+] as const) {
+  test(`${email} נכנס לעמוד הבית של התפקיד שלו ואפשר לצאת`, async ({ page }) => {
+    await login(page, email);
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
+    await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+    await page.getByRole("button", { name: "יציאה" }).click();
+    await expect(page).toHaveURL(/\/login/);
+    await page.goto(path);
+    await expect(page).toHaveURL(/\/login/);
+  });
+}
+
+test("דף מוגן בלי התחברות מפנה לכניסה", async ({ page }) => {
+  await page.goto("/manager");
+  await expect(page).toHaveURL(/\/login\?next=%2Fmanager/);
+});
+
+test("שכחתי סיסמה: אותה תשובה לכתובת קיימת ולא קיימת", async ({ page }) => {
+  for (const email of ["manager@demo.test", "nobody@nowhere.test"]) {
+    await page.goto("/forgot");
+    await page.getByLabel("אימייל").fill(email);
+    await page.getByRole("button", { name: "שלחו לי קישור" }).click();
+    await expect(page.getByRole("status")).toContainText("אם הכתובת קיימת");
+  }
+});
+
+test("קישור איפוס לא תקף", async ({ page }) => {
+  await page.goto("/reset?token=bogus");
+  await page.getByLabel("סיסמה חדשה (לפחות 8 תווים)").fill("longenough1");
+  await page.getByLabel("אימות סיסמה").fill("longenough1");
+  await page.getByRole("button", { name: "שמירה" }).click();
+  await expect(page.locator("p[role=alert]")).toContainText("הקישור לא תקף");
+});

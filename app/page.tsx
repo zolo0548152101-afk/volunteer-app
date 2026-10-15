@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { homeFor } from "@/lib/home";
 
-// בשלב 0 הכל מפנה לכניסה. בשלב 2 תתווסף הפניה לפי תפקיד.
-export default function Home() {
-  redirect("/login");
+export default async function Home() {
+  const session = await auth();
+  redirect(session ? homeFor(session.user.roles) : "/login");
 }

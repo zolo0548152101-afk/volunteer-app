@@ -15,6 +15,13 @@
       "when": 1792090240267,
       "tag": "0001_aromatic_exiles",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792091550070,
+      "tag": "0002_auth_tokens",
+      "breakpoints": true
     }
   ]
 }

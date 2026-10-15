@@ -217,3 +217,44 @@ describe("audit + טרנזקציה", () => {
     expect(logsAfter).toBe(logsBefore);
   });
 });
+
+describe("טוקנים חד-פעמיים", () => {
+  it("קישור: עובד פעם אחת, אחר כך 'used'; הערך לא נשמר ב-DB", async () => {
+    const { issueToken, consumeToken } = await import("@/lib/services/tokens");
+    const u = s.students[0];
+    const raw = await issueToken(db(), { organizationId: s.organizationId, userId: u.id, kind: "password_reset" });
+    const rows = await db().execute<{ token_hash: string }>(sql`SELECT token_hash FROM auth_tokens WHERE user_id = ${u.id}`);
+    expect(rows.rows.some((r) => r.token_hash === raw)).toBe(false);
+    expect(await consumeToken(db(), { kind: "password_reset", raw })).toMatchObject({ ok: true, userId: u.id });
+    expect(await consumeToken(db(), { kind: "password_reset", raw })).toEqual({ ok: false, reason: "used" });
+    expect(await consumeToken(db(), { kind: "invite", raw })).toEqual({ ok: false, reason: "invalid" });
+  });
+
+  it("הנפקה חדשה מבטלת את הקודמת; פג תוקף נדחה", async () => {
+    const { issueToken, consumeToken } = await import("@/lib/services/tokens");
+    const u = s.students[1];
+    const first = await issueToken(db(), { organizationId: s.organizationId, userId: u.id, kind: "invite" });
+    const second = await issueToken(db(), { organizationId: s.organizationId, userId: u.id, kind: "invite" });
+    expect((await consumeToken(db(), { kind: "invite", raw: first })).ok).toBe(false);
+    const later = new Date(Date.now() + 8 * 24 * 3600_000);
+    expect(await consumeToken(db(), { kind: "invite", raw: second, now: later })).toEqual({ ok: false, reason: "expired" });
+  });
+
+  it("קוד SMS: ניסיונות שגויים נספרים וננעלים, גם לקוד הנכון", async () => {
+    const { issueToken, consumeToken } = await import("@/lib/services/tokens");
+    const u = s.students[2];
+    const code = await issueToken(db(), { organizationId: s.organizationId, userId: u.id, kind: "otp" });
+    const wrong = code === "000000" ? "111111" : "000000";
+    for (let i = 0; i < 5; i++) expect((await consumeToken(db(), { kind: "otp", raw: wrong, userId: u.id })).ok).toBe(false);
+    expect(await consumeToken(db(), { kind: "otp", raw: code, userId: u.id })).toEqual({ ok: false, reason: "too_many_attempts" });
+  });
+
+  it("קוד SMS נכון עובד פעם אחת, ורק למשתמש שלו", async () => {
+    const { issueToken, consumeToken } = await import("@/lib/services/tokens");
+    const u = s.students[3];
+    const code = await issueToken(db(), { organizationId: s.organizationId, userId: u.id, kind: "otp" });
+    expect((await consumeToken(db(), { kind: "otp", raw: code, userId: s.students[4].id })).ok).toBe(false);
+    expect((await consumeToken(db(), { kind: "otp", raw: code, userId: u.id })).ok).toBe(true);
+    expect((await consumeToken(db(), { kind: "otp", raw: code, userId: u.id })).ok).toBe(false);
+  });
+});

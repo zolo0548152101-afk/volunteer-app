@@ -24,7 +24,22 @@
     "submit": "Sign in",
     "forgot": "Forgot password",
     "register": "Not registered yet? Sign up",
-    "language": "Language"
+    "language": "Language",
+    "forgotTitle": "Forgot password",
+    "sendReset": "Send me a link",
+    "resetSent": "If that address exists, a reset link is on its way. Check spam too.",
+    "resetTitle": "New password",
+    "inviteTitle": "Welcome, choose a password",
+    "newPassword": "New password (at least 8 characters)",
+    "confirmPassword": "Confirm password",
+    "savePassword": "Save",
+    "passwordSet": "Password saved.",
+    "errors": {
+      "invalid": "Wrong email or password",
+      "weak": "Password too short (min 8) or confirmation doesn't match",
+      "token": "This link is invalid or expired. You can request a new one",
+      "generic": "Something went wrong. Try again in a moment"
+    }
   },
   "roles": {
     "student": "Student",
