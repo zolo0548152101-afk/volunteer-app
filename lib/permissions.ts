@@ -48,7 +48,8 @@ export type SessionUser = {
 export type Subject = {
   organizationId?: string;
   ownerId?: string;
-  coordinatorId?: string | null;
+  /** סטודנט יכול להיות משויך לכמה רכזים */
+  coordinatorIds?: string[];
 };
 
 export type RuleTable = Record<Role, Rule[]>;
@@ -97,7 +98,7 @@ function scopeAllows(scope: Scope, user: SessionUser, subject?: Subject): boolea
     case "own":
       return !!subject?.ownerId && subject.ownerId === user.id;
     case "assigned":
-      return !!subject?.coordinatorId && subject.coordinatorId === user.id;
+      return !!subject?.coordinatorIds?.includes(user.id);
   }
 }
 

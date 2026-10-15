@@ -60,15 +60,16 @@ describe("permissions – scope", () => {
 
   it("assigned: רק סטודנט שמשויך אליו כרכז", () => {
     const c = mk("c1", ["coordinator"]);
-    expect(check(c, "approve", "hour_report", { coordinatorId: "c1" })).toBe(true);
-    expect(check(c, "approve", "hour_report", { coordinatorId: "c2" })).toBe(false);
-    expect(check(c, "approve", "hour_report", { coordinatorId: null })).toBe(false);
+    expect(check(c, "approve", "hour_report", { coordinatorIds: ["c1"] })).toBe(true);
+    expect(check(c, "approve", "hour_report", { coordinatorIds: ["c2"] })).toBe(false);
+    expect(check(c, "approve", "hour_report", { coordinatorIds: [] })).toBe(false);
+    expect(check(c, "approve", "hour_report", { coordinatorIds: ["c2", "c1"] })).toBe(true);
   });
 
   it("כמה תפקידים: איחוד ההרשאות", () => {
     const both = mk("x", ["student", "coordinator"]);
     expect(check(both, "read", "hour_report", { ownerId: "x" })).toBe(true);
-    expect(check(both, "approve", "hour_report", { coordinatorId: "x" })).toBe(true);
+    expect(check(both, "approve", "hour_report", { coordinatorIds: ["x"] })).toBe(true);
     expect(check(both, "delete", "hour_report", { ownerId: "x" })).toBe(false);
   });
 });
