@@ -22,10 +22,11 @@ describe("permissions – ברירת מחדל חסימה", () => {
     expect(can(undefined, "read", "user")).toBe(false);
   });
 
-  it("תפקידים שעדיין לא הוגדרו: חסום על הכל", () => {
+  it("סטודנט, רכז ומראיין: חסומים על כל מה שלא הוגדר במפורש", () => {
     for (const role of ["student", "coordinator", "interviewer"] as const) {
-      expect(can(mk("u", [role]), "read", "hour_report")).toBe(false);
-      expect(RULES[role]).toEqual([]);
+      expect(can(mk("u", [role]), "delete", "audit_log")).toBe(false);
+      expect(can(mk("u", [role]), "export", "audit_log")).toBe(false);
+      expect(can(mk("u", [role]), "read", "setting")).toBe(false);
     }
   });
 
