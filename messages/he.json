@@ -1,0 +1,61 @@
+{
+  "app": {
+    "name": "מלגאים",
+    "tagline": "שעות התנדבות, בלי כאב ראש"
+  },
+  "nav": {
+    "home": "בית",
+    "report": "דיווח שעות",
+    "reports": "הדיווחים שלי",
+    "profile": "הפרופיל שלי",
+    "places": "מקומות התנדבות",
+    "inbox": "תיבת אישורים",
+    "students": "סטודנטים",
+    "interviews": "ראיונות",
+    "dashboard": "לוח בקרה",
+    "users": "משתמשים",
+    "settings": "הגדרות",
+    "logout": "יציאה"
+  },
+  "auth": {
+    "loginTitle": "כניסה למערכת",
+    "email": "אימייל",
+    "password": "סיסמה",
+    "submit": "כניסה",
+    "forgot": "שכחתי סיסמה",
+    "register": "עוד לא נרשמת? להרשמה",
+    "language": "שפה"
+  },
+  "roles": {
+    "student": "סטודנט",
+    "coordinator": "רכז",
+    "interviewer": "מראיין",
+    "manager": "מנהל"
+  },
+  "common": {
+    "save": "שמירה",
+    "cancel": "ביטול",
+    "edit": "עריכה",
+    "delete": "מחיקה",
+    "loading": "טוען. לא כמו המודל, באמת טוען",
+    "empty": "אין כאן כלום. עדיין",
+    "back": "חזרה",
+    "next": "המשך",
+    "search": "חיפוש",
+    "yes": "כן",
+    "no": "לא",
+    "hours": "שעות",
+    "comingSoon": "בקרוב"
+  },
+  "statuses": {
+    "pending": "ממתין לאישור",
+    "approved": "אושר",
+    "rejected": "נדחה",
+    "needs_correction": "חוזר לתיקון"
+  },
+  "errors": {
+    "generic": "משהו השתבש. נסו שוב בעוד רגע",
+    "forbidden": "אין לך הרשאה לפעולה הזו",
+    "required": "שדה חובה"
+  }
+}

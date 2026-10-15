@@ -1,0 +1,61 @@
+{
+  "app": {
+    "name": "Scholars",
+    "tagline": "Volunteer hours, minus the headache"
+  },
+  "nav": {
+    "home": "Home",
+    "report": "Report hours",
+    "reports": "My reports",
+    "profile": "My profile",
+    "places": "Volunteer places",
+    "inbox": "Approvals inbox",
+    "students": "Students",
+    "interviews": "Interviews",
+    "dashboard": "Dashboard",
+    "users": "Users",
+    "settings": "Settings",
+    "logout": "Log out"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "forgot": "Forgot password",
+    "register": "Not registered yet? Sign up",
+    "language": "Language"
+  },
+  "roles": {
+    "student": "Student",
+    "coordinator": "Coordinator",
+    "interviewer": "Interviewer",
+    "manager": "Manager"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loading": "Loading. Not like a model, actually loading",
+    "empty": "Nothing here. Yet",
+    "back": "Back",
+    "next": "Continue",
+    "search": "Search",
+    "yes": "Yes",
+    "no": "No",
+    "hours": "hours",
+    "comingSoon": "Coming soon"
+  },
+  "statuses": {
+    "pending": "Pending approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "needs_correction": "Needs correction"
+  },
+  "errors": {
+    "generic": "Something went wrong. Try again in a moment",
+    "forbidden": "You don't have permission to do that",
+    "required": "Required field"
+  }
+}
