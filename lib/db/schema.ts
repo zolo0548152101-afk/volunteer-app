@@ -105,6 +105,8 @@ export const users = pgTable(
     /** לסטודנט: הרכז שלו (אחד) */
     coordinatorId: uuid("coordinator_id").references((): AnyPgColumn => users.id),
     lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    /** התחברויות שנעשו לפני הרגע הזה אינן תקפות (יציאה, איפוס סיסמה). JWT נושא loginAt */
+    sessionsInvalidBefore: timestamp("sessions_invalid_before", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [

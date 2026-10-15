@@ -15,7 +15,7 @@ export async function setPasswordFromToken(db: Db, input: { kind: Extract<TokenK
     if (!u || u.status === "inactive") {
       tx.rollback(); // הטוקן לא נצרך
     }
-    await tx.update(users).set({ passwordHash: input.passwordHash, status: "active" }).where(eq(users.id, r.userId));
+    await tx.update(users).set({ passwordHash: input.passwordHash, status: "active", sessionsInvalidBefore: new Date() }).where(eq(users.id, r.userId));
     return true;
   });
 }

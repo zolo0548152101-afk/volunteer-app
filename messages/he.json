@@ -513,5 +513,116 @@
     "students": "סטודנטים",
     "myReports": "הדיווחים שלי",
     "reportHours": "דיווח שעות"
+  },
+  "settings": {
+    "title": "הגדרות",
+    "saved": "נשמר",
+    "save": "שמירה",
+    "add": "הוספה",
+    "active": "פעיל",
+    "errors": {
+      "invalid": "ערך לא תקין",
+      "bad_dates": "התאריכים לא תקינים (הסיום חייב להיות אחרי ההתחלה)",
+      "name_required": "חסר שם",
+      "bad_milestones": "אבני דרך: כל שורה בצורה 45: פעימה 1, בסדר עולה, ולא מעל היעד",
+      "not_found": "לא נמצא",
+      "forbidden": "אין לך הרשאה לפעולה הזו",
+      "generic": "משהו השתבש. נסו שוב בעוד רגע"
+    },
+    "general": "כללי",
+    "tolerance": "סף פער מיעד הסטודנט (שעות)",
+    "toleranceHint": "עד פער כזה בין החוזה לבין מה שנשאר לסטודנט עד סוף השנה לא תוצג אזהרה בשיבוץ. 0 = כל פער מתריע",
+    "languages": "שפות פעילות",
+    "lang": {
+      "he": "עברית",
+      "en": "English"
+    },
+    "year": "שנה אקדמית",
+    "yearName": "שם",
+    "startDate": "תחילת שנה",
+    "endDate": "סוף שנה",
+    "reportDeadline": "מועד אחרון לדיווח",
+    "isCurrent": "השנה הנוכחית",
+    "newYear": "שנה חדשה",
+    "programs": "מסלולים ויעדים",
+    "newProgram": "מסלול חדש",
+    "programName": "שם המסלול",
+    "requiredHours": "יעד שעות לשנה",
+    "maxHoursPerDay": "תקרת שעות ליום",
+    "milestones": "אבני דרך לתשלום",
+    "milestonesHint": "שורה לכל פעימה: שעות, נקודתיים, שם. למשל 45: פעימה 1",
+    "rules": "התראות",
+    "ruleKind": {
+      "report_escalation": "הסלמת דיווח שממתין",
+      "student_inactivity": "סטודנט שלא מדווח",
+      "coordinator_digest": "סיכום יומי לרכז"
+    },
+    "ruleHint": {
+      "report_escalation": "נשלח לרכז כשדיווח ממתין לאישור יותר מדי זמן",
+      "student_inactivity": "נשלח לסטודנט משובץ שלא הגיש דיווח",
+      "coordinator_digest": "פעם ביום, לרכז שיש לו דיווחים ממתינים"
+    },
+    "ruleEnabled": "שליחה פעילה",
+    "firstAfterDays": "אחרי כמה ימים לשלוח",
+    "maxSends": "עד כמה פעמים לכל רשומה",
+    "repeatEveryDays": "כל כמה ימים לחזור",
+    "channels": "ערוצים",
+    "channel": {
+      "email": "מייל",
+      "sms": "SMS",
+      "whatsapp": "וואטסאפ"
+    },
+    "copyManager": "עותק למנהל",
+    "lookups": "רשימות בחירה",
+    "lookupKind": {
+      "volunteer_type": "תחומי התנדבות",
+      "institution": "מוסדות לימוד",
+      "absence_reason": "סיבות היעדרות"
+    },
+    "labelHe": "שם בעברית",
+    "labelEn": "שם באנגלית",
+    "sortOrder": "סדר"
+  },
+  "nav3": {
+    "settings": "הגדרות"
+  },
+  "customFieldsAdmin": {
+    "title": "שדות מותאמים",
+    "intro": "שדות נוספים שמופיעים בטפסים ובכרטיסים. הסטודנט רואה שדות רק אם סימנתם לו",
+    "saved": "נשמר",
+    "labelHe": "שם בעברית",
+    "labelEn": "שם באנגלית",
+    "type": "סוג",
+    "types": {
+      "text": "טקסט",
+      "number": "מספר",
+      "date": "תאריך",
+      "select": "בחירה אחת",
+      "multi_select": "בחירה מרובה",
+      "boolean": "כן / לא",
+      "file": "קובץ"
+    },
+    "sortOrder": "סדר",
+    "options": "אפשרויות",
+    "optionsHint": "שורה לכל אפשרות. אפשר להוסיף אחרי קו אנכי את השם באנגלית: כן | Yes",
+    "visibleTo": "מי רואה",
+    "editableBy": "מי עורך",
+    "required": "חובה",
+    "active": "פעיל",
+    "save": "שמירה",
+    "add": "הוספת שדה",
+    "entities": {
+      "student": "סטודנטים",
+      "place": "מקומות התנדבות",
+      "placement": "שיבוצים",
+      "report": "דיווחים"
+    },
+    "errors": {
+      "invalid": "ערך לא תקין (בשדה בחירה צריך לפחות אפשרות אחת)",
+      "name_required": "חסר שם",
+      "not_found": "לא נמצא",
+      "forbidden": "אין לך הרשאה לפעולה הזו",
+      "generic": "משהו השתבש. נסו שוב בעוד רגע"
+    }
   }
 }

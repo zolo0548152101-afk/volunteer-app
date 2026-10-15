@@ -513,5 +513,116 @@
     "students": "Students",
     "myReports": "My reports",
     "reportHours": "Report hours"
+  },
+  "settings": {
+    "title": "Settings",
+    "saved": "Saved",
+    "save": "Save",
+    "add": "Add",
+    "active": "Active",
+    "errors": {
+      "invalid": "Invalid value",
+      "bad_dates": "Invalid dates (end must be after start)",
+      "name_required": "Name is missing",
+      "bad_milestones": "Milestones: one per line like 45: Beat 1, ascending, not above the target",
+      "not_found": "Not found",
+      "forbidden": "You don't have permission to do that",
+      "generic": "Something went wrong. Try again in a moment"
+    },
+    "general": "General",
+    "tolerance": "Student target gap threshold (hours)",
+    "toleranceHint": "Gaps up to this size between the contract and what the student still needs this year show no warning at placement. 0 = any gap warns",
+    "languages": "Active languages",
+    "lang": {
+      "he": "עברית",
+      "en": "English"
+    },
+    "year": "Academic year",
+    "yearName": "Name",
+    "startDate": "Year start",
+    "endDate": "Year end",
+    "reportDeadline": "Reporting deadline",
+    "isCurrent": "Current year",
+    "newYear": "New year",
+    "programs": "Tracks and targets",
+    "newProgram": "New track",
+    "programName": "Track name",
+    "requiredHours": "Yearly hour target",
+    "maxHoursPerDay": "Max hours per day",
+    "milestones": "Payment milestones",
+    "milestonesHint": "One per line: hours, colon, name. For example 45: Beat 1",
+    "rules": "Notifications",
+    "ruleKind": {
+      "report_escalation": "Pending report escalation",
+      "student_inactivity": "Student not reporting",
+      "coordinator_digest": "Coordinator daily summary"
+    },
+    "ruleHint": {
+      "report_escalation": "Sent to the coordinator when a report waits too long for approval",
+      "student_inactivity": "Sent to a placed student who hasn't submitted a report",
+      "coordinator_digest": "Once a day, to a coordinator with pending reports"
+    },
+    "ruleEnabled": "Sending enabled",
+    "firstAfterDays": "Send after how many days",
+    "maxSends": "Max sends per record",
+    "repeatEveryDays": "Repeat every how many days",
+    "channels": "Channels",
+    "channel": {
+      "email": "Email",
+      "sms": "SMS",
+      "whatsapp": "WhatsApp"
+    },
+    "copyManager": "Copy the manager",
+    "lookups": "Choice lists",
+    "lookupKind": {
+      "volunteer_type": "Volunteering areas",
+      "institution": "Institutions",
+      "absence_reason": "Absence reasons"
+    },
+    "labelHe": "Hebrew name",
+    "labelEn": "English name",
+    "sortOrder": "Order"
+  },
+  "nav3": {
+    "settings": "Settings"
+  },
+  "customFieldsAdmin": {
+    "title": "Custom fields",
+    "intro": "Extra fields shown in forms and cards. Students only see a field if you tick them",
+    "saved": "Saved",
+    "labelHe": "Hebrew name",
+    "labelEn": "English name",
+    "type": "Type",
+    "types": {
+      "text": "Text",
+      "number": "Number",
+      "date": "Date",
+      "select": "Single choice",
+      "multi_select": "Multiple choice",
+      "boolean": "Yes / No",
+      "file": "File"
+    },
+    "sortOrder": "Order",
+    "options": "Options",
+    "optionsHint": "One option per line. Add the English name after a vertical bar: כן | Yes",
+    "visibleTo": "Visible to",
+    "editableBy": "Editable by",
+    "required": "Required",
+    "active": "Active",
+    "save": "Save",
+    "add": "Add field",
+    "entities": {
+      "student": "Students",
+      "place": "Volunteer places",
+      "placement": "Placements",
+      "report": "Reports"
+    },
+    "errors": {
+      "invalid": "Invalid value (a choice field needs at least one option)",
+      "name_required": "Name is missing",
+      "not_found": "Not found",
+      "forbidden": "You don't have permission to do that",
+      "generic": "Something went wrong. Try again in a moment"
+    }
   }
 }

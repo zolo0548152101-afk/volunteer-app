@@ -10,7 +10,7 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db, Tx } from "@/lib/db";
 import { academicYears, hourReports, placeTimeWindows, placements, programs, studentProfiles, users, volunteerPlaces } from "@/lib/db/schema";
-import { assertCan, can, type SessionUser } from "@/lib/permissions";
+import { assertCan, can, ForbiddenError, type SessionUser } from "@/lib/permissions";
 import { writeAudit } from "@/lib/services/audit";
 import { round2 } from "@/lib/services/capacity";
 import { notify } from "@/lib/services/notify";
@@ -202,6 +202,8 @@ export async function decide(db: Db, actor: SessionUser, reportId: string, d: De
     let action: string;
     let reason: string | undefined;
     if (d.kind === "unapprove") {
+      // ביטול אישור הוא פעולת מנהל בלבד (WORKPLAN שלב 6)
+      if (!actor.roles.includes("manager")) throw new ForbiddenError();
       if (old.status !== "approved") throw new ReportError("bad_transition");
       if (!clean(d.reason)) throw new ReportError("reason_required");
       patch = { status: "pending", approvedAt: null, approvedBy: null };

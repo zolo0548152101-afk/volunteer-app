@@ -1,7 +1,9 @@
 "use server";
 
 import { AuthError } from "next-auth";
-import { and, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
+import { headers } from "next/headers";
+import { getToken } from "next-auth/jwt";
 import { z } from "zod";
 import { signIn, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -28,6 +30,9 @@ export async function loginAction(_: FormState, formData: FormData): Promise<For
 }
 
 export async function logoutAction() {
+  // ביטול בצד השרת: בקשה שהייתה בדרך בזמן היציאה עלולה להחזיר את העוגייה; ה-JWT שלה כבר לא יתקבל
+  const token = await getToken({ req: { headers: await headers() }, secret: process.env.AUTH_SECRET });
+  if (token?.uid) await db().update(users).set({ sessionsInvalidBefore: new Date() }).where(eq(users.id, token.uid as string));
   await signOut({ redirectTo: "/login" });
 }
 

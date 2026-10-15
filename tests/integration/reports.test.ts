@@ -96,8 +96,9 @@ describe("תיבת רכז והחלטות", () => {
 
   it("אי אפשר להחליט פעמיים; ביטול אישור דורש סיבה, מחזיר ל-pending ונרשם", async () => {
     await expect(decide(db(), c1, id, { kind: "approve" })).rejects.toMatchObject({ code: "bad_transition" });
-    await expect(decide(db(), c1, id, { kind: "unapprove", reason: "  " })).rejects.toMatchObject({ code: "reason_required" });
-    await decide(db(), c1, id, { kind: "unapprove", reason: "טעות בספירה" });
+    await expect(decide(db(), c1, id, { kind: "unapprove", reason: "טעות בספירה" })).rejects.toBeInstanceOf(ForbiddenError); // רק מנהל
+    await expect(decide(db(), manager, id, { kind: "unapprove", reason: "  " })).rejects.toMatchObject({ code: "reason_required" });
+    await decide(db(), manager, id, { kind: "unapprove", reason: "טעות בספירה" });
     const [r] = await db().select().from(hourReports).where(eq(hourReports.id, id));
     expect(r).toMatchObject({ status: "pending", approvedBy: null });
     expect((await myProgress(db(), st)).approved).toBe(0);

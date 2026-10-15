@@ -4,6 +4,7 @@
  * בלי לגעת בלוגיקה העסקית. בשלב 0 קיים רק ספק קונסול.
  */
 import type { Locale } from "@/i18n/config";
+import { renderTemplate } from "@/lib/notifications/templates";
 
 export type Channel = "email" | "sms" | "whatsapp";
 
@@ -15,6 +16,9 @@ export type NotifyInput = {
   template: string;
   data?: Record<string, unknown>;
   locale: Locale;
+  /** מולאו על ידי notify מהתבנית. ספק אמיתי שולח אותם כמות שהם */
+  subject?: string;
+  body?: string;
 };
 
 export type NotifyResult = { ok: boolean; channel: Channel; error?: string };
@@ -26,7 +30,7 @@ export interface Provider {
 const consoleProvider: Provider = {
   async send(input) {
     console.info(
-      `[notify:${input.channel}] → ${input.to} · ${input.template} (${input.locale})`,
+      `[notify:${input.channel}] → ${input.to} · ${input.template} (${input.locale}) · ${input.subject ?? ""}`,
       input.data ?? {},
     );
   },
@@ -52,7 +56,9 @@ export function resetProviders() {
 /** לא זורק: כישלון בשליחה לא אמור להפיל פעולה עסקית. הכישלון מוחזר ונרשם. */
 export async function notify(input: NotifyInput): Promise<NotifyResult> {
   try {
-    await providers[input.channel].send(input);
+    const text = renderTemplate(input.template, input.data, input.locale);
+    if (!text) console.warn(`[notify] unknown template ${input.template}`);
+    await providers[input.channel].send({ ...input, subject: text?.subject, body: text?.body });
     return { ok: true, channel: input.channel };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);

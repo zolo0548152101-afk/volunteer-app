@@ -5,7 +5,7 @@
  */
 import type { Channel } from "@/lib/services/notify";
 
-export type RuleKind = "report_escalation" | "student_inactivity";
+export type RuleKind = "report_escalation" | "student_inactivity" | "coordinator_digest";
 
 export type Rule = {
   enabled: boolean;
@@ -31,6 +31,15 @@ export const DEFAULT_RULES: Record<RuleKind, Rule> = {
     firstAfterDays: 21,
     maxSends: 1,
     repeatEveryDays: 7,
+    channels: ["email"],
+    copyManager: false,
+  },
+  /** סיכום יומי לרכז על דיווחים ממתינים. רק מתג וערוצים; הימים והמספרים לא רלוונטיים */
+  coordinator_digest: {
+    enabled: true,
+    firstAfterDays: 0,
+    maxSends: 1,
+    repeatEveryDays: 1,
     channels: ["email"],
     copyManager: false,
   },

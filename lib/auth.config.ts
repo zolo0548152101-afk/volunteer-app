@@ -13,6 +13,7 @@ export const authConfig = {
         token.uid = user.id as string;
         token.organizationId = user.organizationId;
         token.roles = user.roles;
+        token.loginAt = Date.now();
       }
       return token;
     },

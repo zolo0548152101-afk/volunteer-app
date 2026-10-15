@@ -22,6 +22,13 @@
       "when": 1792091550070,
       "tag": "0002_auth_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792106344283,
+      "tag": "0003_sessions_invalid_before",
+      "breakpoints": true
     }
   ]
 }

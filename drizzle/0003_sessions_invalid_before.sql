@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "sessions_invalid_before" timestamp with time zone;

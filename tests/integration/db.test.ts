@@ -134,7 +134,7 @@ describe("אילוצים במסד", () => {
 describe("הגדרות והתראות ניתנות לניהול", () => {
   it("ל-seed יש חוקי ברירת מחדל והגדרת סף, וכולם ניתנים לעדכון", async () => {
     const rules = await db().select().from(notificationRules).where(eq(notificationRules.organizationId, s.organizationId));
-    expect(rules.map((r) => r.kind).sort()).toEqual(["report_escalation", "student_inactivity"]);
+    expect(rules.map((r) => r.kind).sort()).toEqual(["coordinator_digest", "report_escalation", "student_inactivity"]);
     const esc = rules.find((r) => r.kind === "report_escalation")!;
     expect(esc).toMatchObject({ enabled: true, firstAfterDays: 7, maxSends: 1 });
 

@@ -11,6 +11,8 @@ export default async function Page() {
       <Link href="/reports" className="me-4 mt-4 inline-block underline">{t("nav2.reports")}</Link>
       <Link href="/students" className="me-4 mt-4 inline-block underline">{t("nav2.students")}</Link>
       <Link href="/places" className="me-4 mt-4 inline-block underline">{t("nav.places")}</Link>
+      <Link href="/manager/settings" className="me-4 mt-4 inline-block underline">{t("nav3.settings")}</Link>
+      <Link href="/manager/custom-fields" className="me-4 mt-4 inline-block underline">{t("customFieldsAdmin.title")}</Link>
       <Link href="/manager/users" className="mt-4 inline-block underline">{t("nav.users")}</Link>
     </main>
   );

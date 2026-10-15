@@ -48,7 +48,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
                 </div>
               </form>
             )}
-            {status === "approved" && (
+            {status === "approved" && actor.roles.includes("manager") && (
               <form action={decideAction} className="mt-2 flex flex-wrap items-end gap-2">
                 <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} /><input type="hidden" name="kind" value="unapprove" />
                 <label className="flex flex-col gap-1">{t("unapproveReason")}<input name="notes" required className={input} /></label>

@@ -118,3 +118,15 @@ test.describe("שימור חשבונות בזמן אמת", () => {
     await expect(page).toHaveURL(/\/student$/);
   });
 });
+
+test("אחרי יציאה, עוגייה ישנה שחוזרת לדפדפן כבר לא מחברת", async ({ page, context }, info) => {
+  test.skip(info.project.name !== "desktop");
+  await login(page, "coord2@demo.test");
+  await expect(page).toHaveURL(/\/coordinator$/);
+  const old = (await context.cookies()).find((c) => c.name.endsWith("session-token"))!;
+  await page.getByRole("button", { name: "יציאה" }).click();
+  await expect(page).toHaveURL(/\/login/);
+  await context.addCookies([old]); // כמו תשובה מאוחרת שמחזירה את העוגייה
+  await page.goto("/coordinator");
+  await expect(page).toHaveURL(/\/login/);
+});
