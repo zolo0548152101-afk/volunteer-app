@@ -11,6 +11,8 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isPublic = pathname === "/" || PUBLIC.some((p) => pathname === p || pathname.startsWith(p + "/"));
   if (!req.auth && !isPublic) {
+    // ל-API עונים 401 במקום להפנות לדף כניסה
+    if (pathname.startsWith("/api/")) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     const url = new URL("/login", req.nextUrl);
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);

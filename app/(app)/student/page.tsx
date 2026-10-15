@@ -19,6 +19,7 @@ export default async function Page() {
       <nav className="mt-4 flex flex-col gap-2">
         <Link href="/student/report" className="underline">{t("nav2.reportHours")}</Link>
         <Link href="/student/reports" className="underline">{t("nav2.myReports")}</Link>
+        <Link href={`/certificate/${actor.id}`} className="underline">{t("nav4.certificate")}</Link>
         <Link href="/student/profile" className="underline">{t("nav.profile")}</Link>
         <Link href="/places" className="underline">{t("nav.places")}</Link>
       </nav>

@@ -360,7 +360,8 @@
       "forbidden": "You don't have permission to do that",
       "not_found": "Not found",
       "generic": "Something went wrong. Try again in a moment"
-    }
+    },
+    "certificateLink": "Hours certificate"
   },
   "issues": {
     "window_not_found": "Window not found",
@@ -624,5 +625,95 @@
       "forbidden": "You don't have permission to do that",
       "generic": "Something went wrong. Try again in a moment"
     }
+  },
+  "analytics": {
+    "dashboardTitle": "Dashboard",
+    "year": "Academic year: {name}",
+    "activeStudents": "Active students",
+    "awaitingInterview": "Awaiting interview",
+    "staleReports": "Reports pending over {days} days",
+    "pendingReports": "Pending reports",
+    "slotsLine": "Slot occupancy: {used} of {total} ({percent}%)",
+    "slotsLabel": "Slot occupancy",
+    "byMonth": "Approved hours by month",
+    "byPlace": "Approved hours by place",
+    "noData": "No data yet. There will be once reports get approved",
+    "hoursUnit": " h",
+    "reportsTitle": "Reports",
+    "back": "Back to dashboard",
+    "month": "Month",
+    "coordinator": "Coordinator",
+    "allCoordinators": "All coordinators",
+    "filter": "Filter",
+    "exportExcel": "Export to Excel",
+    "noRows": "No rows to show",
+    "kinds": {
+      "students": "By student",
+      "places": "By place",
+      "coordinators": "By coordinator",
+      "months": "By month",
+      "milestones": "Payment milestone eligibility",
+      "absences": "Absences"
+    },
+    "columns": {
+      "student": "Student",
+      "coordinator": "Coordinator",
+      "track": "Track",
+      "target": "Target",
+      "approved": "Approved",
+      "pending": "Pending",
+      "remaining": "Remaining",
+      "progress": "Progress",
+      "place": "Place",
+      "city": "City",
+      "requestedWeekly": "Weekly hours requested",
+      "allocatedWeekly": "Weekly hours allocated",
+      "remainingWeekly": "Weekly hours open",
+      "approvedYear": "Approved hours this year",
+      "students": "Students",
+      "pendingReports": "Pending reports",
+      "oldestPendingDays": "Days since oldest report",
+      "month": "Month",
+      "reports": "Reports",
+      "approvedHours": "Approved hours",
+      "reachedMilestone": "Milestone reached",
+      "nextMilestone": "Next milestone",
+      "toNext": "Hours to next",
+      "date": "Date",
+      "reason": "Reason",
+      "hours": "Hours",
+      "status": "Status",
+      "counts": "Counts toward target"
+    },
+    "values": {
+      "yes": "Yes",
+      "no": "No",
+      "reserve_duty": "Reserve duty",
+      "illness": "Illness",
+      "security_situation": "Security situation",
+      "other": "Other",
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "needs_correction": "Needs fix"
+    }
+  },
+  "certificate": {
+    "title": "Volunteer hours certificate",
+    "print": "Print / save as PDF",
+    "year": "Academic year {name}",
+    "summary": "Total approved hours: {total}",
+    "ofTarget": "Out of a target of {target} hours.",
+    "none": "No approved hours yet",
+    "date": "Date",
+    "place": "Place",
+    "hours": "Hours",
+    "absence": "Approved absence",
+    "total": "Total",
+    "issued": "Issued on {date}"
+  },
+  "nav4": {
+    "analytics": "Dashboard and reports",
+    "certificate": "Hours certificate"
   }
 }

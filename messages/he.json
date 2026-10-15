@@ -360,7 +360,8 @@
       "forbidden": "אין לך הרשאה לפעולה הזו",
       "not_found": "לא נמצא",
       "generic": "משהו השתבש. נסו שוב בעוד רגע"
-    }
+    },
+    "certificateLink": "תעודת שעות"
   },
   "issues": {
     "window_not_found": "החלון לא נמצא",
@@ -624,5 +625,95 @@
       "forbidden": "אין לך הרשאה לפעולה הזו",
       "generic": "משהו השתבש. נסו שוב בעוד רגע"
     }
+  },
+  "analytics": {
+    "dashboardTitle": "לוח בקרה",
+    "year": "שנה אקדמית: {name}",
+    "activeStudents": "סטודנטים פעילים",
+    "awaitingInterview": "ממתינים לראיון",
+    "staleReports": "דיווחים שממתינים מעל {days} ימים",
+    "pendingReports": "דיווחים ממתינים",
+    "slotsLine": "תפוסת תקנים: {used} מתוך {total} ({percent}%)",
+    "slotsLabel": "תפוסת תקנים",
+    "byMonth": "שעות מאושרות לפי חודש",
+    "byPlace": "שעות מאושרות לפי מקום",
+    "noData": "עוד אין נתונים. יהיה מה להראות ברגע שיאושרו דיווחים",
+    "hoursUnit": " ש'",
+    "reportsTitle": "דוחות",
+    "back": "חזרה ללוח הבקרה",
+    "month": "חודש",
+    "coordinator": "רכז",
+    "allCoordinators": "כל הרכזים",
+    "filter": "סינון",
+    "exportExcel": "ייצוא ל-Excel",
+    "noRows": "אין שורות להצגה",
+    "kinds": {
+      "students": "לפי סטודנט",
+      "places": "לפי מקום",
+      "coordinators": "לפי רכז",
+      "months": "לפי חודש",
+      "milestones": "זכאות לפעימת תשלום",
+      "absences": "היעדרויות"
+    },
+    "columns": {
+      "student": "סטודנט",
+      "coordinator": "רכז",
+      "track": "מסלול",
+      "target": "יעד",
+      "approved": "אושרו",
+      "pending": "ממתינות",
+      "remaining": "נשארו",
+      "progress": "התקדמות",
+      "place": "מקום",
+      "city": "עיר",
+      "requestedWeekly": "שעות שבועיות מבוקשות",
+      "allocatedWeekly": "שעות שבועיות משובצות",
+      "remainingWeekly": "שעות שבועיות פנויות",
+      "approvedYear": "שעות מאושרות השנה",
+      "students": "סטודנטים",
+      "pendingReports": "דיווחים ממתינים",
+      "oldestPendingDays": "ימים מהדיווח הוותיק",
+      "month": "חודש",
+      "reports": "דיווחים",
+      "approvedHours": "שעות מאושרות",
+      "reachedMilestone": "פעימה שהושגה",
+      "nextMilestone": "הפעימה הבאה",
+      "toNext": "חסרות לפעימה",
+      "date": "תאריך",
+      "reason": "סיבה",
+      "hours": "שעות",
+      "status": "מצב",
+      "counts": "נספרת ליעד"
+    },
+    "values": {
+      "yes": "כן",
+      "no": "לא",
+      "reserve_duty": "מילואים",
+      "illness": "מחלה",
+      "security_situation": "מצב ביטחוני",
+      "other": "אחר",
+      "pending": "ממתין",
+      "approved": "אושר",
+      "rejected": "נדחה",
+      "needs_correction": "בתיקון"
+    }
+  },
+  "certificate": {
+    "title": "תעודת שעות התנדבות",
+    "print": "הדפסה / שמירה כ-PDF",
+    "year": "שנה אקדמית {name}",
+    "summary": "סך השעות המאושרות: {total}",
+    "ofTarget": "מתוך יעד של {target} שעות.",
+    "none": "עדיין אין שעות מאושרות",
+    "date": "תאריך",
+    "place": "מקום",
+    "hours": "שעות",
+    "absence": "היעדרות מאושרת",
+    "total": "סה״כ",
+    "issued": "הופקה בתאריך {date}"
+  },
+  "nav4": {
+    "analytics": "לוח בקרה ודוחות",
+    "certificate": "תעודת שעות"
   }
 }

@@ -9,6 +9,7 @@ export default async function Page() {
       <h1 className="text-xl font-semibold">{t("roles.coordinator")}</h1>
       <p className="mt-2 text-muted">{actor.name}</p>
       <nav className="mt-4 flex flex-col gap-2">
+        <Link href="/analytics" className="underline">{t("nav4.analytics")}</Link>
         <Link href="/reports" className="underline">{t("nav2.reports")}</Link>
         <Link href="/students" className="underline">{t("nav2.students")}</Link>
         <Link href="/places" className="underline">{t("nav.places")}</Link>

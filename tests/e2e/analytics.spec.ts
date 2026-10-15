@@ -1,0 +1,52 @@
+import { expect, test } from "@playwright/test";
+
+async function login(page: import("@playwright/test").Page, email: string) {
+  await page.goto("/login");
+  await page.getByLabel("אימייל").fill(email);
+  await page.getByLabel("סיסמה").fill("demo1234");
+  await page.getByRole("button", { name: "כניסה" }).click();
+  await expect(page).not.toHaveURL(/\/login/);
+}
+
+test("מנהל: לוח בקרה, דוח וייצוא Excel", async ({ page }) => {
+  await login(page, "manager@demo.test");
+  await page.goto("/analytics");
+  await expect(page.getByRole("heading", { name: "לוח בקרה" })).toBeVisible();
+  await expect(page.getByText("סטודנטים פעילים")).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "תפוסת תקנים" })).toBeVisible();
+  await page.getByRole("link", { name: "לפי סטודנט" }).click();
+  await expect(page.getByRole("columnheader", { name: "התקדמות" })).toBeVisible();
+  await expect(page.getByRole("row", { name: /שירה אביב/ })).toBeVisible();
+  const res = await page.request.get("/api/export/students");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("spreadsheetml");
+  expect((await res.body()).subarray(0, 2).toString()).toBe("PK");
+});
+
+test("רכז: רק הסטודנטים שלו בדוח; דוח רכזים חסום; ייצוא מוגבל", async ({ page }) => {
+  await login(page, "coord1@demo.test");
+  await page.goto("/analytics/students");
+  await expect(page.getByRole("row", { name: /שירה אביב/ })).toBeVisible();
+  await expect(page.getByRole("row", { name: /מאיה דגן/ })).toHaveCount(0); // של רכז 2
+  await page.goto("/analytics/coordinators");
+  await expect(page).not.toHaveURL(/analytics\/coordinators/);
+  expect((await page.request.get("/api/export/coordinators")).status()).toBe(403);
+});
+
+test("מראיין חסום מהדוחות; ייצוא בלי התחברות נדחה", async ({ page, request }) => {
+  expect((await request.get("/api/export/students")).status()).toBe(401);
+  await login(page, "interviewer@demo.test");
+  await page.goto("/analytics");
+  await expect(page).not.toHaveURL(/\/analytics/);
+  expect((await page.request.get("/api/export/students")).status()).toBe(403);
+});
+
+test("תעודת שעות: סטודנט רואה את שלו, לא של אחר", async ({ page }) => {
+  await login(page, "student1@demo.test");
+  await page.getByRole("link", { name: "תעודת שעות" }).click();
+  await expect(page.getByRole("heading", { name: "תעודת שעות התנדבות" })).toBeVisible();
+  await expect(page.getByText("שירה אביב")).toBeVisible();
+  await expect(page.getByRole("button", { name: /הדפסה/ })).toBeVisible();
+  const other = await page.request.get("/certificate/00000000-0000-0000-0000-000000000000");
+  expect(other.status()).toBe(404);
+});

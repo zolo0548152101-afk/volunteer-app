@@ -35,6 +35,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
       {sp.done && <p role="status" className="mt-2 rounded-lg border border-green-300 p-3 text-sm text-green-800">{t("done")}</p>}
       {errorKey && <p role="alert" className="mt-2 rounded-lg border border-red-300 p-3 text-sm text-red-700">{ti(`errors.${errorKey}`)}</p>}
       <div className="mt-3 flex flex-wrap gap-3">
+        <Link href={`/certificate/${id}`} className="rounded-lg border border-border px-4 py-2">{ti("certificateLink")}</Link>
         {draft && <Link href={`/interviews/${draft.id}`} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("continueDraft")}</Link>}
         {!draft && canInterview && (
           <form action={startInterviewAction}><input type="hidden" name="studentId" value={id} /><input type="hidden" name="kind" value="interview" />
