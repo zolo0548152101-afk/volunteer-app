@@ -1,14 +1,15 @@
 "use server";
 
 import { AuthError } from "next-auth";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { signIn, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/password";
 import { safeNext, sendLink } from "@/lib/services/auth-links";
-import { consumeToken, type TokenKind } from "@/lib/services/tokens";
+import { setPasswordFromToken } from "@/lib/services/credentials";
+import type { TokenKind } from "@/lib/services/tokens";
 
 export type FormState = { error?: "invalid" | "weak" | "token" | "generic"; done?: boolean };
 
@@ -50,12 +51,12 @@ export async function setPasswordAction(_: FormState, formData: FormData): Promi
   const password = String(formData.get("password") ?? "");
   if (password.length < MIN_PASSWORD || password !== String(formData.get("confirm") ?? "")) return { error: "weak" };
   const passwordHash = await hashPassword(password);
-  const res = await db().transaction(async (tx) => {
-    const r = await consumeToken(tx, { kind, raw: String(formData.get("token") ?? "") });
-    if (!r.ok) return r;
-    await tx.update(users).set({ passwordHash, status: "active" }).where(eq(users.id, r.userId));
-    return r;
-  });
-  if (!res.ok) return { error: "token" };
+  let ok = false;
+  try {
+    ok = await setPasswordFromToken(db(), { kind, raw: String(formData.get("token") ?? ""), passwordHash });
+  } catch {
+    ok = false; // rollback של משתמש מושבת
+  }
+  if (!ok) return { error: "token" };
   return { done: true };
 }

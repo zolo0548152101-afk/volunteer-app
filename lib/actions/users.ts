@@ -4,10 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { ForbiddenError, roles as ALL_ROLES, type Role } from "@/lib/permissions";
+import { assertCan, ForbiddenError, roles as ALL_ROLES, type Role } from "@/lib/permissions";
 import { requireActor } from "@/lib/session";
 import { sendLink } from "@/lib/services/auth-links";
-import { assignCoordinator, getUser, inviteUser, NotFoundError, setRoles, setStatus, ValidationError } from "@/lib/services/users";
+import { assignCoordinator, getUser, inviteUser, NotFoundError, setRoles, subjectOf, setStatus, ValidationError } from "@/lib/services/users";
 
 export type UserActionState = { ok?: true; error?: string };
 
@@ -58,8 +58,9 @@ async function run(fn: () => Promise<void>) {
 export async function resendInviteAction(fd: FormData) {
   await run(async () => {
     const actor = await requireActor();
-    if (!actor.roles.includes("manager")) throw new ForbiddenError();
     const u = await getUser(db(), actor, String(fd.get("userId")));
+    assertCan(actor, "manage", "user", subjectOf(u));
+    if (u.status === "inactive") throw new ForbiddenError();
     await sendLink(u, u.status === "invited" ? "invite" : "password_reset");
   });
 }

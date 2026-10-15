@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { sql } from "drizzle-orm";
+
+try { process.loadEnvFile(".env.local"); } catch {}
 
 // דורש את ארגון הדמו על ענף הפיתוח (pnpm db:seed)
 const PASSWORD = "demo1234";
@@ -81,5 +84,37 @@ test.describe("ניהול משתמשים", () => {
     await page.getByLabel("אימייל").fill(email);
     await page.getByRole("button", { name: "שליחת הזמנה", exact: true }).click();
     await expect(page.locator("p[role=alert]")).toContainText("כבר רשום");
+  });
+});
+
+test.afterAll(async () => {
+  if (!process.env.DATABASE_URL) return;
+  const { db, closeDb } = await import("../../lib/db");
+  await db().execute(sql`DELETE FROM users WHERE email LIKE 'e2e-%@demo.test'`);
+  await closeDb();
+});
+
+test.describe("שימור חשבונות בזמן אמת", () => {
+  test("השבתה נכנסת לתוקף מיד, בלי כניסה מחדש", async ({ page }) => {
+    test.skip(!process.env.DATABASE_URL, "דורש DB");
+    const { db, closeDb } = await import("../../lib/db");
+    const email = "student6@demo.test";
+    await login(page, email);
+    await expect(page).toHaveURL(/\/student$/);
+    await db().execute(sql`UPDATE users SET status = 'inactive' WHERE email = ${email}`);
+    try {
+      await page.goto("/student");
+      await expect(page).toHaveURL(/\/login/);
+    } finally {
+      await db().execute(sql`UPDATE users SET status = 'active' WHERE email = ${email}`);
+      await closeDb();
+    }
+  });
+
+  test("סטודנט לא נכנס לדפי מנהל גם כשהוא מחובר", async ({ page }) => {
+    await login(page, "student5@demo.test");
+    await expect(page).toHaveURL(/\/student$/);
+    await page.goto("/manager/users");
+    await expect(page).toHaveURL(/\/student$/);
   });
 });

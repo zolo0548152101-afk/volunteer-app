@@ -2,15 +2,17 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { db } from "@/lib/db";
 import { can } from "@/lib/permissions";
-import { requireActor } from "@/lib/session";
+import { requireRole } from "@/lib/session";
 import { listUsers } from "@/lib/services/users";
 import { InviteForm } from "@/components/users/invite-form";
 import { BulkAssign } from "@/components/users/bulk-assign";
 import { UserRow } from "@/components/users/user-row";
 
+const ERRORS = ["forbidden", "not_found", "email_taken", "bad_roles", "bad_coordinator", "not_student", "last_manager", "self_lockout", "required", "generic"];
+
 export default async function UsersPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const actor = await requireActor();
-  if (!can(actor, "create", "user", { organizationId: actor.organizationId })) redirect("/");
+  const actor = await requireRole("manager");
+  if (!can(actor, "manage", "user", { organizationId: actor.organizationId })) redirect("/");
   const [t, { error }, list] = await Promise.all([getTranslations("users"), searchParams, listUsers(db(), actor)]);
   const coordinators = list.filter((u) => u.roles.includes("coordinator") && u.status !== "inactive");
   const students = list.filter((u) => u.roles.includes("student"));
@@ -19,7 +21,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
-      {error && <p role="alert" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${error}` as never)}</p>}
+      {error && ERRORS.includes(error) && <p role="alert" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${error}` as never)}</p>}
 
       <section className="mt-6" aria-labelledby="invite-h">
         <h2 id="invite-h" className="text-lg font-medium">{t("inviteTitle")}</h2>

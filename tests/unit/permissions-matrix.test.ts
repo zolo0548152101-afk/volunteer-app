@@ -190,3 +190,14 @@ describe("חיתוך מלא: אף תפקיד שאינו מנהל לא יכול �
     }
   });
 });
+
+describe("ניהול חשבונות (manage user) – מנהל בלבד", () => {
+  it("אף תפקיד אחר לא יכול, גם לא על עצמו", () => {
+    const self: Subject = { organizationId: org, ownerId: "x", coordinatorIds: [] };
+    for (const role of ["student", "coordinator", "interviewer"] as const) {
+      expect(can(mk("x", [role]), "manage", "user", self)).toBe(false);
+    }
+    expect(can(manager, "manage", "user", mine)).toBe(true);
+    expect(can(manager, "manage", "user", { organizationId: "org-2" })).toBe(false);
+  });
+});

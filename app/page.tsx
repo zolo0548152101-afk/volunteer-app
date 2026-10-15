@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { getActor } from "@/lib/session";
 import { homeFor } from "@/lib/home";
 
 export default async function Home() {
-  const session = await auth();
-  redirect(session ? homeFor(session.user.roles) : "/login");
+  const actor = await getActor();
+  redirect(actor ? homeFor(actor.roles) : "/login");
 }

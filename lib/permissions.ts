@@ -15,7 +15,9 @@ export type Action =
   | "delete"
   | "approve"
   | "assign"
-  | "export";
+  | "export"
+  /** ניהול חשבונות: תפקידים, סטטוס, שליחת קישורי כניסה. נפרד מ-update (עריכת הפרופיל של עצמך). */
+  | "manage";
 
 export type Entity =
   | "user"
@@ -62,6 +64,7 @@ const allActions: Action[] = [
   "approve",
   "assign",
   "export",
+  "manage",
 ];
 
 const allEntities: Entity[] = [

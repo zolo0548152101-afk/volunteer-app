@@ -1,12 +1,12 @@
 import { getTranslations } from "next-intl/server";
-import { auth } from "@/lib/auth";
+import { requireRole } from "@/lib/session";
 
 export default async function Page() {
-  const [t, session] = await Promise.all([getTranslations(), auth()]);
+  const [t, actor] = await Promise.all([getTranslations(), requireRole("interviewer")]);
   return (
     <main className="p-4">
       <h1 className="text-xl font-semibold">{t("roles.interviewer")}</h1>
-      <p className="mt-2 text-muted">{session?.user.name}</p>
+      <p className="mt-2 text-muted">{actor.name}</p>
       <p className="mt-2 text-muted">{t("common.comingSoon")}</p>
     </main>
   );

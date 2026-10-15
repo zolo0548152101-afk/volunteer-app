@@ -107,7 +107,7 @@ export async function setRoles(db: Db, actor: SessionUser, userId: string, newRo
     const [target] = (await tx.select(safeCols).from(users)
       .where(and(eq(users.id, userId), eq(users.organizationId, actor.organizationId))).for("update").limit(1)) as SafeUser[];
     if (!target) throw new NotFoundError();
-    assertCan(actor, "update", "user", subjectOf(target));
+    assertCan(actor, "manage", "user", subjectOf(target));
     const removingManager = target.roles.includes("manager") && !newRoles.includes("manager");
     if (removingManager && target.status === "active" && (await countActiveManagers(tx, actor.organizationId)) <= 1) {
       throw new ValidationError("last_manager");
@@ -131,7 +131,7 @@ export async function setStatus(db: Db, actor: SessionUser, userId: string, stat
     const [target] = (await tx.select(safeCols).from(users)
       .where(and(eq(users.id, userId), eq(users.organizationId, actor.organizationId))).for("update").limit(1)) as SafeUser[];
     if (!target) throw new NotFoundError();
-    assertCan(actor, "update", "user", subjectOf(target));
+    assertCan(actor, "manage", "user", subjectOf(target));
     if (status === "inactive") {
       if (target.id === actor.id) throw new ValidationError("self_lockout");
       if (target.roles.includes("manager") && target.status === "active" && (await countActiveManagers(tx, actor.organizationId)) <= 1) {

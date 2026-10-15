@@ -4,6 +4,8 @@ import { closeDb, db } from "@/lib/db";
 import { auditLog, users } from "@/lib/db/schema";
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
+import { setPasswordFromToken } from "@/lib/services/credentials";
+import { issueToken } from "@/lib/services/tokens";
 import { assignCoordinator, getUser, inviteUser, listUsers, NotFoundError, setRoles, setStatus, ValidationError } from "@/lib/services/users";
 
 type Seed = Awaited<ReturnType<typeof seedDemo>>;
@@ -136,5 +138,37 @@ describe("שיוך סטודנט לרכז", () => {
   it("שיוך נרשם בלוג עם הערך הקודם", async () => {
     const log = await db().select().from(auditLog).where(eq(auditLog.entityId, s.students[5].id));
     expect(log.some((l) => l.action === "assign_coordinator")).toBe(true);
+  });
+});
+
+describe("הסלמת הרשאות ושימור חשבונות (ביקורת Fable)", () => {
+  it("אף אחד חוץ ממנהל לא משנה תפקידים או סטטוס, גם לא של עצמו", async () => {
+    for (const a of [st1, c1, interviewer]) {
+      await expect(setRoles(db(), a, a.id, [...a.roles, "manager"])).rejects.toBeInstanceOf(ForbiddenError);
+      await expect(setStatus(db(), a, a.id, "active")).rejects.toBeInstanceOf(ForbiddenError);
+    }
+    const [row] = await db().select().from(users).where(eq(users.id, st1.id));
+    expect(row.roles).toEqual(["student"]);
+  });
+
+  it("קישור איפוס ישן לא מחזיר לחיים משתמש מושבת, והטוקן לא נצרך", async () => {
+    const victim = s.students[3];
+    const raw = await issueToken(db(), { organizationId: s.organizationId, userId: victim.id, kind: "password_reset" });
+    await setStatus(db(), manager, victim.id, "inactive");
+    await expect(setPasswordFromToken(db(), { kind: "password_reset", raw, passwordHash: "x" })).rejects.toThrow();
+    const [row] = await db().select().from(users).where(eq(users.id, victim.id));
+    expect(row.status).toBe("inactive");
+    expect(row.passwordHash).not.toBe("x");
+    // אחרי הפעלה מחדש אותו קישור עדיין עובד (לא נצרך)
+    await setStatus(db(), manager, victim.id, "active");
+    expect(await setPasswordFromToken(db(), { kind: "password_reset", raw, passwordHash: "new-hash" })).toBe(true);
+  });
+
+  it("הזמנה מפעילה משתמש 'הוזמן'", async () => {
+    const u = await inviteUser(db(), manager, { email: "inv2@t.test", firstName: "א", lastName: "ב", roles: ["student"] });
+    const raw = await issueToken(db(), { organizationId: s.organizationId, userId: u.id, kind: "invite" });
+    expect(await setPasswordFromToken(db(), { kind: "invite", raw, passwordHash: "h" })).toBe(true);
+    const [row] = await db().select().from(users).where(eq(users.id, u.id));
+    expect(row.status).toBe("active");
   });
 });

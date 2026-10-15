@@ -27,6 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const hash = u?.passwordHash ?? "scrypt$00$00";
         const ok = await verifyPassword(password, hash);
         if (!u || !u.passwordHash || !ok) return null;
+        await db().update(users).set({ lastLoginAt: new Date() }).where(eq(users.id, u.id));
         return {
           id: u.id,
           email: u.email,
