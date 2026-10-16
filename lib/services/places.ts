@@ -11,6 +11,7 @@ import { assertCan, can, type SessionUser } from "@/lib/permissions";
 import { audited } from "@/lib/services/audit";
 import { NotFoundError } from "@/lib/services/users";
 import { round2 } from "@/lib/services/capacity";
+import { clean } from "./_util";
 
 export class PlaceError extends Error {
   constructor(public code: "name_required" | "bad_numbers" | "below_allocated" | "has_active_placements") {
@@ -108,7 +109,6 @@ export type PlaceInput = {
   name: string; description?: string | null; address?: string | null; city?: string | null; contactName?: string | null;
   contactPhone?: string | null; contactEmail?: string | null; category?: string | null; status?: PlaceStatus; notes?: string | null;
 };
-const clean = (v?: string | null) => (v && v.trim() ? v.trim() : null);
 
 export async function createPlace(db: Db, actor: SessionUser, input: PlaceInput): Promise<string> {
   assertCan(actor, "create", "place", { organizationId: actor.organizationId });

@@ -11,7 +11,8 @@ import { audited } from "@/lib/services/audit";
 import { listFields, loadValues } from "@/lib/services/custom-fields";
 import { NotFoundError, subjectOf } from "@/lib/services/users";
 import { isValidIsraeliId, normalizeIsraeliPhone } from "@/lib/validation/israel";
-import type { Day } from "@/lib/services/places";
+import { DAYS, type Day } from "@/lib/services/places";
+import { clean } from "./_util";
 
 export class StudentError extends Error {
   constructor(public code: "email_taken" | "weak_password" | "bad_phone" | "bad_id" | "bad_name" | "bad_date" | "no_org" | "bad_bank" | "incomplete") {
@@ -20,10 +21,8 @@ export class StudentError extends Error {
   }
 }
 
-const DAYS: Day[] = ["sun", "mon", "tue", "wed", "thu", "fri"];
 const DEGREE_TYPES = ["bachelor", "master", "practical_engineer", "other"] as const;
 const DEGREE_YEARS = ["a", "b", "c", "d_plus"] as const;
-const clean = (v?: string | null) => (v && v.trim() ? v.trim() : null);
 
 /** הארגון שאליו נרשמים: REGISTRATION_ORG_ID, אחרת הארגון היחיד (או הוותיק ביותר) */
 export async function registrationOrgId(db: Db): Promise<string> {

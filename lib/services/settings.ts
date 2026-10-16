@@ -12,6 +12,7 @@ import { round2 } from "@/lib/services/capacity";
 import { DEFAULT_RULES, type Rule, type RuleKind } from "@/lib/services/reminders";
 import type { Channel } from "@/lib/services/notify";
 import { locales, type Locale } from "@/i18n/config";
+import { isDate, slug } from "./_util";
 
 export type SettingsCode = "invalid" | "bad_dates" | "name_required" | "bad_milestones" | "not_found";
 export class SettingsError extends Error {
@@ -24,7 +25,6 @@ export class SettingsError extends Error {
 export const LOOKUP_KINDS = ["volunteer_type", "institution", "absence_reason"] as const;
 export type LookupKind = (typeof LOOKUP_KINDS)[number];
 const CHANNELS: Channel[] = ["email", "sms", "whatsapp"];
-const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(`${s}T00:00:00Z`));
 const guard = (actor: SessionUser) => assertCan(actor, "manage", "setting", { organizationId: actor.organizationId });
 const ctx = (a: SessionUser) => ({ organizationId: a.organizationId, actorId: a.id });
 const int = (n: number, min: number, max: number) => {
@@ -139,7 +139,6 @@ export async function saveRule(db: Db, actor: SessionUser, kind: string, input: 
   });
 }
 
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
 export async function saveLookup(db: Db, actor: SessionUser, input: { id?: string; kind: string; labelHe: string; labelEn?: string | null; sortOrder?: number; isActive: boolean }) {
   guard(actor);

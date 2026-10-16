@@ -9,6 +9,7 @@ import { defaultWeeklyHours, round2 } from "@/lib/services/capacity";
 import { DAYS, type Day } from "@/lib/services/places";
 import { NotFoundError } from "@/lib/services/users";
 import { loadWindows } from "@/lib/db/queries/capacity";
+import { numOrNull, str } from "./_form";
 
 function code(e: unknown): string {
   if (e instanceof ContractError) return e.evaluation.blocked ? "contract_blocked" : "needs_override";
@@ -26,8 +27,6 @@ async function go(back: string, fn: () => Promise<string | void>) {
   redirect(error ? `${back}${back.includes("?") ? "&" : "?"}error=${error}` : to || back);
 }
 
-const str = (fd: FormData, k: string) => String(fd.get(k) ?? "");
-const numOrNull = (v: string) => (v.trim() === "" ? null : Number(v));
 
 function fieldsOf(fd: FormData): InterviewFields {
   const imp = str(fd, "generalImpression");

@@ -10,6 +10,7 @@ import { assertCan, type Role, type SessionUser } from "@/lib/permissions";
 import { writeAudit } from "@/lib/services/audit";
 import { SettingsError } from "@/lib/services/settings";
 import type { CustomEntity } from "@/lib/services/custom-fields";
+import { slug } from "./_util";
 
 export const ENTITIES: CustomEntity[] = ["student", "place", "placement", "report"];
 export const FIELD_TYPES = ["text", "number", "date", "select", "multi_select", "boolean"] as const; // "file" ממתין להעלאת קבצים (Blob)
@@ -17,7 +18,6 @@ const ROLES: Role[] = ["student", "coordinator", "interviewer", "manager"];
 type Option = { key: string; label_he: string; label_en?: string };
 
 const guard = (actor: SessionUser) => assertCan(actor, "manage", "custom_field", { organizationId: actor.organizationId });
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
 export async function listAllFields(db: Db, actor: SessionUser) {
   guard(actor);

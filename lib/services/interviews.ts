@@ -15,6 +15,7 @@ import { approvedHoursTotal, defaultWeeklyHours, evaluateContract, round2, stude
 import { notify } from "@/lib/services/notify";
 import { DAYS, type Day } from "@/lib/services/places";
 import { NotFoundError, subjectOf } from "@/lib/services/users";
+import { clean, todayIL } from "./_util";
 
 export type InterviewCode =
   | "not_draft" | "no_lines" | "need_coordinator" | "bad_coordinator" | "override_forbidden" | "override_reason_required"
@@ -43,8 +44,6 @@ export type InterviewFields = {
   notes?: string | null; preferencesDiscussed?: string | null; constraintsDiscussed?: string | null; placementDecisionNotes?: string | null; summary?: string | null;
 };
 
-const clean = (v?: string | null) => (v && v.trim() ? v.trim() : null);
-const todayIL = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" });
 
 /** ההרשאה לפעול על ראיון/שיבוץ של סטודנט: ראיון = מראיין/מנהל; שיבוץ מחדש = רכז שלו או מנהל */
 function authorize(actor: SessionUser, kind: "interview" | "reassignment", student: { id: string; organizationId: string; coordinatorId: string | null }, action: "create" | "update") {

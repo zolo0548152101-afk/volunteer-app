@@ -17,6 +17,7 @@ import { round2 } from "@/lib/services/capacity";
 import { notify } from "@/lib/services/notify";
 import type { TemplateId } from "@/lib/notifications/templates";
 import { NotFoundError } from "@/lib/services/users";
+import { clean, isDate, todayIL } from "./_util";
 
 export type ReportCode =
   | "bad_date" | "future_date" | "outside_year" | "no_year" | "bad_hours" | "bad_time" | "day_over_max" | "duplicate"
@@ -33,9 +34,6 @@ export type ReportStatus = "pending" | "approved" | "rejected" | "needs_correcti
 export type AbsenceReason = "reserve_duty" | "illness" | "security_situation" | "other";
 const ABSENCE: AbsenceReason[] = ["reserve_duty", "illness", "security_situation", "other"];
 
-const todayIL = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" });
-const clean = (v?: string | null) => (v && v.trim() ? v.trim() : null);
-const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(`${s}T00:00:00Z`));
 const timeOk = (s?: string | null) => !s || /^([01]\d|2[0-3]):[0-5]\d$/.test(s);
 
 export type SubmitInput = {

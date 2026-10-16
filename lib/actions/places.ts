@@ -7,6 +7,7 @@ import { ForbiddenError } from "@/lib/permissions";
 import { requireActor } from "@/lib/session";
 import { createPlace, createWindow, DAYS, PlaceError, setWindowActive, updatePlace, updateWindow, type Day, type PlaceInput, type PlaceStatus, type WindowInput } from "@/lib/services/places";
 import { NotFoundError } from "@/lib/services/users";
+import { num, str } from "./_form";
 
 function errorCode(e: unknown): string {
   if (e instanceof ForbiddenError) return "forbidden";
@@ -30,14 +31,12 @@ async function run(back: string, fn: () => Promise<string | void>) {
   redirect(error ? `${back}?error=${error}` : base);
 }
 
-const str = (fd: FormData, k: string) => String(fd.get(k) ?? "");
 const placeOf = (fd: FormData): PlaceInput => ({
   name: str(fd, "name"), description: str(fd, "description"), address: str(fd, "address"), city: str(fd, "city"),
   contactName: str(fd, "contactName"), contactPhone: str(fd, "contactPhone"), contactEmail: str(fd, "contactEmail"),
   category: str(fd, "category"), notes: str(fd, "notes"),
   status: (["active", "paused", "closed"].includes(str(fd, "status")) ? str(fd, "status") : undefined) as PlaceStatus | undefined,
 });
-const num = (fd: FormData, k: string) => (str(fd, k).trim() === "" ? NaN : Number(str(fd, k)));
 const windowOf = (fd: FormData): WindowInput => ({
   label: str(fd, "label"), days: fd.getAll("days").map(String).filter((d): d is Day => (DAYS as string[]).includes(d)),
   startTime: str(fd, "startTime"), endTime: str(fd, "endTime"), hoursPerSlot: num(fd, "hoursPerSlot"), slots: num(fd, "slots"),

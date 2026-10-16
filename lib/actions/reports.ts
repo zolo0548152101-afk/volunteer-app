@@ -6,6 +6,7 @@ import { ForbiddenError } from "@/lib/permissions";
 import { requireActor } from "@/lib/session";
 import { approveMany, decide, ReportError, resubmitReport, submitReport, type AbsenceReason, type SubmitInput } from "@/lib/services/reports";
 import { NotFoundError } from "@/lib/services/users";
+import { trimmed as str } from "./_form";
 
 function code(e: unknown): string {
   if (e instanceof ReportError) return e.code;
@@ -15,7 +16,6 @@ function code(e: unknown): string {
   return "generic";
 }
 
-const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
 
 /** חזרה בטוחה: רק נתיבים פנימיים של המערכת, כדי שלא ישמשו להפניה חיצונית */
 const safeBack = (v: string, fallback: string) => (/^\/(reports|student)(\/[A-Za-z0-9_\-/?=&.%]*)?$/.test(v) ? v : fallback);

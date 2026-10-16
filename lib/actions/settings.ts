@@ -7,9 +7,8 @@ import { requireActor } from "@/lib/session";
 import { saveGeneral, saveLookup, saveProgram, saveRule, saveYear, SettingsError } from "@/lib/services/settings";
 import { saveField } from "@/lib/services/custom-field-admin";
 import type { Channel } from "@/lib/services/notify";
+import { num, trimmed as str } from "./_form";
 
-const str = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
-const num = (fd: FormData, k: string) => (str(fd, k) === "" ? NaN : Number(str(fd, k)));
 
 async function run(section: string, fn: () => Promise<void>) {
   let error: string | undefined;
