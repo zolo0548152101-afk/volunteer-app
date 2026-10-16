@@ -37,8 +37,8 @@ test("הודעה אחרי redirect מקבלת פוקוס, כדי שקורא מס
 });
 
 for (const [email, path, heading] of [
-  ["manager@demo.test", "/manager", "מנהל"],
-  ["coord1@demo.test", "/coordinator", "רכז"],
+  ["manager@demo.test", "/manager", /מירב/], // לוח הבקרה: ברכה בשם
+  ["coord1@demo.test", "/coordinator", /דנה/],
   ["interviewer@demo.test", "/interviewer", "ממתינים לראיון"],
   ["student1@demo.test", "/student", "שירה אביב"],
 ] as const) {

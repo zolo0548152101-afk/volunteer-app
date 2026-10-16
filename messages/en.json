@@ -773,5 +773,71 @@
     "recentEmpty": "You haven't reported anything yet. It's all ahead of you",
     "allReports": "All reports",
     "absenceTag": "Absence"
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Good morning, {name}",
+      "afternoon": "Good afternoon, {name}",
+      "evening": "Good evening, {name}"
+    },
+    "statusLine": "{pending, plural, =0 {No reports waiting} one {One report waiting for approval} other {# reports waiting for approval}}{stale, plural, =0 {} one {, one of them over {days} days} other {, # of them over {days} days}}. {awaiting, plural, =0 {No one waiting for an interview} one {One student waiting for an interview} other {# students waiting for an interview}}. Slot occupancy {percent}%.",
+    "toInbox": "Open the inbox",
+    "exportExcel": "Export to Excel",
+    "kpi": {
+      "activeStudents": "Active students",
+      "newThisMonth": "{n, plural, =0 {none new this month} one {one joined this month} other {+# this month}}",
+      "awaiting": "Awaiting interview",
+      "awaitingWeek": "{n, plural, =0 {none registered this week} one {one registered this week} other {# registered this week}}",
+      "pending": "Pending reports",
+      "stale": "{n, plural, =0 {all under {days} days} one {one over {days} days} other {# over {days} days}}",
+      "hoursYear": "Approved hours this year",
+      "hours30": "+{n} in the last 30 days",
+      "occupancy": "Slot occupancy",
+      "occupancyOf": "{used} of {total} slots"
+    },
+    "monthChart": {
+      "title": "Approved hours by month",
+      "avg": "Average {n} h per month",
+      "empty": "No approved hours yet this year. The chart wakes up with the first approved report",
+      "table": "Approved hours by month"
+    },
+    "coordinators": {
+      "title": "Coordinator load",
+      "line": "{students, plural, one {one student} other {# students}} · {pending, plural, =0 {none pending} one {one pending} other {# pending}}",
+      "oldest": "{n, plural, =0 {today} one {one day} other {# days}}",
+      "noQueue": "No queue",
+      "hint": "The tag shows the age of the oldest report waiting with the coordinator.",
+      "empty": "No active coordinators yet"
+    },
+    "oldest": {
+      "title": "Longest-waiting reports",
+      "all": "All pending reports",
+      "student": "Student",
+      "where": "Place · window",
+      "coordinator": "Coordinator",
+      "hours": "Hours",
+      "waiting": "Waiting",
+      "days": "{n, plural, =0 {today} one {one day} other {# days}}",
+      "absence": "Absence",
+      "empty": "The queue is empty. Coffee time",
+      "noCoordinator": "No coordinator"
+    },
+    "occupancy": {
+      "title": "Occupancy by place",
+      "hint": "Red: almost full. Amber: a place waiting for students. Slots are computed from active placements, never stored.",
+      "empty": "No active windows at any place yet",
+      "label": "{name}: {allocated} of {slots} slots"
+    },
+    "year": {
+      "title": "The year in numbers",
+      "academicYear": "Academic year",
+      "weeksLeft": "Weeks remaining",
+      "milestone1": "Reached the first milestone",
+      "absences": "Approved absences",
+      "places": "Active places",
+      "noYear": "No current year set"
+    },
+    "provenance": "All numbers are computed live from approved reports and active placements. Updated {at}.",
+    "reports": "Reports"
   }
 }
