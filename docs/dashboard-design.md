@@ -71,7 +71,7 @@
 ## 8. סדר בנייה מוצע (לסונט)
 
 1. `lib/services/analytics.ts`: להרחיב את `dashboard()` בנתונים מסעיף 5 + בדיקות אינטגרציה (ערכים, היקף רכז).
-2. `components/dashboard/*`: `KpiCard`, `CoordinatorLoad`, `OldestPending`, `PlaceOccupancy`, `YearFacts` – קומפוננטות שרת, טוקנים ב-Tailwind (`bg-[#F2F2F0]` → להוסיף כטוקנים ב-`globals.css`: `--paper`, `--hairline`, `--ink`, `--ink-2`, `--ink-3`).
+2. `app/(app)/analytics/_components/*` (ליד ה-route, לפי הנחיית Next.js בסעיף 10): `KpiCard`, `CoordinatorLoad`, `OldestPending`, `PlaceOccupancy`, `YearFacts` – קומפוננטות שרת, טוקנים ב-Tailwind (`bg-[#F2F2F0]` → להוסיף כטוקנים ב-`globals.css`: `--paper`, `--hairline`, `--ink`, `--ink-2`, `--ink-3`).
 3. `app/(app)/analytics/page.tsx` → המסך החדש; `app/(app)/manager/page.tsx` ו-`coordinator/page.tsx` → `redirect("/analytics")` (היום הם רשימת קישורים).
 4. סרגל צד + ניווט תחתון כ-layout משותף ל-`(app)` (היום יש רק header דק). שלב זה משפיע על כל המסכים, אז בקומיט נפרד.
 5. e2e: KPI מקשרים נכון, אין גלילה אופקית במובייל, axe נקי, רכז לא רואה "עומס רכזים".
@@ -84,3 +84,29 @@
 - Geist/Inter: לא תומכים עברית טוב. Assistant.
 - הפאנל "Top Contributors" עם אווטרים מ-GitHub: אצלנו אין תמונות משתמשים; עיגול עם אות ראשונה בצבע קבוע לפי hash של ה-id.
 - "Refresh" בכותרת: המסך תמיד חי (SSR), הכפתור מיותר. במקומו תאריך + ייצוא.
+
+## 10. בנייה עם UI/UX Pro Max (הנחיה לסונט)
+
+בזמן הבנייה משתמשים בסקיל `anthropic-skills:ui-ux-pro-max` (מאגר ידע מקומי עם כלי חיפוש ב-Python). הרצתי אותו פעם אחת כדי לכייל:
+
+**מה לקחת ממנו**
+- הסגנון שהוא מזהה לדשבורד ניהולי: *Minimalism & Swiss* (נקי, מרווח, ניגודיות גבוהה, גריד, sans-serif). זה אותו כיוון של Soft Paper מהסקיל של open-design; השניים מתיישבים.
+- לגרף החודשי: **Bar Chart** (קטגוריות ≤15, תוויות ערך ישירות, אסור לקודד משמעות בצבע בלבד, טבלה חלופית גלויה או `sr-only`). לא radar ולא pie.
+- טבלאות: `overflow-x-auto` במחשב, כרטיסים בטלפון (כבר בתוכנית, סעיף 3).
+- Next.js: קומפוננטות שרת כברירת מחדל, fetch בתוך הקומפוננטה, קבצים ליד ה-route: `app/(app)/analytics/_components/` במקום `components/dashboard/` (מעדכן את סעיף 8 שלב 2).
+- רשימת הבדיקה לפני מסירה: אייקוני SVG ולא אימוג׳י, `cursor-pointer` על כל לחיץ, hover עם מעבר 150–300ms, ניגודיות 4.5:1, פוקוס נראה, `prefers-reduced-motion`, בדיקה ב-375/768/1024/1440.
+
+**מה לא לקחת ממנו**
+- פלט `--design-system` נתן פלטת "dark tech" (`#0F172A`) עם Fira Code/Fira Sans. זה לא מתאים: מערכת יומיומית לרכזים ולסטודנטים, בעברית. נשארים עם Soft Paper (בהיר, `#F2F2F0`) ו-Assistant, עם גרסה כהה דרך הטוקנים. הסקיל עצמו מזהיר לא לקבל סגנון אוטומטית.
+- מוטיב "Scroll Reveal" עם GSAP: הדשבורד נטען פעם אחת, בלי אנימציות כניסה. מותר רק hover עדין.
+- תבנית "Real-Time / Operations Landing" היא דף נחיתה, לא רלוונטית.
+
+**איך מריצים** (פעם אחת בסשן):
+```bash
+UX="${TMPDIR:-/tmp}/ui-ux-pro-max"
+[ -d "$UX/.git" ] || { git clone -q --filter=blob:none https://github.com/nextlevelbuilder/ui-ux-pro-max-skill.git "$UX" && git -C "$UX" checkout -q 7246805992a42b7bba37d4cac83b01416f0c6c44; }
+SEARCH="$UX/src/ui-ux-pro-max/scripts/search.py"
+python3 "$SEARCH" "<2–5 מילים>" --domain <ux|chart|typography|color|icons> -n 5
+python3 "$SEARCH" "<מילה>" --stack nextjs
+```
+שאילתות שכדאי להריץ בכל שלב: `kpi card trend delta` (ux), `progress bar occupancy capacity` (ux/chart), `sidebar navigation collapse mobile` (ux), `bottom navigation touch` (ux), `empty state dashboard` (ux), `dark mode tokens contrast` (color). הסקיל מכוון ל-LTR; משלבים עם `hebrew-first` (מאפיינים לוגיים, אייקונים כיווניים מראה, dd/mm/yyyy).
