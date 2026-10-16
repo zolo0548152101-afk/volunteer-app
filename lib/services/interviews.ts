@@ -181,6 +181,10 @@ export async function finalizeInterview(db: Db, actor: SessionUser, interviewId:
     const windowIds = [...new Set(lines.map((l) => l.timeWindowId))].sort();
     await tx.execute(sql`SELECT id FROM place_time_windows WHERE id IN (${sql.join(windowIds.map((id) => sql`${id}`), sql`, `)}) ORDER BY id FOR UPDATE`);
 
+    // נעילת המקומות: סגירה/השהיה של מקום במקביל לא תחמוק מהבדיקה (updatePlace נועל את אותה שורה)
+    const placeIds = [...new Set(lines.map((l) => l.placeId))].sort();
+    await tx.execute(sql`SELECT id FROM volunteer_places WHERE id IN (${sql.join(placeIds.map((id) => sql`${id}`), sql`, `)}) ORDER BY id FOR SHARE`);
+
     const evaluation = await evaluate(tx, actor.organizationId, iv.studentId, lines.map((l) => ({ timeWindowId: l.timeWindowId, slots: l.slots, weeklyHours: l.weeklyHours })));
     if (evaluation.blocked) throw new ContractError(evaluation);
     if (evaluation.needsManagerOverride) {

@@ -6,6 +6,8 @@ import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { windowUsageRows } from "@/lib/db/queries/capacity";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
 import { weeksRemaining } from "@/lib/services/capacity";
+import { updatePlace } from "@/lib/services/places";
+import { placeTimeWindows, volunteerPlaces } from "@/lib/db/schema";
 import {
   cancelInterview, ContractError, finalizeInterview, getDraft, InterviewError, listCandidateWindows, listCoordinatorsWithLoad, saveDraft, startInterview, studentHistory,
   type DraftLine,
@@ -184,6 +186,25 @@ describe("סגירת ראיון", () => {
     expect(rejected.reason).toBeInstanceOf(ContractError);
     const usage = await windowUsageRows(db(), s.organizationId);
     expect(usage.find((x) => x.windowId === s.windows.eldersThu.id)!.remainingSlots).toBe(0);
+  });
+
+  it("אי אפשר לסגור ראיון אל חלון של מקום שאינו פעיל", async () => {
+    const [w] = await db().select().from(placeTimeWindows).where(eq(placeTimeWindows.id, s.windows.kgMorning.id));
+    const [pl] = await db().select().from(volunteerPlaces).where(eq(volunteerPlaces.id, w.placeId));
+    const keep = { name: pl.name, description: pl.description, address: pl.address, city: pl.city, contactName: pl.contactName, contactPhone: pl.contactPhone, contactEmail: pl.contactEmail, category: pl.category, notes: pl.notes };
+    const id = await startInterview(db(), interviewer, s.students[4].id, "interview");
+    const before = (await activeOf(s.students[4].id)).map((p) => p.id).sort();
+    try {
+      await saveDraft(db(), interviewer, id, { lines: underLines() });
+      for (const status of ["paused"] as const) { // "closed" נחסם בנפרד כשיש שיבוצים פעילים; אותו תנאי ב-loadWindows
+        await updatePlace(db(), manager, pl.id, { ...keep, status });
+        await expect(finalizeInterview(db(), manager, id, { coordinatorId: c1.id, overrideReason: "בדיקה" })).rejects.toBeInstanceOf(ContractError);
+        expect((await activeOf(s.students[4].id)).map((p) => p.id).sort()).toEqual(before);
+      }
+    } finally {
+      await updatePlace(db(), manager, pl.id, { ...keep, status: "active" });
+      await cancelInterview(db(), interviewer, id);
+    }
   });
 
   it("רשימת רכזים לבחירה כוללת עומס", async () => {

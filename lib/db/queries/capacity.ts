@@ -20,9 +20,11 @@ export async function loadWindows(
       placeId: placeTimeWindows.placeId,
       slots: placeTimeWindows.slots,
       hoursPerSlot: placeTimeWindows.hoursPerSlot,
-      isActive: placeTimeWindows.isActive,
+      // חלון במקום שאינו פעיל (מושהה/סגור) נחשב לא פעיל: אי אפשר לשבץ אליו
+      isActive: sql<boolean>`(${placeTimeWindows.isActive} AND ${volunteerPlaces.status} = 'active')`,
     })
     .from(placeTimeWindows)
+    .innerJoin(volunteerPlaces, eq(volunteerPlaces.id, placeTimeWindows.placeId))
     .where(
       and(
         eq(placeTimeWindows.organizationId, organizationId),
