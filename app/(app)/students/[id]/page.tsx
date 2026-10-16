@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
+import { formatDay } from "@/lib/date-format";
 import { startInterviewAction } from "@/lib/actions/interviews";
 import { db } from "@/lib/db";
 import { can } from "@/lib/permissions";
@@ -15,7 +16,7 @@ import { CustomFields } from "@/components/custom-fields/custom-fields";
 import { SubmitButton } from "@/components/submit-button";
 
 export default async function StudentCard({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; done?: string }> }) {
-  const [{ id }, sp, actor, t, ti, td, tdt] = await Promise.all([params, searchParams, requireActor(), getTranslations("studentCard"), getTranslations("interviews"), getTranslations("days"), getTranslations("degreeTypes")]);
+  const [{ id }, sp, actor, t, ti, td, tdt, format] = await Promise.all([params, searchParams, requireActor(), getTranslations("studentCard"), getTranslations("interviews"), getTranslations("days"), getTranslations("degreeTypes"), getFormatter()]);
   let s, history;
   try {
     s = await getStudentForStaff(db(), actor, id);
@@ -88,7 +89,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
         ))}
         {history.placements.filter((p) => !p.isActive).map((p) => (
           <li key={p.id} className="rounded-xl border border-border p-3 opacity-70">
-            {p.placeName} · {p.windowLabel} · {p.startedAt ?? ""} → {p.endedAt ?? ""}
+            {p.placeName} · {p.windowLabel} · {p.startedAt ? formatDay(format, p.startedAt) : ""} – {p.endedAt ? formatDay(format, p.endedAt) : ""}
           </li>
         ))}
       </ul>

@@ -1,4 +1,4 @@
-const input = "rounded-lg border border-border bg-transparent px-3 py-2 text-base";
+const input = "min-h-11 rounded-lg border border-border bg-transparent px-3 py-2 text-base";
 
 export function Field({ label, name, type = "text", autoComplete, minLength }: {
   label: string; name: string; type?: string; autoComplete?: string; minLength?: number;
@@ -13,7 +13,7 @@ export function Field({ label, name, type = "text", autoComplete, minLength }: {
 
 export function Submit({ children, pending }: { children: React.ReactNode; pending: boolean }) {
   return (
-    <button type="submit" disabled={pending} className="rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground disabled:opacity-60">
+    <button type="submit" disabled={pending} className="min-h-11 rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground disabled:opacity-60">
       {children}
     </button>
   );

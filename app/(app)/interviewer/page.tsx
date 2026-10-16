@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
+import { formatInstant } from "@/lib/date-format";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/session";
 import { listAwaitingInterview } from "@/lib/services/students";
 
 export default async function InterviewerHome() {
-  const [t, actor] = await Promise.all([getTranslations("queue"), requireRole("interviewer")]);
+  const [t, actor, format] = await Promise.all([getTranslations("queue"), requireRole("interviewer"), getFormatter()]);
   const queue = await listAwaitingInterview(db(), actor);
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
@@ -17,7 +18,7 @@ export default async function InterviewerHome() {
           <li key={q.id} className="flex items-center justify-between rounded-xl border border-border p-3">
             <div>
               <Link href={`/students/${q.id}`} className="font-medium underline">{q.firstName} {q.lastName}</Link>
-              <p className="text-sm text-muted">{[q.city, t("registered", { date: q.registeredAt.toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" }) })].filter(Boolean).join(" · ")}</p>
+              <p className="text-sm text-muted">{[q.city, t("registered", { date: formatInstant(format, q.registeredAt) })].filter(Boolean).join(" · ")}</p>
             </div>
           </li>
         ))}

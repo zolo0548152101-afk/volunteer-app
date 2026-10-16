@@ -100,7 +100,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
               <li key={c.windowId} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3 text-sm">
                 <div>
                   <p className="font-medium">{c.placeName} · {c.label}</p>
-                  <p className="text-muted">{[c.city, c.category ? catLabel.get(c.category) : null, c.days.map((d) => td(d)).join(", "), c.startTime && c.endTime ? `${c.startTime.slice(0, 5)}-${c.endTime.slice(0, 5)}` : null].filter(Boolean).join(" · ")}</p>
+                  <p className="text-muted">{[c.city, c.category ? catLabel.get(c.category) : null, c.days.map((d) => td(d)).join(", "), c.startTime && c.endTime ? `\u2066${c.startTime.slice(0, 5)}–${c.endTime.slice(0, 5)}\u2069` : null].filter(Boolean).join(" · ")}</p>
                   <p>{t("remaining", { slots: c.remainingSlots, hours: c.remainingHours })}
                     {c.overlapDays.length > 0 && <span className="ms-2 text-green-700">{t("overlap", { days: c.overlapDays.map((d) => td(d)).join(", ") })}</span>}
                     {c.typeMatch && <span className="ms-2 text-green-700">{t("typeMatch")}</span>}</p>

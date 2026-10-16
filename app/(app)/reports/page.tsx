@@ -72,14 +72,14 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
               {status === "pending" && <input type="checkbox" name="ids" value={r.id} form="bulk" aria-label={t("pick", { student: r.studentName })} className="size-5" />}
               <Link href={`/students/${r.studentId}`} className="underline">{r.studentName}</Link> · {date(r.volunteerDate)}</p>
             <p>{r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} · ${r.windowLabel ?? ""}`}</p>
-            <p>{t("reported", { n: r.reportedHours })}{r.startTime && r.endTime ? ` · ${r.startTime.slice(0, 5)}–${r.endTime.slice(0, 5)}` : ""}{r.status === "approved" ? ` · ${t("approved", { n: r.approvedHours })}` : ""}</p>
+            <p>{t("reported", { n: r.reportedHours })}{r.startTime && r.endTime ? <> · <span dir="ltr">{r.startTime.slice(0, 5)}–{r.endTime.slice(0, 5)}</span></> : ""}{r.status === "approved" ? ` · ${t("approved", { n: r.approvedHours })}` : ""}</p>
             {r.studentNotes && <p className="text-muted">{t("studentNote", { note: r.studentNotes })}</p>}
             {r.coordinatorNotes && r.status !== "pending" && <p className="text-muted">{t("coordinatorNote", { note: r.coordinatorNotes })}</p>}
             {status === "pending" && (
               <form action={decideAction} className="mt-2 flex flex-col gap-2">
                 <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
                 <div className="flex flex-wrap items-end gap-2">
-                  <label className="flex flex-col gap-1">{t("approvedHoursLabel")}<input name="approvedHours" type="number" step="0.25" min="0" max="24" defaultValue={r.approvedHours} className={`${input} w-28`} /></label>
+                  <label className="flex flex-col gap-1">{t("approvedHoursLabel")}<input name="approvedHours" type="number" step="0.25" min="0" max={r.reportedHours} defaultValue={r.approvedHours} className={`${input} w-28`} /></label>
                   {r.reportType === "absence" && <label className="flex items-center gap-1"><input type="checkbox" name="countsTowardTarget" value="1" defaultChecked />{t("countsTowardTarget")}</label>}
                   <SubmitButton name="kind" value="approve" className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("approve")}</SubmitButton>
                 </div>

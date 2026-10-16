@@ -1,7 +1,7 @@
 import { getLocale } from "next-intl/server";
 import type { FieldDef, FieldValue } from "@/lib/services/custom-fields";
 
-const input = "rounded-lg border border-border bg-transparent px-3 py-2 text-base";
+const input = "min-h-11 rounded-lg border border-border bg-transparent px-3 py-2 text-base";
 
 /** רינדור גנרי של שדות מותאמים. שמות שדות: cf_<fieldId>. שדה לקריאה בלבד מוצג כטקסט. */
 export async function CustomFields({ fields, values }: { fields: FieldDef[]; values: Record<string, FieldValue> }) {
@@ -20,23 +20,30 @@ export async function CustomFields({ fields, values }: { fields: FieldDef[]; val
             : f.type === "boolean" ? (v ? "✓" : "—") : v === null ? "—" : String(v);
           return (<div key={f.id} className="text-sm"><p className="text-muted">{label(f)}</p><p>{shown || "—"}</p></div>);
         }
+        if (f.type === "multi_select") {
+          // קבוצת צ'קבוקסים: fieldset+legend, כדי שקורא מסך יקרא את שם השדה לפני כל אפשרות
+          return (
+            <fieldset key={f.id} className="flex flex-col gap-1 text-sm">
+              <legend className="mb-1">{label(f)}{f.required && " *"}</legend>
+              <div className="flex flex-wrap gap-x-4">
+                {f.options.map((o) => (
+                  <label key={o.key} className="flex min-h-11 items-center gap-2"><input type="checkbox" name={name} value={o.key} defaultChecked={Array.isArray(v) && v.includes(o.key)} className="size-5" />{optLabel(o)}</label>
+                ))}
+              </div>
+              <input type="hidden" name={name} value="" />
+            </fieldset>
+          );
+        }
         return (
-          <label key={f.id} className="flex flex-col gap-1 text-sm">
+          <label key={f.id} className={`flex gap-1 text-sm ${f.type === "boolean" ? "min-h-11 items-center" : "flex-col"}`}>
             {label(f)}{f.required && " *"}
             {f.type === "select" ? (
               <select name={name} defaultValue={(v as string) ?? ""} required={f.required} className={input}>
                 <option value="">—</option>
                 {f.options.map((o) => <option key={o.key} value={o.key}>{optLabel(o)}</option>)}
               </select>
-            ) : f.type === "multi_select" ? (
-              <span className="flex flex-wrap gap-3">
-                {f.options.map((o) => (
-                  <span key={o.key} className="flex items-center gap-1"><input type="checkbox" name={name} value={o.key} defaultChecked={Array.isArray(v) && v.includes(o.key)} /> {optLabel(o)}</span>
-                ))}
-                <input type="hidden" name={name} value="" />
-              </span>
             ) : f.type === "boolean" ? (
-              <span className="flex items-center gap-2"><input type="hidden" name={name} value="0" /><input type="checkbox" name={name} value="1" defaultChecked={v === true} /></span>
+              <span className="flex items-center gap-2"><input type="hidden" name={name} value="0" /><input type="checkbox" name={name} value="1" defaultChecked={v === true} className="size-5" /></span>
             ) : f.type === "number" ? (
               <input name={name} type="number" step="any" defaultValue={v === null ? "" : String(v)} required={f.required} className={input} />
             ) : f.type === "date" ? (

@@ -63,7 +63,7 @@ export default async function PlaceCard({ params, searchParams }: { params: Prom
               <li key={w.id} className={`rounded-xl border border-border p-3 ${w.isActive ? "" : "opacity-60"}`}>
                 <p className="font-medium">{w.label}{!w.isActive && <span className="ms-2 text-xs">({t("inactive")})</span>}</p>
                 <p className="text-sm text-muted">
-                  {w.days.map((d) => td(d)).join(", ")} {w.startTime && w.endTime ? `· ${w.startTime.slice(0, 5)}-${w.endTime.slice(0, 5)}` : ""}
+                  {w.days.map((d) => td(d)).join(", ")} {w.startTime && w.endTime ? <>· <span dir="ltr">{w.startTime.slice(0, 5)}–{w.endTime.slice(0, 5)}</span></> : ""}
                 </p>
                 <p className="mt-1 text-sm">{t("windowSummary", { slots: w.slots, perSlot: w.hoursPerSlot, requested: w.requestedHours, allocated: w.allocatedSlots, remaining: w.remainingSlots })}</p>
                 {canEdit && (

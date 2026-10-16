@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
+import { formatDay } from "@/lib/date-format";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/session";
 import { listMyReports, myProgress } from "@/lib/services/reports";
 
 export default async function MyReports({ searchParams }: { searchParams: Promise<{ sent?: string }> }) {
-  const [sp, t, actor] = await Promise.all([searchParams, getTranslations("myReports"), requireRole("student")]);
+  const [sp, t, actor, format] = await Promise.all([searchParams, getTranslations("myReports"), requireRole("student"), getFormatter()]);
   const [list, progress] = await Promise.all([listMyReports(db(), actor), myProgress(db(), actor)]);
   return (
     <main className="mx-auto w-full max-w-xl p-4">
@@ -20,7 +21,7 @@ export default async function MyReports({ searchParams }: { searchParams: Promis
       <ul className="mt-4 flex flex-col gap-2">
         {list.map((r) => (
           <li key={r.id} className="rounded-xl border border-border p-3 text-sm">
-            <p className="font-medium">{r.volunteerDate} · {r.reportType === "absence" ? t("absence") : r.placeName} · {t("hours", { n: r.reportedHours })}</p>
+            <p className="font-medium">{formatDay(format, r.volunteerDate)} · {r.reportType === "absence" ? t("absence") : r.placeName} · {t("hours", { n: r.reportedHours })}</p>
             <p>{t(`status.${r.status}`)}{r.status === "approved" && r.approvedHours !== r.reportedHours ? ` · ${t("approvedHours", { n: r.approvedHours })}` : ""}</p>
             {r.coordinatorNotes && (r.status === "rejected" || r.status === "needs_correction") && <p className="text-muted">{t("coordinatorNote", { note: r.coordinatorNotes })}</p>}
             {(r.status === "needs_correction" || r.status === "pending") && <Link href={`/student/reports/${r.id}`} className="underline">{r.status === "needs_correction" ? t("fix") : t("edit")}</Link>}

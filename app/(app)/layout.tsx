@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <button type="submit" className="text-sm underline">{t("logout")}</button>
         </form>
       </header>
-      <div id="content" className="flex flex-1 flex-col">{children}</div>
+      <div id="content" tabIndex={-1} className="flex flex-1 flex-col outline-none">{children}</div>
       <footer className="flex items-center justify-between gap-4 border-t border-border px-4 py-2 text-sm">
         <Link href="/accessibility" className="underline">{tA("title")}</Link>
         <form action={setLocale}>
