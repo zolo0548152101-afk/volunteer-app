@@ -8,6 +8,7 @@ import { academicYears, programs, studentProfiles, users } from "@/lib/db/schema
 import { assertCan, can, type SessionUser } from "@/lib/permissions";
 import { hashPassword } from "@/lib/password";
 import { audited } from "@/lib/services/audit";
+import { listFields, loadValues } from "@/lib/services/custom-fields";
 import { NotFoundError, subjectOf } from "@/lib/services/users";
 import { isValidIsraeliId, normalizeIsraeliPhone } from "@/lib/validation/israel";
 import type { Day } from "@/lib/services/places";
@@ -163,6 +164,13 @@ export async function completeProfile(db: Db, actor: SessionUser): Promise<void>
   assertCan(actor, "update", "student_profile", { organizationId: actor.organizationId, ownerId: actor.id });
   const p = await getMyProfile(db, actor);
   if (!p.nationalId || !p.institution || !p.degreeType) throw new StudentError("incomplete");
+  // שדות מותאמים שסומנו חובה: אי אפשר לעקוף אותם בהשמטה מהטופס
+  const required = (await listFields(db, actor, "student")).filter((f) => f.required && f.canEdit && f.type !== "boolean");
+  if (required.length > 0) {
+    const values = await loadValues(db, actor.organizationId, actor.id, required);
+    const missing = required.some((f) => { const v = values[f.id]; return v === null || v === "" || (Array.isArray(v) && v.length === 0); });
+    if (missing) throw new StudentError("incomplete");
+  }
   await db.update(studentProfiles).set({ profileCompletedAt: p.profileCompletedAt ?? new Date() }).where(eq(studentProfiles.userId, actor.id));
 }
 

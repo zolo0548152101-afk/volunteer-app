@@ -25,3 +25,12 @@ test("אין גלילה אופקית במסך הכניסה", async ({ page }) =>
   );
   expect(overflow).toBe(false);
 });
+
+test("כותרות אבטחה: אין הטמעה ב-iframe, Referrer מוגבל", async ({ request }) => {
+  const res = await request.get("/login");
+  const h = res.headers();
+  expect(h["x-frame-options"]).toBe("DENY");
+  expect(h["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(h["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+  expect(h["x-content-type-options"]).toBe("nosniff");
+});

@@ -39,7 +39,8 @@
       "invalid": "Wrong email or password",
       "weak": "Password too short (min 8) or confirmation doesn't match",
       "token": "This link is invalid or expired. You can request a new one",
-      "generic": "Something went wrong. Try again in a moment"
+      "generic": "Something went wrong. Try again in a moment",
+      "rate_limited": "Too many attempts. Please try again in a few minutes"
     }
   },
   "roles": {
@@ -210,7 +211,8 @@
       "bad_phone": "Invalid phone number",
       "bad_name": "Name is required",
       "no_org": "Registration is closed right now",
-      "generic": "Something went wrong. Try again in a moment"
+      "generic": "Something went wrong. Try again in a moment",
+      "rate_limited": "Too many sign-up attempts. Please try again in an hour"
     }
   },
   "profile": {
@@ -248,7 +250,7 @@
       "bad_id": "Invalid national ID",
       "bad_date": "Invalid date of birth",
       "bad_bank": "Invalid bank details (digits only)",
-      "incomplete": "Required: national ID, institution and degree type",
+      "incomplete": "Required details are missing: national ID, institution, degree type, or a field the manager marked as required",
       "forbidden": "You don't have permission to do that",
       "cf_required": "A required field is missing",
       "cf_invalid": "One of the additional fields is invalid",

@@ -1,7 +1,7 @@
 "use server";
 
 import { AuthError } from "next-auth";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { TransactionRollbackError, and, eq, inArray, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { getToken } from "next-auth/jwt";
 import { z } from "zod";
@@ -11,20 +11,36 @@ import { users } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/password";
 import { safeNext, sendLink } from "@/lib/services/auth-links";
 import { setPasswordFromToken } from "@/lib/services/credentials";
+import { clearAttempts, clientIp, isLimited, limitKey, recordAttempt } from "@/lib/services/rate-limit";
 import type { TokenKind } from "@/lib/services/tokens";
 
-export type FormState = { error?: "invalid" | "weak" | "token" | "generic"; done?: boolean };
+export type FormState = { error?: "invalid" | "weak" | "token" | "generic" | "rate_limited"; done?: boolean };
+
+/** חלונות הגבלת הקצב (ניסיונות כושלים לכניסה; כל בקשה לאיפוס) */
+const LOGIN_EMAIL = { max: 8, windowSec: 15 * 60 };
+const LOGIN_IP = { max: 40, windowSec: 15 * 60 };
+const RESET_EMAIL = { max: 5, windowSec: 3600 };
+const RESET_IP = { max: 20, windowSec: 3600 };
 
 const MIN_PASSWORD = 8;
 
 export async function loginAction(_: FormState, formData: FormData): Promise<FormState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const emailKey = limitKey("login:email", email), ipKey = limitKey("login:ip", clientIp(await headers()));
+  if ((await isLimited(db(), emailKey, LOGIN_EMAIL.max, LOGIN_EMAIL.windowSec)) || (await isLimited(db(), ipKey, LOGIN_IP.max, LOGIN_IP.windowSec))) {
+    return { error: "rate_limited" };
+  }
   try {
     await signIn("credentials", { email, password, redirectTo: safeNext(String(formData.get("next") ?? "")) });
   } catch (e) {
-    if (e instanceof AuthError) return { error: e.type === "CredentialsSignin" ? "invalid" : "generic" };
-    throw e; // ה-redirect של Next זורק, וזה תקין
+    if (e instanceof AuthError) {
+      if (e.type !== "CredentialsSignin") return { error: "generic" };
+      await Promise.all([recordAttempt(db(), emailKey), recordAttempt(db(), ipKey)]);
+      return { error: "invalid" };
+    }
+    await clearAttempts(db(), emailKey).catch(() => {}); // ה-redirect של Next זורק, וזה כניסה מוצלחת
+    throw e;
   }
   return {};
 }
@@ -40,6 +56,11 @@ export async function logoutAction() {
 export async function requestResetAction(_: FormState, formData: FormData): Promise<FormState> {
   const parsed = z.string().email().safeParse(String(formData.get("email") ?? "").trim());
   if (!parsed.success) return { error: "invalid" };
+  // מעל המכסה: אותה תשובה כרגיל, בלי לשלוח. כך אי אפשר להפציץ תיבת מייל, וגם לא לגלות אילו מיילים רשומים
+  const emailKey = limitKey("reset:email", parsed.data), ipKey = limitKey("reset:ip", clientIp(await headers()));
+  const limited = (await isLimited(db(), emailKey, RESET_EMAIL.max, RESET_EMAIL.windowSec)) || (await isLimited(db(), ipKey, RESET_IP.max, RESET_IP.windowSec));
+  await Promise.all([recordAttempt(db(), emailKey), recordAttempt(db(), ipKey)]);
+  if (limited) return { done: true };
   // אותו מייל בכמה ארגונים: כל חשבון מקבל קישור משלו (הקישור מחייב את החשבון, לא את המייל)
   const matches = await db()
     .select()
@@ -60,7 +81,8 @@ export async function setPasswordAction(_: FormState, formData: FormData): Promi
   let ok = false;
   try {
     ok = await setPasswordFromToken(db(), { kind, raw: String(formData.get("token") ?? ""), passwordHash });
-  } catch {
+  } catch (e) {
+    if (!(e instanceof TransactionRollbackError)) throw e; // כשל אמיתי (למשל המסד) לא מוצג כ"קישור לא תקף"
     ok = false; // rollback של משתמש מושבת
   }
   if (!ok) return { error: "token" };

@@ -274,7 +274,11 @@ export async function getDraft(db: Db, actor: SessionUser, interviewId: string):
   if (!iv) throw new NotFoundError();
   const student = await loadStudent(db, actor.organizationId, iv.studentId);
   if (iv.kind === "interview") assertCan(actor, "read", "interview", { organizationId: actor.organizationId });
-  else assertCan(actor, "read", "placement", subjectOf(student));
+  else {
+    assertCan(actor, "read", "placement", subjectOf(student));
+    // שיבוץ מחדש הוא כלי צוות: הוא מציג את קיבולת המוסד, שסטודנט לא רואה (גם לא בשיבוץ של עצמו)
+    if (!actor.roles.some((r) => r !== "student")) throw new ForbiddenError();
+  }
   const lines = await db.select({ p: placements, placeName: volunteerPlaces.name, windowLabel: placeTimeWindows.label }).from(placements)
     .innerJoin(volunteerPlaces, eq(volunteerPlaces.id, placements.placeId)).innerJoin(placeTimeWindows, eq(placeTimeWindows.id, placements.timeWindowId))
     .where(eq(placements.interviewId, interviewId)).orderBy(asc(placements.createdAt));

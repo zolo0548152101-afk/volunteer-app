@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { AuthError } from "next-auth";
 import { signIn } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -10,6 +11,7 @@ import { requireActor } from "@/lib/session";
 import { CustomFieldError, customInputFromForm, saveValues } from "@/lib/services/custom-fields";
 import { completeProfile, registerStudent, registrationOrgId, saveSection, StudentError, type Section } from "@/lib/services/students";
 import { getLocale } from "next-intl/server";
+import { clientIp, isLimited, limitKey, recordAttempt } from "@/lib/services/rate-limit";
 
 export type RegisterState = { error?: string };
 
@@ -17,6 +19,10 @@ export async function registerAction(_: RegisterState, fd: FormData): Promise<Re
   const str = (k: string) => String(fd.get(k) ?? "");
   if (str("password") !== str("confirm")) return { error: "weak_password" };
   const email = str("email").trim();
+  // הרשמה פתוחה לכולם: מגבילים לפי כתובת, כדי שלא יציפו חשבונות (וגם לא יסרקו מיילים רשומים)
+  const ipKey = limitKey("register:ip", clientIp(await headers()));
+  if (await isLimited(db(), ipKey, 10, 3600)) return { error: "rate_limited" };
+  await recordAttempt(db(), ipKey);
   try {
     const locale = (await getLocale()) === "en" ? "en" : "he";
     await registerStudent(db(), await registrationOrgId(db()), { firstName: str("firstName"), lastName: str("lastName"), email, phone: str("phone"), password: str("password"), locale });

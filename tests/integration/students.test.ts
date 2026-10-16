@@ -149,6 +149,14 @@ describe("שדות מותאמים", () => {
     await expect(saveValues(db(), st1, "student", st1.id, { [fReq]: [""] }, { enforceRequired: true })).rejects.toMatchObject({ code: "required" });
   });
 
+  it("סיום הרשמה נחסם כשחסר שדה מותאם חובה, גם אם הוא הושמט מהטופס (ביקורת Fable)", async () => {
+    const me = act({ id: await reg() }, s.organizationId, ["student"]);
+    await saveSection(db(), me, "academic", { nationalId: "123456782", institution: "אוניברסיטת חיפה", degreeType: "bachelor", degreeYear: "b", city: "חיפה" });
+    await expect(completeProfile(db(), me)).rejects.toMatchObject({ code: "incomplete" }); // "must" חובה וריק
+    await saveValues(db(), me, "student", me.id, { [fReq]: ["5"] });
+    await expect(completeProfile(db(), me)).resolves.toBeUndefined();
+  });
+
   it("עדכון חוזר דורס ולא יוצר כפילות", async () => {
     await saveValues(db(), st1, "student", st1.id, { [fStudent]: ["m"] });
     const vals = await loadValues(db(), s.organizationId, st1.id, await listFields(db(), st1, "student"));

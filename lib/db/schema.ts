@@ -564,3 +564,14 @@ export const authTokens = pgTable(
     check("auth_tokens_attempts_chk", sql`${t.attempts} >= 0`),
   ],
 );
+
+/** ניסיונות כניסה/איפוס/הרשמה, להגבלת קצב. המפתח מגובב (בלי מייל גלוי); שורות ישנות נמחקות תוך כדי כתיבה */
+export const authAttempts = pgTable(
+  "auth_attempts",
+  {
+    id: id(),
+    key: text("key").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index("auth_attempts_key_created_idx").on(t.key, t.createdAt)],
+);

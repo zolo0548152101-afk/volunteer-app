@@ -74,6 +74,13 @@ describe("טיוטה והרשאות", () => {
     expect(await activeOf(s.students[0].id)).toHaveLength(1); // החוזה הפעיל לא נפגע
   });
 
+  it("סטודנט לא קורא את טיוטת השיבוץ-מחדש של עצמו (היא מציגה את קיבולת המוסד)", async () => {
+    const id = await startInterview(db(), c1, s.students[0].id, "reassignment");
+    await expect(getDraft(db(), st, id)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(getDraft(db(), c1, id)).resolves.toBeTruthy();
+    await cancelInterview(db(), c1, id);
+  });
+
   it("רכז לא עורך את הטיוטה של סטודנט אחר", async () => {
     const id = await startInterview(db(), manager, s.students[2].id, "reassignment");
     await expect(saveDraft(db(), c1, id, { lines: [] })).rejects.toBeInstanceOf(ForbiddenError);
