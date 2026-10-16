@@ -131,6 +131,16 @@ describe("שיוך סטודנט לרכז", () => {
     await expect(assignCoordinator(db(), interviewer, [s.students[5].id], c2.id)).resolves.toBe(1);
   });
 
+  it("מראיין לא מחליף ולא מנתק רכז של סטודנט שכבר משויך (ביקורת Fable)", async () => {
+    // students[5] שויך לעיל ל-c2
+    await expect(assignCoordinator(db(), interviewer, [s.students[5].id], c1.id)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(assignCoordinator(db(), interviewer, [s.students[5].id], null)).rejects.toBeInstanceOf(ForbiddenError);
+    const [row] = await db().select().from(users).where(eq(users.id, s.students[5].id));
+    expect(row.coordinatorId).toBe(c2.id);
+    // מנהל כן רשאי
+    await expect(assignCoordinator(db(), manager, [s.students[5].id], c1.id)).resolves.toBe(1);
+  });
+
   it("סטודנט מארגון אחר: לא נמצא", async () => {
     await expect(assignCoordinator(db(), manager, [other.students[0].id], c1.id)).rejects.toBeInstanceOf(NotFoundError);
   });

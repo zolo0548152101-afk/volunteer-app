@@ -160,6 +160,8 @@ export async function assignCoordinator(db: Db, actor: SessionUser, studentIds: 
     for (const t of targets) {
       assertCan(actor, "assign", "user", subjectOf(t));
       if (!t.roles.includes("student")) throw new ValidationError("not_student");
+      // מראיין רק משייך סטודנט שעוד אין לו רכז. החלפה וניתוק שמורים למנהל
+      if (!actor.roles.includes("manager") && (t.coordinatorId !== null || coordinatorId === null)) throw new ForbiddenError();
     }
     for (const t of targets) {
       if (t.coordinatorId === coordinatorId) continue;
