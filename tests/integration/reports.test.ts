@@ -100,10 +100,16 @@ describe("תיבת רכז והחלטות", () => {
     await expect(decide(db(), manager, id, { kind: "unapprove", reason: "  " })).rejects.toMatchObject({ code: "reason_required" });
     await decide(db(), manager, id, { kind: "unapprove", reason: "טעות בספירה" });
     const [r] = await db().select().from(hourReports).where(eq(hourReports.id, id));
-    expect(r).toMatchObject({ status: "pending", approvedBy: null });
+    // השעות המאושרות חוזרות לערך שדווח (לא נשאר 2 מהאישור הקודם)
+    expect(r).toMatchObject({ status: "pending", approvedBy: null, approvedHours: 2.5, reportedHours: 2.5 });
     expect((await myProgress(db(), st)).approved).toBe(0);
     const [log] = await db().select().from(auditLog).where(and(eq(auditLog.entityId, id), eq(auditLog.action, "unapprove")));
     expect(log.reason).toBe("טעות בספירה");
+  });
+
+  it("הרכז לא מאשר יותר שעות ממה שדווח", async () => {
+    await expect(decide(db(), c1, id, { kind: "approve", approvedHours: 10 })).rejects.toMatchObject({ code: "bad_hours" });
+    await expect(decide(db(), c1, id, { kind: "approve", approvedHours: 2.51 })).rejects.toMatchObject({ code: "bad_hours" });
   });
 
   it("דחייה והחזרה לתיקון דורשות סיבה; סטודנט מתקן ומחזיר ל-pending; נדחה סופי", async () => {

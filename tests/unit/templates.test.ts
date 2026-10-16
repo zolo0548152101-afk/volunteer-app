@@ -4,6 +4,11 @@ import { renderTemplate, TEMPLATES, type TemplateId } from "@/lib/notifications/
 const vars = (s: string) => [...s.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 
 describe("תבניות הודעה", () => {
+  it("יש תבנית לכל מעבר מצב של דיווח שנשלחת בגללו הודעה", () => {
+    for (const id of ["report.approved", "report.rejected", "report.needs_correction", "report.unapproved", "report.submitted"]) {
+      expect(id in TEMPLATES, id).toBe(true);
+    }
+  });
   it("לכל תבנית עברית ואנגלית, עם אותם משתנים בשתיהן ובלי טקסט ריק", () => {
     for (const [id, t] of Object.entries(TEMPLATES)) {
       expect(t.he.subject.length, id).toBeGreaterThan(0);

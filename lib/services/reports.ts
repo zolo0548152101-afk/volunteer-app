@@ -14,6 +14,7 @@ import { assertCan, can, ForbiddenError, type SessionUser } from "@/lib/permissi
 import { writeAudit } from "@/lib/services/audit";
 import { round2 } from "@/lib/services/capacity";
 import { notify } from "@/lib/services/notify";
+import type { TemplateId } from "@/lib/notifications/templates";
 import { NotFoundError } from "@/lib/services/users";
 
 export type ReportCode =
@@ -206,14 +207,16 @@ export async function decide(db: Db, actor: SessionUser, reportId: string, d: De
       if (!actor.roles.includes("manager")) throw new ForbiddenError();
       if (old.status !== "approved") throw new ReportError("bad_transition");
       if (!clean(d.reason)) throw new ReportError("reason_required");
-      patch = { status: "pending", approvedAt: null, approvedBy: null };
+      // השעות המאושרות חוזרות לערך שדווח, כדי שהרכז לא יראה מספר ישן כברירת מחדל
+      patch = { status: "pending", approvedAt: null, approvedBy: null, approvedHours: old.reportedHours as unknown as number, coordinatorNotes: null };
       action = "unapprove";
       reason = d.reason.trim();
     } else {
       if (old.status !== "pending") throw new ReportError("bad_transition");
       if (d.kind === "approve") {
         const hrs = d.approvedHours === undefined ? Number(old.reportedHours) : round2(d.approvedHours);
-        if (!Number.isFinite(hrs) || hrs < 0 || hrs > 24) throw new ReportError("bad_hours");
+        // הרכז יכול להפחית שעות, לא להוסיף על מה שהסטודנט דיווח
+        if (!Number.isFinite(hrs) || hrs < 0 || hrs > Number(old.reportedHours)) throw new ReportError("bad_hours");
         patch = { status: "approved", approvedHours: hrs, coordinatorNotes: clean(d.notes), approvedAt: new Date(), approvedBy: actor.id };
         if (old.reportType === "absence" && d.countsTowardTarget !== undefined) patch.countsTowardTarget = d.countsTowardTarget;
         action = "approve";
@@ -228,10 +231,11 @@ export async function decide(db: Db, actor: SessionUser, reportId: string, d: De
     await writeAudit(tx, { organizationId: actor.organizationId, actorId: actor.id }, { entity: "hour_report", entityId: old.id, action, reason }, old, row);
     return { studentId: old.studentId, status: row.status, notes: row.coordinatorNotes };
   });
-  await notifyUser(db, out.studentId, `report.${out.status}`, { notes: out.notes ?? "" });
+  const template: TemplateId = d.kind === "unapprove" ? "report.unapproved" : (`report.${out.status}` as TemplateId);
+  await notifyUser(db, out.studentId, template, { notes: d.kind === "unapprove" ? d.reason.trim() : (out.notes ?? "") });
 }
 
-async function notifyUser(db: Db, userId: string | null, template: string, data: Record<string, unknown>) {
+async function notifyUser(db: Db, userId: string | null, template: TemplateId, data: Record<string, unknown>) {
   if (!userId) return;
   const [u] = await db.select({ email: users.email, locale: users.locale, status: users.status }).from(users).where(eq(users.id, userId));
   if (!u || u.status !== "active") return;

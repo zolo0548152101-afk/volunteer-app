@@ -57,8 +57,12 @@ export function resetProviders() {
 export async function notify(input: NotifyInput): Promise<NotifyResult> {
   try {
     const text = renderTemplate(input.template, input.data, input.locale);
-    if (!text) console.warn(`[notify] unknown template ${input.template}`);
-    await providers[input.channel].send({ ...input, subject: text?.subject, body: text?.body });
+    // תבנית לא קיימת = שליחה ריקה. עדיף כישלון גלוי (נרשם ביומן) מאשר מייל בלי נושא וגוף
+    if (!text) {
+      console.error(`[notify] unknown template ${input.template}`);
+      return { ok: false, channel: input.channel, error: "unknown_template" };
+    }
+    await providers[input.channel].send({ ...input, subject: text.subject, body: text.body });
     return { ok: true, channel: input.channel };
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);

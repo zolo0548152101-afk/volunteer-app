@@ -40,6 +40,10 @@ export const TEMPLATES = {
     he: { subject: "נדרש תיקון בדיווח", body: "הרכז ביקש תיקון בדיווח השעות שלך. הערת הרכז: {notes}" },
     en: { subject: "Your report needs a fix", body: "The coordinator asked for a fix to your hour report. Coordinator's note: {notes}" },
   },
+  "report.unapproved": {
+    he: { subject: "אישור הדיווח בוטל", body: "המנהל ביטל את אישור דיווח השעות שלך והוא חזר לבדיקה. הסיבה: {notes}" },
+    en: { subject: "Report approval was withdrawn", body: "A manager withdrew the approval of your hour report and it is back in review. Reason: {notes}" },
+  },
   "report.escalation": {
     he: { subject: "דיווח ממתין לאישור כבר {days} ימים", body: "הדיווח של {student} ממתין לאישור כבר {days} ימים. נא לטפל בו בתיבת הדיווחים." },
     en: { subject: "A report has been pending for {days} days", body: "{student}'s report has been waiting for approval for {days} days. Please handle it in the reports inbox." },

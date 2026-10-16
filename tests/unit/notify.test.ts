@@ -33,4 +33,13 @@ describe("notify", () => {
     const res = await notify({ ...base, channel: "whatsapp" });
     expect(res.ok).toBe(true);
   });
+
+  it("תבנית לא קיימת נכשלת בגלוי ולא נשלחת ריקה", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const send = vi.fn().mockResolvedValue(undefined);
+    registerProvider("email", { send });
+    const r = await notify({ channel: "email", to: "a@b.test", template: "report.pending", locale: "he" });
+    expect(r).toMatchObject({ ok: false, error: "unknown_template" });
+    expect(send).not.toHaveBeenCalled();
+  });
 });
