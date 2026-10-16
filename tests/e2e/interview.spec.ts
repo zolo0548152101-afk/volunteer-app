@@ -44,6 +44,14 @@ test("מראיין רואה את התור, מנהל מראיין ומשבץ סט
   // הוספת החלון הראשון שמוצע, ושמירת טיוטה
   await page.getByRole("button", { name: "הוספה לחוזה" }).first().click();
   await expect(page.getByLabel("תקנים")).toBeVisible({ timeout: 20_000 });
+  // פאנל חי: שינוי כמות התקנים מעדכן את הבנקים והחריגה לפני כל שמירה
+  const slots = page.getByLabel("תקנים");
+  const original = await slots.inputValue();
+  await slots.fill("999");
+  await expect(page.getByText("חריגה ממכסת התקנים בחלון")).toBeVisible();
+  await slots.fill(original);
+  await expect(page.getByText("חריגה ממכסת התקנים בחלון")).toBeHidden();
+
   await page.getByRole("button", { name: "שמירת טיוטה" }).click();
   await expect(page.getByText("שני הבנקים")).toBeVisible();
   // נגישות מסך הראיון (המסך המורכב ביותר)

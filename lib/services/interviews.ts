@@ -11,7 +11,7 @@ import { academicYears, hourReports, interviews, placeTimeWindows, placements, p
 import { loadActivePlacements, loadWindows } from "@/lib/db/queries/capacity";
 import { assertCan, can, ForbiddenError, type SessionUser } from "@/lib/permissions";
 import { audited, writeAudit } from "@/lib/services/audit";
-import { approvedHoursTotal, defaultWeeklyHours, evaluateContract, round2, studentTarget, windowUsage, type ContractEvaluation, type ProposedPlacement } from "@/lib/services/capacity";
+import { approvedHoursTotal, defaultWeeklyHours, evaluateContract, round2, studentTarget, windowUsage, type ContractEvaluation, type PlacementLike, type ProposedPlacement, type WindowInfo } from "@/lib/services/capacity";
 import { notify } from "@/lib/services/notify";
 import { DAYS, type Day } from "@/lib/services/places";
 import { NotFoundError, subjectOf } from "@/lib/services/users";
@@ -83,6 +83,31 @@ async function evaluate(tx: Db | Tx, orgId: string, studentId: string, lines: Pr
   const windows = await loadWindows(tx, orgId, { windowIds: ids });
   const active = await loadActivePlacements(tx, orgId, ids);
   return evaluateContract({ studentId, proposed: lines, windows, activePlacements: active, bank: await loadBankInput(tx, orgId, studentId) });
+}
+
+/**
+ * הקלט לחישוב "שני הבנקים" בדפדפן (מחשבון חי בזמן עריכה). שיבוצים של סטודנטים אחרים מסוכמים לשורה
+ * אחת לכל חלון, כך שמזהי סטודנטים אחרים לא יוצאים ללקוח. החישוב עצמו הוא אותו `evaluateContract`.
+ */
+export type LiveEvalInput = {
+  studentId: string;
+  windows: WindowInfo[];
+  others: PlacementLike[];
+  bank: Awaited<ReturnType<typeof loadBankInput>>;
+};
+
+async function liveEvalInput(tx: Db | Tx, orgId: string, studentId: string, windowIds: string[]): Promise<LiveEvalInput> {
+  const ids = [...new Set(windowIds)];
+  const windows = await loadWindows(tx, orgId, { windowIds: ids });
+  const active = await loadActivePlacements(tx, orgId, ids);
+  const sums = new Map<string, { slots: number; weeklyHours: number }>();
+  for (const p of active) {
+    if (!p.isActive || p.studentId === studentId) continue;
+    const c = sums.get(p.timeWindowId) ?? { slots: 0, weeklyHours: 0 };
+    sums.set(p.timeWindowId, { slots: round2(c.slots + p.slots), weeklyHours: round2(c.weeklyHours + p.weeklyHours) });
+  }
+  const others: PlacementLike[] = [...sums].map(([timeWindowId, v]) => ({ studentId: "others", timeWindowId, slots: v.slots, weeklyHours: v.weeklyHours, isActive: true }));
+  return { studentId, windows, others, bank: await loadBankInput(tx, orgId, studentId) };
 }
 
 /* ───────────── טיוטה ───────────── */
@@ -267,6 +292,7 @@ export type DraftView = {
   interview: typeof interviews.$inferSelect;
   lines: (typeof placements.$inferSelect & { placeName: string; windowLabel: string })[];
   evaluation: ContractEvaluation;
+  live: LiveEvalInput;
 };
 
 export async function getDraft(db: Db, actor: SessionUser, interviewId: string): Promise<DraftView> {
@@ -283,7 +309,8 @@ export async function getDraft(db: Db, actor: SessionUser, interviewId: string):
     .innerJoin(volunteerPlaces, eq(volunteerPlaces.id, placements.placeId)).innerJoin(placeTimeWindows, eq(placeTimeWindows.id, placements.timeWindowId))
     .where(eq(placements.interviewId, interviewId)).orderBy(asc(placements.createdAt));
   const evaluation = await evaluate(db, actor.organizationId, iv.studentId, lines.filter((l) => !l.p.isActive || iv.status === "draft").map((l) => ({ timeWindowId: l.p.timeWindowId, slots: l.p.slots, weeklyHours: l.p.weeklyHours })));
-  return { interview: iv, lines: lines.map((l) => ({ ...l.p, placeName: l.placeName, windowLabel: l.windowLabel })), evaluation };
+  const live = await liveEvalInput(db, actor.organizationId, iv.studentId, lines.map((l) => l.p.timeWindowId));
+  return { interview: iv, lines: lines.map((l) => ({ ...l.p, placeName: l.placeName, windowLabel: l.windowLabel })), evaluation, live };
 }
 
 /** היסטוריית ראיונות ושיבוצים של סטודנט (כרטיס הסטודנט) */

@@ -12,14 +12,15 @@ import { ForbiddenError } from "@/lib/permissions";
 import { DAYS } from "@/lib/services/places";
 import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
+import { LiveBanks } from "@/components/interview/live-banks";
 
 const input = "rounded-lg border border-border bg-transparent px-2 py-1.5 text-base";
 
 export default async function InterviewPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; city?: string; category?: string; day?: string; q?: string }> }) {
-  const [{ id }, sp, actor, t, td, ti] = await Promise.all([params, searchParams, requireActor(), getTranslations("interviews"), getTranslations("days"), getTranslations("issues")]);
+  const [{ id }, sp, actor, t, td] = await Promise.all([params, searchParams, requireActor(), getTranslations("interviews"), getTranslations("days")]);
   let draft;
   try { draft = await getDraft(db(), actor, id); } catch (e) { if (e instanceof NotFoundError || e instanceof ForbiddenError) notFound(); throw e; }
-  const { interview: iv, lines, evaluation: ev } = draft;
+  const { interview: iv, lines, evaluation: ev, live } = draft;
   const student = await getStudentForStaff(db(), actor, iv.studentId);
   const editable = iv.status === "draft";
   const isInterview = iv.kind === "interview";
@@ -30,9 +31,6 @@ export default async function InterviewPage({ params, searchParams }: { params: 
   ]);
   const catLabel = new Map(cats.map((c) => [c.key, c.label]));
   const isManager = actor.roles.includes("manager");
-  const warns = ev.issues.filter((i) => i.severity === "warn");
-  const blocks = ev.issues.filter((i) => i.severity === "block");
-  const label = (windowId: string) => lines.find((l) => l.timeWindowId === windowId)?.windowLabel ?? "";
   const errorKey = ["contract_blocked", "needs_override", "no_lines", "need_coordinator", "bad_coordinator", "override_reason_required", "override_forbidden", "not_draft", "bad_line", "forbidden", "not_found", "generic"].includes(sp.error ?? "") ? sp.error : null;
 
   return (
@@ -56,32 +54,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
 
       <section className="mt-6" aria-labelledby="bank-h">
         <h2 id="bank-h" className="text-lg font-medium">{t("banks")}</h2>
-        {ev.bank ? (
-          <div className="mt-2 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-border p-3 text-sm">
-              <p className="font-medium">{t("studentBank")}</p>
-              <p>{t("bankLine1", { approved: ev.bank.approved, target: ev.bank.target, remaining: ev.bank.remainingNeed })}</p>
-              <p>{t("bankLine2", { weeks: ev.bank.weeksRemaining, needed: ev.bank.neededWeekly })}</p>
-              <p>{t("bankLine3", { contract: ev.bank.contractWeekly, planned: ev.bank.plannedHours })}</p>
-              <p className={`mt-1 font-medium ${ev.bank.status === "ok" ? "text-green-700" : "text-amber-700"}`}>{t(`bankStatus.${ev.bank.status}`, { gap: Math.abs(ev.bank.gap) })}</p>
-            </div>
-            <div className="rounded-xl border border-border p-3 text-sm">
-              <p className="font-medium">{t("institutionBank")}</p>
-              {Object.keys(ev.windows).length === 0 && <p className="text-muted">{t("noLines")}</p>}
-              {Object.entries(ev.windows).map(([wid, u]) => (
-                <p key={wid}>{label(wid)}: {t("windowLeft", { remainingSlots: u.remainingSlots, remainingHours: u.remainingHours })}</p>
-              ))}
-            </div>
-          </div>
-        ) : <p className="mt-2 text-sm text-muted">{t("noBank")}</p>}
-        {(blocks.length > 0 || warns.length > 0) && (
-          <div role="status">
-            <ul className="mt-3 flex flex-col gap-1 text-sm">
-              {blocks.map((i, n) => <li key={`b${n}`} className="text-red-700">⛔ {ti(i.code)}{i.timeWindowId ? ` (${label(i.timeWindowId)})` : ""}</li>)}
-              {warns.map((i, n) => <li key={`w${n}`} className="text-amber-700">⚠ {ti(i.code)}</li>)}
-            </ul>
-          </div>
-        )}
+        <LiveBanks formId="draft-form" live={live} editable={editable} lines={lines.map((l) => ({ windowId: l.timeWindowId, slots: l.slots, weeklyHours: l.weeklyHours, label: l.windowLabel }))} />
         <p className="mt-1 text-xs text-muted">{t("evalNote")}</p>
       </section>
 
@@ -116,7 +89,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
         </section>
       )}
 
-      <form action={saveDraftAction} className="mt-6 flex flex-col gap-4">
+      <form id="draft-form" action={saveDraftAction} className="mt-6 flex flex-col gap-4">
         <input type="hidden" name="interviewId" value={id} />
         <h2 className="text-lg font-medium">{t("lines")}</h2>
         {lines.length === 0 && <p className="text-muted">{t("noLines")}</p>}

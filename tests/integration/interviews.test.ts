@@ -5,7 +5,7 @@ import { auditLog, interviews, placements, users } from "@/lib/db/schema";
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { windowUsageRows } from "@/lib/db/queries/capacity";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
-import { weeksRemaining } from "@/lib/services/capacity";
+import { evaluateContract, weeksRemaining } from "@/lib/services/capacity";
 import { updatePlace } from "@/lib/services/places";
 import { placeTimeWindows, volunteerPlaces } from "@/lib/db/schema";
 import {
@@ -85,6 +85,27 @@ describe("טיוטה והרשאות", () => {
     const id = await startInterview(db(), manager, s.students[2].id, "reassignment");
     await expect(saveDraft(db(), c1, id, { lines: [] })).rejects.toBeInstanceOf(ForbiddenError);
     await cancelInterview(db(), manager, id);
+  });
+});
+
+describe("קלט לפאנל שני הבנקים החי", () => {
+  it("שיבוצי אחרים מסוכמים בלי מזהים, והחישוב בלקוח שווה לחישוב בשרת", async () => {
+    const id = await startInterview(db(), interviewer, s.students[4].id, "interview");
+    try {
+      await saveDraft(db(), interviewer, id, { lines: fitLines() });
+      const d = await getDraft(db(), interviewer, id);
+      // אף מזהה של סטודנט אחר לא יוצא ללקוח
+      expect(d.live.others.every((p) => p.studentId === "others" && p.isActive)).toBe(true);
+      expect(new Set(d.live.others.map((p) => p.timeWindowId)).size).toBe(d.live.others.length);
+      expect(d.live.others.length).toBeGreaterThan(0);
+      const client = evaluateContract({
+        studentId: d.live.studentId, windows: d.live.windows, activePlacements: d.live.others, bank: d.live.bank,
+        proposed: d.lines.map((l) => ({ timeWindowId: l.timeWindowId, slots: l.slots, weeklyHours: l.weeklyHours })),
+      });
+      expect(client).toEqual(d.evaluation);
+    } finally {
+      await cancelInterview(db(), interviewer, id);
+    }
   });
 });
 
