@@ -11,6 +11,7 @@ import { NotFoundError } from "@/lib/services/users";
 import { ForbiddenError } from "@/lib/permissions";
 import { DAYS } from "@/lib/services/places";
 import { SubmitButton } from "@/components/submit-button";
+import { Flash } from "@/components/flash";
 
 const input = "rounded-lg border border-border bg-transparent px-2 py-1.5 text-base";
 
@@ -39,7 +40,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
       <Link href={`/students/${iv.studentId}`} className="text-sm underline">{t("backToStudent")}</Link>
       <h1 className="mt-2 text-xl font-semibold">{isInterview ? t("interviewWith", { name: `${student.firstName} ${student.lastName}` }) : t("reassignFor", { name: `${student.firstName} ${student.lastName}` })}</h1>
       {!editable && <p className="mt-2 rounded-lg border border-border p-3 text-sm">{t(`status.${iv.status}`)}</p>}
-      {errorKey && <p role="alert" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${errorKey}`)}</p>}
+      {errorKey && <Flash tone="error" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${errorKey}`)}</Flash>}
 
       <section className="mt-4 rounded-xl border border-border p-3 text-sm" aria-labelledby="stu-h">
         <h2 id="stu-h" className="font-medium">{t("studentDetails")}</h2>

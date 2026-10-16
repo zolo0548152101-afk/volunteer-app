@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/session";
 import { ENTITIES, FIELD_TYPES, listAllFields } from "@/lib/services/custom-field-admin";
 import { SubmitButton } from "@/components/submit-button";
+import { Flash } from "@/components/flash";
 
 const input = "rounded-lg border border-border bg-background px-3 py-2";
 const ROLES = ["student", "coordinator", "interviewer", "manager"] as const;
@@ -41,8 +42,8 @@ export default async function CustomFieldsPage({ searchParams }: { searchParams:
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <p className="mt-1 text-sm text-muted">{t("intro")}</p>
-      {sp.saved && <p role="status" className="mt-3 rounded-lg border border-green-300 p-2 text-sm text-green-800">{t("saved")}</p>}
-      {sp.error && KNOWN.includes(sp.error) && <p role="alert" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${sp.error}`)}</p>}
+      {sp.saved && <Flash tone="status" className="mt-3 rounded-lg border border-green-300 p-2 text-sm text-green-800">{t("saved")}</Flash>}
+      {sp.error && KNOWN.includes(sp.error) && <Flash tone="error" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${sp.error}`)}</Flash>}
       {ENTITIES.map((e) => (
         <section key={e} className="mt-8">
           <h2 className="text-lg font-medium">{t(`entities.${e}`)}</h2>

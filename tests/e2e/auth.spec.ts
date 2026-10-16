@@ -17,6 +17,23 @@ test("סיסמה שגויה: הודעה עניינית ונשארים בכניס
   await login(page, "manager@demo.test", "wrong-password");
   await expect(page.locator("p[role=alert]")).toHaveText("האימייל או הסיסמה לא נכונים");
   await expect(page).toHaveURL(/\/login/);
+  // השגיאה מחוברת לשדות: קורא מסך מקריא אותה כשהפוקוס בשדה, והשדה מסומן כלא תקין
+  const alertId = await page.locator("p[role=alert]").getAttribute("id");
+  expect(alertId).toBeTruthy();
+  for (const label of ["אימייל", "סיסמה"]) {
+    const f = page.getByLabel(label);
+    await expect(f).toHaveAttribute("aria-invalid", "true");
+    await expect(f).toHaveAttribute("aria-describedby", alertId!);
+  }
+});
+
+test("הודעה אחרי redirect מקבלת פוקוס, כדי שקורא מסך יקריא אותה", async ({ page }) => {
+  await login(page, "manager@demo.test");
+  await expect(page).toHaveURL(/\/manager$/); // לחכות לסיום הכניסה לפני ניווט
+  await page.goto("/manager/users?error=forbidden");
+  const alert = page.locator("p[role=alert]");
+  await expect(alert).toBeVisible();
+  await expect(alert).toBeFocused();
 });
 
 for (const [email, path, heading] of [

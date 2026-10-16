@@ -7,6 +7,7 @@ import { listUsers } from "@/lib/services/users";
 import { InviteForm } from "@/components/users/invite-form";
 import { BulkAssign } from "@/components/users/bulk-assign";
 import { UserRow } from "@/components/users/user-row";
+import { Flash } from "@/components/flash";
 
 const ERRORS = ["forbidden", "not_found", "email_taken", "bad_roles", "bad_coordinator", "not_student", "last_manager", "self_lockout", "required", "generic"];
 
@@ -21,7 +22,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
-      {error && ERRORS.includes(error) && <p role="alert" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${error}` as never)}</p>}
+      {error && ERRORS.includes(error) && <Flash tone="error" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${error}` as never)}</Flash>}
 
       <section className="mt-6" aria-labelledby="invite-h">
         <h2 id="invite-h" className="text-lg font-medium">{t("inviteTitle")}</h2>

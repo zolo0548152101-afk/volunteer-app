@@ -8,6 +8,7 @@ import { ForbiddenError } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import { ReportErrorBanner } from "@/components/student/report-error";
 import { SubmitButton } from "@/components/submit-button";
+import { Flash } from "@/components/flash";
 
 const STATUSES: ReportStatus[] = ["pending", "needs_correction", "approved", "rejected"];
 const input = "rounded-lg border border-border bg-background px-3 py-2";
@@ -56,7 +57,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
         {filtered && <Link href={`/reports?status=${status}`} className="inline-flex min-h-11 items-center underline">{t("clearFilters")}</Link>}
       </form>
       <ReportErrorBanner code={sp.error} />
-      {bulkMsg && <p role="status" className="mt-3 rounded-lg border border-border p-3 text-sm">{bulkMsg}</p>}
+      {bulkMsg && <Flash tone="status" className="mt-3 rounded-lg border border-border p-3 text-sm">{bulkMsg}</Flash>}
       {status === "pending" && list.length > 0 && (
         <form id="bulk" action={bulkApproveAction} className="mt-3 flex flex-wrap items-center gap-3 text-sm">
           <input type="hidden" name="back" value={back} />

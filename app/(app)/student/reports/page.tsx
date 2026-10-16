@@ -4,6 +4,7 @@ import { formatDay } from "@/lib/date-format";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/session";
 import { listMyReports, myProgress } from "@/lib/services/reports";
+import { Flash } from "@/components/flash";
 
 export default async function MyReports({ searchParams }: { searchParams: Promise<{ sent?: string }> }) {
   const [sp, t, actor, format] = await Promise.all([searchParams, getTranslations("myReports"), requireRole("student"), getFormatter()]);
@@ -11,7 +12,7 @@ export default async function MyReports({ searchParams }: { searchParams: Promis
   return (
     <main className="mx-auto w-full max-w-xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
-      {sp.sent && <p role="status" className="mt-2 rounded-lg border border-green-300 p-3 text-sm text-green-800">{t("sent")}</p>}
+      {sp.sent && <Flash tone="status" className="mt-2 rounded-lg border border-green-300 p-3 text-sm text-green-800">{t("sent")}</Flash>}
       <p className="mt-2 text-sm text-muted">{t("progress", { approved: progress.approved, pending: progress.pending })}</p>
       <div className="mt-3 flex gap-4">
         <Link href="/student/report" className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("newReport")}</Link>

@@ -1,5 +1,5 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useId } from "react";
 import { useTranslations } from "next-intl";
 import { inviteUserAction, type UserActionState } from "@/lib/actions/users";
 import { roles } from "@/lib/permissions";
@@ -9,12 +9,13 @@ export function InviteForm({ coordinators }: { coordinators: { id: string; name:
   const t = useTranslations("users");
   const tr = useTranslations("roles");
   const [state, action, pending] = useActionState<UserActionState, FormData>(inviteUserAction, {});
+  const errId = useId();
   return (
     <form action={action} className="mt-3 flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label={t("firstName")} name="firstName" />
         <Field label={t("lastName")} name="lastName" />
-        <Field label={t("email")} name="email" type="email" autoComplete="off" />
+        <Field label={t("email")} name="email" type="email" autoComplete="off" errorId={state.error === "email_taken" ? errId : undefined} />
         <label className="flex flex-col gap-1 text-sm">
           {t("phone")}
           <input name="phone" type="tel" className="rounded-lg border border-border bg-transparent px-3 py-2 text-base" />
@@ -35,7 +36,7 @@ export function InviteForm({ coordinators }: { coordinators: { id: string; name:
           {coordinators.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </label>
-      <FormError message={state.error ? t(`errors.${state.error}` as never) : undefined} />
+      <FormError id={errId} message={state.error ? t(`errors.${state.error}` as never) : undefined} />
       {state.ok && <p role="status" className="text-sm text-green-700">{t("invited")}</p>}
       <Submit pending={pending}>{t("invite")}</Submit>
     </form>

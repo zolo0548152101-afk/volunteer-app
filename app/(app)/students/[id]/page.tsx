@@ -14,6 +14,7 @@ import { NotFoundError } from "@/lib/services/users";
 import { ForbiddenError } from "@/lib/permissions";
 import { CustomFields } from "@/components/custom-fields/custom-fields";
 import { SubmitButton } from "@/components/submit-button";
+import { Flash } from "@/components/flash";
 
 export default async function StudentCard({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; done?: string }> }) {
   const [{ id }, sp, actor, t, ti, td, tdt, format] = await Promise.all([params, searchParams, requireActor(), getTranslations("studentCard"), getTranslations("interviews"), getTranslations("days"), getTranslations("degreeTypes"), getFormatter()]);
@@ -35,8 +36,8 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{s.firstName} {s.lastName}</h1>
-      {sp.done && <p role="status" className="mt-2 rounded-lg border border-green-300 p-3 text-sm text-green-800">{t("done")}</p>}
-      {errorKey && <p role="alert" className="mt-2 rounded-lg border border-red-300 p-3 text-sm text-red-700">{ti(`errors.${errorKey}`)}</p>}
+      {sp.done && <Flash tone="status" className="mt-2 rounded-lg border border-green-300 p-3 text-sm text-green-800">{t("done")}</Flash>}
+      {errorKey && <Flash tone="error" className="mt-2 rounded-lg border border-red-300 p-3 text-sm text-red-700">{ti(`errors.${errorKey}`)}</Flash>}
       <div className="mt-3 flex flex-wrap gap-3">
         <Link href={`/certificate/${id}`} className="rounded-lg border border-border px-4 py-2">{ti("certificateLink")}</Link>
         {draft && <Link href={`/interviews/${draft.id}`} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("continueDraft")}</Link>}

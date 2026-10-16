@@ -5,6 +5,7 @@ import { requireRole } from "@/lib/session";
 import { loadAdminSettings, LOOKUP_KINDS } from "@/lib/services/settings";
 import type { RuleKind } from "@/lib/services/reminders";
 import { SubmitButton } from "@/components/submit-button";
+import { Flash } from "@/components/flash";
 
 const input = "rounded-lg border border-border bg-background px-3 py-2";
 const btn = "self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground";
@@ -16,12 +17,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const current = s.years.find((y) => y.isCurrent);
   const field = (label: string, node: React.ReactNode) => <label className="flex flex-col gap-1 text-sm">{label}{node}</label>;
   const section = (id: string, title: string, body: React.ReactNode) => (
-    <section id={id} className="mt-8 scroll-mt-4"><h2 className="text-lg font-medium">{title}</h2>{sp.saved === id && <p role="status" className="mt-2 rounded-lg border border-green-300 p-2 text-sm text-green-800">{t("saved")}</p>}{body}</section>
+    <section id={id} className="mt-8 scroll-mt-4"><h2 className="text-lg font-medium">{title}</h2>{sp.saved === id && <Flash tone="status" className="mt-2 rounded-lg border border-green-300 p-2 text-sm text-green-800">{t("saved")}</Flash>}{body}</section>
   );
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
-      {sp.error && KNOWN.includes(sp.error) && <p role="alert" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${sp.error}`)}</p>}
+      {sp.error && KNOWN.includes(sp.error) && <Flash tone="error" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${sp.error}`)}</Flash>}
 
       {section("general", t("general"), (
         <form action={saveGeneralAction} className="mt-3 flex flex-col gap-3">
