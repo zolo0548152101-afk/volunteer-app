@@ -84,14 +84,15 @@ export async function buildReport(db: Db, actor: SessionUser, kind: ReportKind, 
     const cols: Column[] = [{ key: "place", type: "text" }, { key: "city", type: "text" }, { key: "requestedWeekly", type: "hours" }, { key: "allocatedWeekly", type: "hours" }, { key: "remainingWeekly", type: "hours" }, { key: "approvedYear", type: "hours" }];
     if (!year) return empty(cols);
     const usage = await windowUsageRows(db, org);
-    const places = await db.execute<{ id: string; name: string; city: string | null; approved: string }>(sql`
-      SELECT vp.id, vp.name, vp.city,
+    const places = await db.execute<{ id: string; name: string; city: string | null; status: string; approved: string }>(sql`
+      SELECT vp.id, vp.name, vp.city, vp.status,
              COALESCE((SELECT SUM(r.approved_hours) FROM hour_reports r JOIN users u ON u.id = r.student_id
                        WHERE r.place_id = vp.id AND r.academic_year_id = ${year.id} AND ${COUNTED} ${monthCond(filters.month)} ${studentScope}), 0) AS approved
-      FROM volunteer_places vp WHERE vp.organization_id = ${org} AND vp.status = 'active' ORDER BY vp.name`);
+      FROM volunteer_places vp WHERE vp.organization_id = ${org} ORDER BY vp.name`);
     const by = new Map<string, { req: number; alloc: number; rem: number }>();
     for (const u of usage) { const c = by.get(u.placeId) ?? { req: 0, alloc: 0, rem: 0 }; c.req += u.requestedHours; c.alloc += u.allocatedHours; c.rem += u.remainingHours; by.set(u.placeId, c); }
-    return { kind, yearName: year.name, columns: cols, rows: places.rows.map((p) => {
+    return { kind, yearName: year.name, columns: cols, rows: places.rows.filter((p) => p.status === "active" || num(p.approved) > 0 || (by.get(p.id)?.alloc ?? 0) > 0).map((p) => {
+      // מקום שהושהה/נסגר נשאר בדוח כל עוד יש בו שיבוצים או שעות מאושרות השנה
       const c = by.get(p.id) ?? { req: 0, alloc: 0, rem: 0 };
       return { place: p.name, city: p.city, requestedWeekly: round2(c.req), allocatedWeekly: round2(c.alloc), remainingWeekly: round2(c.rem), approvedYear: num(p.approved) };
     }) };
@@ -161,7 +162,7 @@ export async function dashboard(db: Db, actor: SessionUser) {
   const [c] = (await db.execute<{ active: number; awaiting: number; stale: number; pending: number }>(sql`
     SELECT
       (SELECT count(*)::int FROM users u WHERE u.organization_id = ${org} AND 'student' = ANY(u.roles) AND u.status = 'active' ${studentScope}) AS active,
-      (SELECT count(*)::int FROM users u JOIN student_profiles sp ON sp.user_id = u.id WHERE u.organization_id = ${org} AND u.status = 'active' AND sp.profile_completed_at IS NOT NULL
+      (SELECT count(*)::int FROM users u JOIN student_profiles sp ON sp.user_id = u.id WHERE u.organization_id = ${org} AND 'student' = ANY(u.roles) AND u.status = 'active' AND sp.profile_completed_at IS NOT NULL
          AND NOT EXISTS (SELECT 1 FROM interviews i WHERE i.student_id = u.id AND i.status = 'finalized' AND i.kind = 'interview') ${studentScope}) AS awaiting,
       (SELECT count(*)::int FROM hour_reports r JOIN users u ON u.id = r.student_id WHERE r.organization_id = ${org} AND r.status = 'pending'
          AND r.submitted_at <= now() - make_interval(days => ${escDays}) ${studentScope}) AS stale,

@@ -140,3 +140,53 @@ describe("תיבת רכז והחלטות", () => {
     expect(res.filter((x) => x.status === "fulfilled")).toHaveLength(1);
   });
 });
+
+describe("שיבוץ שהסתיים, ותאריך מחוץ לתקופת השיבוץ (ביקורת Fable)", () => {
+  beforeAll(async () => {
+    // תחילת השיבוץ בעבר רחוק מספיק, כדי שהבדיקות לא יהיו תלויות בתאריך ה-seed
+    await db().update(placements).set({ startedAt: "2026-10-01" }).where(eq(placements.id, placementId));
+  });
+  it("אי אפשר לדווח לפני תחילת השיבוץ", async () => {
+    await db().update(placements).set({ startedAt: daysAgo(3) }).where(eq(placements.id, placementId));
+    try {
+      await expect(submitReport(db(), st, vol({ volunteerDate: daysAgo(7) }))).rejects.toMatchObject({ code: "not_your_placement" });
+    } finally {
+      await db().update(placements).set({ startedAt: "2026-10-01" }).where(eq(placements.id, placementId));
+    }
+  });
+
+  it("דיווח שהוחזר לתיקון לא נתקע אחרי שיבוץ מחדש: מותר בתוך תקופת השיבוץ שהסתיים, אסור אחריה", async () => {
+    const day = daysAgo(12);
+    const id = await submitReport(db(), st, vol({ volunteerDate: day }));
+    await decide(db(), c1, id, { kind: "needs_correction", notes: "תקנו שעות" });
+    // השיבוץ מוחלף ונסגר לפני שבוע
+    await db().update(placements).set({ isActive: false, endedAt: daysAgo(9) }).where(eq(placements.id, placementId));
+    try {
+      await expect(resubmitReport(db(), st, id, vol({ volunteerDate: day, reportedHours: 2 }))).resolves.toBeUndefined();
+      await expect(submitReport(db(), st, vol({ volunteerDate: daysAgo(1) }))).rejects.toMatchObject({ code: "not_your_placement" }); // אחרי סיום השיבוץ
+      await expect(submitReport(db(), st, vol({ volunteerDate: daysAgo(11) }))).resolves.toBeTruthy(); // בתוך התקופה
+    } finally {
+      await db().update(placements).set({ isActive: true, endedAt: null }).where(eq(placements.id, placementId));
+    }
+  });
+
+  it("שורת טיוטה שלא הופעלה אף פעם אינה שיבוץ לדיווח", async () => {
+    const [p] = await db().select().from(placements).where(eq(placements.id, placementId));
+    const [draft] = await db().insert(placements).values({ ...p, id: undefined, isActive: false, startedAt: null, endedAt: null }).returning();
+    try {
+      await expect(submitReport(db(), st, vol({ placementId: draft.id, volunteerDate: daysAgo(10) }))).rejects.toMatchObject({ code: "not_your_placement" });
+    } finally {
+      await db().delete(placements).where(eq(placements.id, draft.id));
+    }
+  });
+
+  it("ביטול אישור מחדש את מועד ההגשה, כדי שההסלמה תספור מהחזרה לתור", async () => {
+    const id = await submitReport(db(), st, vol({ volunteerDate: daysAgo(10) }));
+    await decide(db(), c1, id, { kind: "approve" });
+    const [a] = await db().select().from(hourReports).where(eq(hourReports.id, id));
+    await new Promise((r) => setTimeout(r, 20));
+    await decide(db(), manager, id, { kind: "unapprove", reason: "בדיקה" });
+    const [b] = await db().select().from(hourReports).where(eq(hourReports.id, id));
+    expect(b.submittedAt.getTime()).toBeGreaterThan(a.submittedAt.getTime());
+  });
+});

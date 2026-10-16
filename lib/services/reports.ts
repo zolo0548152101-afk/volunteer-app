@@ -64,10 +64,13 @@ async function validate(tx: Db | Tx, actor: SessionUser, input: SubmitInput, exc
 
   let placement: { id: string; placeId: string } | null = null;
   if (input.type === "volunteering" || input.placementId) {
-    const [p] = await tx.select({ id: placements.id, placeId: placements.placeId, studentId: placements.studentId, isActive: placements.isActive })
+    const [p] = await tx.select({ id: placements.id, placeId: placements.placeId, studentId: placements.studentId, isActive: placements.isActive, startedAt: placements.startedAt, endedAt: placements.endedAt })
       .from(placements).where(and(eq(placements.id, input.placementId ?? ""), eq(placements.organizationId, actor.organizationId))).limit(1);
-    // דיווח התנדבות רק על שיבוץ פעיל של הסטודנט עצמו
-    if (!p || p.studentId !== actor.id || (input.type === "volunteering" && !p.isActive)) throw new ReportError("not_your_placement");
+    // דיווח התנדבות רק על שיבוץ של הסטודנט עצמו: פעיל, או שיבוץ שהסתיים והתאריך בתוך תקופתו
+    // (דיווח שהוחזר לתיקון לא נתקע כששיבוץ מחדש מחליף את החוזה)
+    const wasActive = !!p && (p.isActive || p.endedAt !== null); // שורת טיוטה שלא הופעלה אף פעם אינה שיבוץ
+    const inPeriod = !!p && (!p.startedAt || input.volunteerDate >= String(p.startedAt)) && (!p.endedAt || input.volunteerDate <= String(p.endedAt));
+    if (!p || p.studentId !== actor.id || (input.type === "volunteering" && (!wasActive || !inPeriod))) throw new ReportError("not_your_placement");
     placement = { id: p.id, placeId: p.placeId };
   }
 
@@ -212,7 +215,9 @@ export async function decide(db: Db, actor: SessionUser, reportId: string, d: De
       if (old.status !== "approved") throw new ReportError("bad_transition");
       if (!clean(d.reason)) throw new ReportError("reason_required");
       // השעות המאושרות חוזרות לערך שדווח, כדי שהרכז לא יראה מספר ישן כברירת מחדל
-      patch = { status: "pending", approvedAt: null, approvedBy: null, approvedHours: old.reportedHours as unknown as number, coordinatorNotes: null };
+      patch = { status: "pending", approvedAt: null, approvedBy: null, approvedHours: old.reportedHours as unknown as number, coordinatorNotes: null,
+        // הדיווח חוזר לתור: ההסלמה סופרת ממועד החזרה, לא מההגשה המקורית
+        submittedAt: new Date() };
       action = "unapprove";
       reason = d.reason.trim();
     } else {
