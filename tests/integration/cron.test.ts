@@ -91,6 +91,17 @@ describe("הסלמת דיווחים", () => {
     expect((await runEscalation(db(), { organizationId: s.organizationId, now: later(9) })).sent).toBe(n);
   });
 
+  it("עותק למנהל נרשם ביומן בנפרד ולא נספר כשליחה לנמען הראשי", async () => {
+    await setRule("report_escalation", { firstAfterDays: 7, maxSends: 1, repeatEveryDays: 7, copyManager: true });
+    const n = await pendingCount();
+    await runEscalation(db(), { organizationId: s.organizationId, now: later(9) });
+    expect((await logs("report_escalation")).filter((l) => l.ok)).toHaveLength(n);
+    expect((await logs("report_escalation_copy")).length).toBeGreaterThan(0);
+    sent = [];
+    await runEscalation(db(), { organizationId: s.organizationId, now: later(10) });
+    expect(sent).toHaveLength(0); // ההסלמה לא חוזרת
+  });
+
   it("דיווח שהוגש מחדש מתחיל ספירה חדשה", async () => {
     await runEscalation(db(), { organizationId: s.organizationId, now: later(9) });
     const [r] = await db().select().from(hourReports).where(and(eq(hourReports.organizationId, s.organizationId), eq(hourReports.status, "pending")));

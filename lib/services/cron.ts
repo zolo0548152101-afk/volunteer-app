@@ -2,7 +2,7 @@
  * עבודות רקע (PRD 7.5): הסלמת דיווחים, סטודנט שלא מדווח, וסיכום יומי לרכז.
  * כל ההחלטות מגיעות מ-notification_rules (המנהל עורך) דרך nextSendDecision.
  * הרצה כפולה/מקבילה בטוחה: כל עבודה רצה בטרנזקציה עם נעילת advisory לפי ארגון וסוג,
- * והיומן נכתב באותה טרנזקציה, כך שהרצה שנייה רואה את מה שכבר נשלח.
+ * והיומן נכתב מיד אחרי כל שליחה (מחוץ לטרנזקציה, כך שנקלט גם אם ההרצה נופלת אחר כך), כך שהרצה שנייה רואה את מה שכבר נשלח.
  * שליחה שנכשלה בכל הערוצים נרשמת ok=false ולא נספרת, ולכן תנוסה שוב בהרצה הבאה.
  */
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
@@ -45,7 +45,9 @@ async function deliver(p: Person, channels: Channel[], template: string, data: R
   return { ok, error, channel: channels[0] ?? ("email" as Channel) };
 }
 
-async function logSend(tx: Tx, orgId: string, kind: string, entityId: string, recipientId: string, r: { ok: boolean; error?: string; channel: Channel }, now: Date, entity = "hour_report") {
+async function logSend(tx: Db | Tx, orgId: string, kind: string, entityId: string, recipientId: string, r: { ok: boolean; error?: string; channel: Channel }, now: Date, entity = "hour_report") {
+  // הקריאה מעבירה את ה-db (לא את הטרנזקציה): הרישום נקלט מיד, כך שכשל מאוחר בהרצה (אחרי שליחה שכבר יצאה) לא מוחק אותו והשליחה לא תחזור בהרצה הבאה.
+  // הנעילה (advisory, ברמת הטרנזקציה) ממשיכה לחסום הרצה מקבילה
   // sentAt = זמן ההרצה (לא שעון המסד), כדי שהרצה מדומה בבדיקות ושעון אמיתי יתנהגו אותו דבר
   await tx.insert(notificationLog).values({ organizationId: orgId, kind, entity, entityId, recipientId, channel: r.channel, ok: r.ok, error: r.error ?? null, sentAt: now });
 }
@@ -101,10 +103,12 @@ export async function runEscalation(db: Db, opts: CronOpts = {}): Promise<CronSu
         if (!primary) continue;
         const data = { student: `${r.sf} ${r.sl}`, days: Math.floor((now.getTime() - r.submittedAt.getTime()) / DAY) };
         const res = await deliver(primary, rule.channels, "report.escalation", data);
-        await logSend(tx, org.id, "report_escalation", r.id, primary.id, res, now);
+        await logSend(db, org.id, "report_escalation", r.id, primary.id, res, now);
         if (res.ok) {
           sum.sent++;
-          if (rule.copyManager) for (const m of managers.filter((m) => m.id !== primary.id)) await deliver(m, rule.channels, "report.escalation", data);
+          if (rule.copyManager) for (const m of managers.filter((m) => m.id !== primary.id)) {
+            await logSend(db, org.id, "report_escalation_copy", r.id, m.id, await deliver(m, rule.channels, "report.escalation", data), now);
+          }
         } else sum.failed++;
       }
     });
@@ -143,10 +147,12 @@ export async function runReminders(db: Db, opts: CronOpts = {}): Promise<CronSum
           const p: Person = { id: r.id, email: r.email, phone: r.phone, locale: r.locale, name: `${r.f} ${r.l}` };
           const data = { days: Math.floor((now.getTime() - triggeredAt.getTime()) / DAY) };
           const res = await deliver(p, inact.channels, "student.inactivity", data);
-          await logSend(tx, org.id, "student_inactivity", r.id, p.id, res, now, "user");
+          await logSend(db, org.id, "student_inactivity", r.id, p.id, res, now, "user");
           if (res.ok) {
             sum.sent++;
-            if (inact.copyManager) for (const m of managers) await deliver(m, inact.channels, "student.inactivity", { ...data, days: data.days });
+            if (inact.copyManager) for (const m of managers) {
+              await logSend(db, org.id, "student_inactivity_copy", r.id, m.id, await deliver(m, inact.channels, "student.inactivity", data), now, "user");
+            }
           } else sum.failed++;
         }
       }
@@ -164,7 +170,7 @@ export async function runReminders(db: Db, opts: CronOpts = {}): Promise<CronSum
           if (done.has(c.id) || c.n === 0) continue;
           const p: Person = { id: c.id, email: c.email, phone: c.phone, locale: c.locale, name: `${c.first_name} ${c.last_name}` };
           const res = await deliver(p, dig.channels, "coordinator.digest", { count: c.n });
-          await logSend(tx, org.id, "coordinator_digest", c.id, c.id, res, now, "user");
+          await logSend(db, org.id, "coordinator_digest", c.id, c.id, res, now, "user");
           if (res.ok) sum.sent++; else sum.failed++;
         }
       }
