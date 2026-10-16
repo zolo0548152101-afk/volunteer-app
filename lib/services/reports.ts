@@ -202,6 +202,14 @@ export async function listInbox(db: Db, actor: SessionUser, opts: InboxFilters =
   return rows.filter((x) => can(actor, "read", "hour_report", { organizationId: actor.organizationId, ownerId: x.r.studentId, coordinatorIds: x.studentCoordinator ? [x.studentCoordinator] : [] })).map(shape);
 }
 
+/** מונה לתפריט: דיווחים ממתינים בהיקף של המשתמש (מנהל: הארגון; רכז: הסטודנטים שלו) */
+export async function countPendingInbox(db: Db, actor: SessionUser): Promise<number> {
+  if (!can(actor, "read", "hour_report", { organizationId: actor.organizationId, coordinatorIds: [actor.id] })) return 0;
+  const [r] = await db.select({ n: sql<number>`count(*)::int` }).from(hourReports).innerJoin(users, eq(users.id, hourReports.studentId))
+    .where(and(...inboxScope(actor), eq(hourReports.status, "pending")));
+  return r?.n ?? 0;
+}
+
 /** אפשרויות הסינון בתיבה: הסטודנטים והמקומות שיש להם דיווחים במצב הנבחר, בהיקף של המשתמש */
 export async function inboxFilterOptions(db: Db, actor: SessionUser, status: ReportStatus) {
   assertCan(actor, "read", "hour_report", { organizationId: actor.organizationId, coordinatorIds: [actor.id] });

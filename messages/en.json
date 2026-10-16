@@ -16,7 +16,18 @@
     "users": "Users",
     "settings": "Settings",
     "logout": "Log out",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "groupMain": "Manage",
+    "groupReports": "Reports",
+    "groupSettings": "Settings",
+    "groupMe": "Mine",
+    "queue": "Awaiting interview",
+    "customFields": "Custom fields",
+    "certificate": "Hours certificate",
+    "more": "More",
+    "mainNav": "Main navigation",
+    "bottomNav": "Bottom navigation",
+    "pendingCount": "{n} pending reports"
   },
   "auth": {
     "loginTitle": "Sign in",

@@ -37,8 +37,8 @@ export async function requireActor(): Promise<SessionUser & { name: string }> {
 }
 
 /** כמו requireActor, ודורש תפקיד מסוים (אחרת חזרה לעמוד הבית של המשתמש) */
-export async function requireRole(role: Role) {
+export async function requireRole(...roles: Role[]) {
   const a = await requireActor();
-  if (!a.roles.includes(role)) redirect("/");
+  if (!roles.some((r) => a.roles.includes(r))) redirect("/");
   return a;
 }

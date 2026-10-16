@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/session";
 import { listAwaitingInterview } from "@/lib/services/students";
 
 export default async function InterviewerHome() {
-  const [t, actor, format] = await Promise.all([getTranslations("queue"), requireRole("interviewer"), getFormatter()]);
+  const [t, actor, format] = await Promise.all([getTranslations("queue"), requireRole("interviewer", "manager"), getFormatter()]);
   const queue = await listAwaitingInterview(db(), actor);
   return (
     <main className="mx-auto w-full max-w-3xl p-4">

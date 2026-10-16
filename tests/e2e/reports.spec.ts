@@ -79,7 +79,7 @@ test("רכז אחר ומראיין לא רואים את תיבת הדיווחי�
 test("בית הסטודנט: התקדמות, חוזה, כפתור דיווח ודיווחים אחרונים", async ({ page }) => {
   await login(page, "student1@demo.test");
   await page.goto("/student");
-  await expect(page.getByRole("link", { name: /דיווח שעות/ })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("link", { name: /דיווח שעות/ })).toBeVisible();
   await expect(page.getByRole("progressbar")).toBeVisible();
   await expect(page.getByRole("heading", { name: "החוזה שלך" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "הדיווחים האחרונים" })).toBeVisible();

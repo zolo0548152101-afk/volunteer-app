@@ -11,10 +11,10 @@ async function login(page: import("@playwright/test").Page, email: string) {
 test("מנהל: לוח בקרה, דוח וייצוא Excel", async ({ page }) => {
   await login(page, "manager@demo.test");
   await page.goto("/analytics");
-  await expect(page.getByRole("heading", { name: "לוח בקרה" })).toBeVisible();
-  await expect(page.getByText("סטודנטים פעילים")).toBeVisible();
-  await expect(page.getByRole("progressbar", { name: "תפוסת תקנים" })).toBeVisible();
-  await page.getByRole("link", { name: "לפי סטודנט" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: /מירב/ })).toBeVisible(); // לוח הבקרה פותח בברכה
+  await expect(page.getByRole("link", { name: /סטודנטים פעילים/ })).toBeVisible();
+  await expect(page.getByRole("link", { name: /תפוסת תקנים/ })).toBeVisible();
+  await page.getByRole("main").getByRole("link", { name: "לפי סטודנט" }).click();
   await expect(page.getByRole("columnheader", { name: "התקדמות" })).toBeVisible();
   await expect(page.getByRole("row", { name: /שירה אביב/ })).toBeVisible();
   const res = await page.request.get("/api/export/students");
@@ -45,7 +45,7 @@ test("תעודת שעות: סטודנט רואה את שלו, לא של אחר",
   await login(page, "student1@demo.test");
   await page.getByRole("link", { name: "תעודת שעות" }).click();
   await expect(page.getByRole("heading", { name: "תעודת שעות התנדבות" })).toBeVisible();
-  await expect(page.getByText("שירה אביב")).toBeVisible();
+  await expect(page.getByRole("main").getByText("שירה אביב")).toBeVisible();
   await expect(page.getByRole("button", { name: /הדפסה/ })).toBeVisible();
   const other = await page.request.get("/certificate/00000000-0000-0000-0000-000000000000");
   expect(other.status()).toBe(404);
@@ -59,7 +59,8 @@ test("מנהל: אין גלילה אופקית בהגדרות ובלוח הבק�
     expect(overflow, path).toBe(false);
   }
   // הגרף מצויר LTR, כדי ש-text-anchor לא יתהפך בעברית
-  const dir = await page.locator("svg[aria-hidden=true]").first().evaluate((el) => getComputedStyle(el).direction);
+  await page.goto("/analytics");
+  const dir = await page.locator("[aria-labelledby=h-month] [dir=ltr]").first().evaluate((el) => getComputedStyle(el).direction);
   expect(dir).toBe("ltr");
 });
 

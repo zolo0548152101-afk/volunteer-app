@@ -16,7 +16,18 @@
     "users": "משתמשים",
     "settings": "הגדרות",
     "logout": "יציאה",
-    "skipToContent": "דילוג לתוכן"
+    "skipToContent": "דילוג לתוכן",
+    "groupMain": "ניהול",
+    "groupReports": "דוחות",
+    "groupSettings": "הגדרות",
+    "groupMe": "שלי",
+    "queue": "ממתינים לראיון",
+    "customFields": "שדות מותאמים",
+    "certificate": "תעודת שעות",
+    "more": "עוד",
+    "mainNav": "ניווט ראשי",
+    "bottomNav": "ניווט תחתון",
+    "pendingCount": "{n} דיווחים ממתינים"
   },
   "auth": {
     "loginTitle": "כניסה למערכת",
