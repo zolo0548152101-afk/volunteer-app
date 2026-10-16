@@ -1,15 +1,8 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
+import { login } from "./helpers";
 
 try { process.loadEnvFile(".env.local"); } catch {}
-
-async function login(page: Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("אימייל").fill(email);
-  await page.getByLabel("סיסמה").fill("demo1234");
-  await page.getByRole("button", { name: "כניסה" }).click();
-  await page.waitForURL((u) => !u.pathname.startsWith("/login"));
-}
 
 test.afterAll(async () => {
   if (!process.env.DATABASE_URL) return;

@@ -1,15 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
+import { login } from "./helpers";
 
 try { process.loadEnvFile(".env.local"); } catch {}
-
-async function login(page: import("@playwright/test").Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("אימייל").fill(email);
-  await page.getByLabel("סיסמה").fill("demo1234");
-  await page.getByRole("button", { name: "כניסה" }).click();
-  await expect(page).not.toHaveURL(/\/login/);
-}
 
 const yesterday = new Date(Date.now() - 86_400_000).toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" });
 

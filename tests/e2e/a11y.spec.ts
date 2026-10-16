@@ -1,13 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-
-async function login(page: Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("אימייל").fill(email);
-  await page.getByLabel("סיסמה").fill("demo1234");
-  await page.getByRole("button", { name: "כניסה" }).click();
-  await expect(page).not.toHaveURL(/\/login/);
-}
+import { login } from "./helpers";
 
 async function check(page: Page, path: string) {
   await page.goto(path);

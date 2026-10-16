@@ -1,12 +1,5 @@
 import { expect, test } from "@playwright/test";
-
-async function login(page: import("@playwright/test").Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("אימייל").fill(email);
-  await page.getByLabel("סיסמה").fill("demo1234");
-  await page.getByRole("button", { name: "כניסה" }).click();
-  await expect(page).not.toHaveURL(/\/login/);
-}
+import { login } from "./helpers";
 
 test("מנהל: לוח בקרה, דוח וייצוא Excel", async ({ page }) => {
   await login(page, "manager@demo.test");

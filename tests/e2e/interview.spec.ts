@@ -1,18 +1,11 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
+import { login } from "./helpers";
 
 try { process.loadEnvFile(".env.local"); } catch {}
 
 const STUDENT = "student5@demo.test"; // ליאן, ממתינה לראיון בנתוני הדמו
-
-async function login(page: import("@playwright/test").Page, email: string) {
-  await page.goto("/login");
-  await page.getByLabel("אימייל").fill(email);
-  await page.getByLabel("סיסמה").fill("demo1234");
-  await page.getByRole("button", { name: "כניסה" }).click();
-  await expect(page).not.toHaveURL(/\/login/);
-}
 
 async function reset() {
   if (!process.env.DATABASE_URL) return;
