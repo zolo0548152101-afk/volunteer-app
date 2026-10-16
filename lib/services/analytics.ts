@@ -9,7 +9,7 @@ import type { Db } from "@/lib/db";
 import { academicYears } from "@/lib/db/schema";
 import { windowUsageRows } from "@/lib/db/queries/capacity";
 import { assertCan, ForbiddenError, type SessionUser } from "@/lib/permissions";
-import { round2 } from "@/lib/services/capacity";
+import { round2, weeksRemaining } from "@/lib/services/capacity";
 import { listFields, loadValuesMany } from "@/lib/services/custom-fields";
 import { loadRules } from "@/lib/services/cron";
 
@@ -154,20 +154,29 @@ export async function buildReport(db: Db, actor: SessionUser, kind: ReportKind, 
 }
 
 /** ספירות ללוח הבקרה (למנהל: כל הארגון; לרכז: הסטודנטים שלו) */
+export type DashboardData = Awaited<ReturnType<typeof dashboard>>;
+
 export async function dashboard(db: Db, actor: SessionUser) {
   const { coordinatorId } = scopeOf(actor, {});
   const org = actor.organizationId;
+  const isManager = actor.roles.includes("manager");
   const year = await currentYear(db, org);
   const studentScope: SQL = coordinatorId ? sql`AND u.coordinator_id = ${coordinatorId}` : sql``;
   const escDays = (await loadRules(db, org)).report_escalation.firstAfterDays;
-  const [c] = (await db.execute<{ active: number; awaiting: number; stale: number; pending: number }>(sql`
+  const yearCond: SQL = year ? sql`AND r.academic_year_id = ${year.id}` : sql`AND false`;
+  const [c] = (await db.execute<{ active: number; new_month: number; awaiting: number; awaiting_week: number; stale: number; pending: number; hours_year: string; hours_30d: string }>(sql`
     SELECT
       (SELECT count(*)::int FROM users u WHERE u.organization_id = ${org} AND 'student' = ANY(u.roles) AND u.status = 'active' ${studentScope}) AS active,
+      (SELECT count(*)::int FROM users u WHERE u.organization_id = ${org} AND 'student' = ANY(u.roles) AND u.status = 'active' AND u.created_at >= date_trunc('month', now()) ${studentScope}) AS new_month,
       (SELECT count(*)::int FROM users u JOIN student_profiles sp ON sp.user_id = u.id WHERE u.organization_id = ${org} AND 'student' = ANY(u.roles) AND u.status = 'active' AND sp.profile_completed_at IS NOT NULL
          AND NOT EXISTS (SELECT 1 FROM interviews i WHERE i.student_id = u.id AND i.status = 'finalized' AND i.kind = 'interview') ${studentScope}) AS awaiting,
+      (SELECT count(*)::int FROM users u JOIN student_profiles sp ON sp.user_id = u.id WHERE u.organization_id = ${org} AND 'student' = ANY(u.roles) AND u.status = 'active' AND sp.profile_completed_at >= now() - interval '7 days'
+         AND NOT EXISTS (SELECT 1 FROM interviews i WHERE i.student_id = u.id AND i.status = 'finalized' AND i.kind = 'interview') ${studentScope}) AS awaiting_week,
       (SELECT count(*)::int FROM hour_reports r JOIN users u ON u.id = r.student_id WHERE r.organization_id = ${org} AND r.status = 'pending'
          AND r.submitted_at <= now() - make_interval(days => ${escDays}) ${studentScope}) AS stale,
-      (SELECT count(*)::int FROM hour_reports r JOIN users u ON u.id = r.student_id WHERE r.organization_id = ${org} AND r.status = 'pending' ${studentScope}) AS pending`)).rows;
+      (SELECT count(*)::int FROM hour_reports r JOIN users u ON u.id = r.student_id WHERE r.organization_id = ${org} AND r.status = 'pending' ${studentScope}) AS pending,
+      (SELECT COALESCE(SUM(r.approved_hours), 0) FROM hour_reports r JOIN users u ON u.id = r.student_id WHERE r.organization_id = ${org} AND ${COUNTED} ${yearCond} ${studentScope}) AS hours_year,
+      (SELECT COALESCE(SUM(r.approved_hours), 0) FROM hour_reports r JOIN users u ON u.id = r.student_id WHERE r.organization_id = ${org} AND ${COUNTED} ${yearCond} AND r.volunteer_date >= (current_date - 30) ${studentScope}) AS hours_30d`)).rows;
   const usage = await windowUsageRows(db, org);
   const slots = await db.execute<{ total: string; used: string }>(sql`
     SELECT COALESCE(SUM(w.slots), 0) AS total,
@@ -175,13 +184,57 @@ export async function dashboard(db: Db, actor: SessionUser) {
     FROM place_time_windows w WHERE w.organization_id = ${org} AND w.is_active`);
   const [by] = slots.rows;
   const totalSlots = round2(Number(by?.total ?? 0)), usedSlots = round2(Number(by?.used ?? 0));
+
+  // הדיווחים שמחכים הכי הרבה (בהיקף של המשתמש)
+  const oldest = await db.execute<{ id: string; student_id: string; student: string; place: string | null; window_label: string | null; coordinator: string | null; report_type: string; hours: string; days: number }>(sql`
+    SELECT r.id, u.id AS student_id, u.first_name || ' ' || u.last_name AS student, vp.name AS place, w.label AS window_label,
+           c.first_name || ' ' || c.last_name AS coordinator, r.report_type, r.reported_hours AS hours,
+           floor(extract(epoch FROM (now() - r.submitted_at)) / 86400)::int AS days
+    FROM hour_reports r JOIN users u ON u.id = r.student_id
+      LEFT JOIN volunteer_places vp ON vp.id = r.place_id
+      LEFT JOIN placements p ON p.id = r.placement_id LEFT JOIN place_time_windows w ON w.id = p.time_window_id
+      LEFT JOIN users c ON c.id = u.coordinator_id
+    WHERE r.organization_id = ${org} AND r.status = 'pending' ${studentScope}
+    ORDER BY r.submitted_at ASC LIMIT 5`);
+
+  // עומס רכזים: למנהל בלבד (השוואה בין רכזים)
+  const coordinators = isManager ? (await db.execute<{ id: string; name: string; students: number; pending: number; oldest: number | null }>(sql`
+    SELECT c.id, c.first_name || ' ' || c.last_name AS name,
+           (SELECT count(*)::int FROM users s WHERE s.coordinator_id = c.id AND s.status = 'active' AND 'student' = ANY(s.roles)) AS students,
+           (SELECT count(*)::int FROM hour_reports r JOIN users s ON s.id = r.student_id WHERE s.coordinator_id = c.id AND r.status = 'pending') AS pending,
+           (SELECT floor(extract(epoch FROM (now() - min(r.submitted_at))) / 86400)::int FROM hour_reports r JOIN users s ON s.id = r.student_id WHERE s.coordinator_id = c.id AND r.status = 'pending') AS oldest
+    FROM users c WHERE c.organization_id = ${org} AND 'coordinator' = ANY(c.roles) AND c.status = 'active'
+    ORDER BY oldest DESC NULLS LAST, pending DESC, c.first_name`)).rows : [];
+
+  // תפוסה לפי מקום: תקנים משובצים מתוך תקנים מבוקשים, מחושב מהשיבוצים הפעילים
+  const placeNames = await db.execute<{ id: string; name: string; status: string }>(sql`SELECT id, name, status FROM volunteer_places WHERE organization_id = ${org} AND status = 'active' ORDER BY name`);
+  const occ = new Map<string, { slots: number; allocated: number }>();
+  for (const u of usage) { const c0 = occ.get(u.placeId) ?? { slots: 0, allocated: 0 }; occ.set(u.placeId, { slots: round2(c0.slots + u.allocatedSlots + u.remainingSlots), allocated: round2(c0.allocated + u.allocatedSlots) }); }
+  const placeOccupancy = placeNames.rows.map((p) => { const o = occ.get(p.id) ?? { slots: 0, allocated: 0 }; return { placeId: p.id, name: p.name, slots: o.slots, allocated: o.allocated, percent: o.slots ? Math.round((o.allocated / o.slots) * 100) : 0 }; })
+    .filter((p) => p.slots > 0).sort((a, b) => b.slots - a.slots).slice(0, 8);
+
   const months = await buildReport(db, actor, "months");
   const places = await buildReport(db, actor, "places");
+  const milestones = year ? await buildReport(db, actor, "milestones") : null;
+  const absences = year ? await buildReport(db, actor, "absences") : null;
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" });
+  const num = (v: unknown) => round2(Number(v ?? 0));
   return {
-    yearName: year?.name ?? "", activeStudents: c.active, awaitingInterview: c.awaiting, staleReports: c.stale, pendingReports: c.pending, escalationDays: escDays,
+    yearName: year?.name ?? "", activeStudents: c.active, newStudentsThisMonth: c.new_month, awaitingInterview: c.awaiting, awaitingThisWeek: c.awaiting_week,
+    staleReports: c.stale, pendingReports: c.pending, escalationDays: escDays,
+    hoursYear: num(c.hours_year), hoursLast30Days: num(c.hours_30d),
     slots: { total: totalSlots, used: usedSlots, percent: totalSlots ? round2((usedSlots / totalSlots) * 100) : 0, windows: usage.length },
     byMonth: months.rows.map((r) => ({ label: String(r.month), value: Number(r.approvedHours) })),
     byPlace: places.rows.filter((r) => Number(r.approvedYear) > 0).map((r) => ({ label: String(r.place), value: Number(r.approvedYear) })).sort((a, b) => b.value - a.value).slice(0, 8),
+    oldestPending: oldest.rows.map((r) => ({ id: r.id, studentId: r.student_id, studentName: r.student, placeName: r.place, windowLabel: r.window_label, coordinator: r.coordinator, reportType: r.report_type as "volunteering" | "absence", hours: num(r.hours), days: r.days })),
+    coordinators: coordinators.map((r) => ({ id: r.id, name: r.name, students: r.students, pending: r.pending, oldestDays: r.oldest })),
+    placeOccupancy,
+    year: {
+      weeksRemaining: year ? weeksRemaining(today, String(year.endDate)) : 0,
+      milestone1: milestones && milestones.rows.length > 0 ? { reached: milestones.rows.filter((r) => r.reachedMilestone !== null).length, total: milestones.rows.length } : null,
+      approvedAbsences: absences ? absences.rows.filter((r) => r.status === "approved").length : 0,
+      activePlaces: placeNames.rows.length,
+    },
   };
 }
 

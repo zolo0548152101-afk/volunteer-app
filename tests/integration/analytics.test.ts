@@ -131,6 +131,31 @@ describe("דוחות: המספרים מול המסד", () => {
     const dc1 = await dashboard(db(), c1);
     expect(dc1.activeStudents).toBe(2);
   });
+
+  it("לוח בקרה (מורחב): שעות השנה, דיווחים ותיקים, עומס רכזים ותפוסה לפי מקום – בהיקף הנכון", async () => {
+    const d = await dashboard(db(), manager);
+    // שעות השנה = סכום המאושר של כל הסטודנטים, מחושב ישירות מהמסד
+    let total = 0; for (const st of s.students) total += await approvedOf(st.id);
+    expect(d.hoursYear).toBeCloseTo(total, 2);
+    expect(d.hoursLast30Days).toBeLessThanOrEqual(d.hoursYear);
+    // הדיווחים הוותיקים: ממתינים בלבד, ממוינים מהישן לחדש, עד 5
+    expect(d.oldestPending.length).toBeLessThanOrEqual(5);
+    expect(d.oldestPending.length).toBe(Math.min(5, d.pendingReports));
+    for (let i = 1; i < d.oldestPending.length; i++) expect(d.oldestPending[i - 1].days).toBeGreaterThanOrEqual(d.oldestPending[i].days);
+    // עומס רכזים: כל הרכזים הפעילים, סכום הסטודנטים = הסטודנטים המשויכים
+    expect(d.coordinators.map((c) => c.id).sort()).toEqual(s.coordinators.map((c) => c.id).sort());
+    expect(d.coordinators.reduce((a, c) => a + c.pending, 0)).toBeLessThanOrEqual(d.pendingReports);
+    // תפוסה: משובץ ≤ תקנים, ואחוז בין 0 ל-100 (או יותר רק בחריגה מאושרת)
+    for (const p of d.placeOccupancy) { expect(p.allocated).toBeLessThanOrEqual(p.slots + 0.001); expect(p.percent).toBeGreaterThanOrEqual(0); }
+    expect(d.year.weeksRemaining).toBeGreaterThanOrEqual(0);
+    expect(d.year.activePlaces).toBeGreaterThan(0);
+    // רכז: בלי עומס רכזים, והדיווחים הוותיקים רק של הסטודנטים שלו
+    const dc1 = await dashboard(db(), c1);
+    expect(dc1.coordinators).toEqual([]);
+    const mine = new Set(s.students.filter((_, i) => i < 2).map((x) => x.id));
+    expect(dc1.oldestPending.every((r) => mine.has(r.studentId))).toBe(true);
+    expect(dc1.hoursYear).toBeLessThanOrEqual(d.hoursYear);
+  });
 });
 
 describe("ייצוא ותעודה", () => {
