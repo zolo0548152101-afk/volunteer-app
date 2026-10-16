@@ -46,7 +46,7 @@
 ### ממצא לתיקון
 | # | ממצא | למה | תיקון מוצע |
 |---|---|---|---|
-| 🟠 F1 | **הגבלת הקצב של הכניסה ניתנת לעקיפה.** היא ב-`loginAction` בלבד, אבל Auth.js חושף `POST /api/auth/callback/credentials` ישירות (ו-`/api/auth` ציבורי ב-proxy). עם CSRF token מ-`/api/auth/csrf` אפשר לנסות סיסמאות בלי מגבלה | ההגנה היחידה נגד brute-force לא חלה על המסלול הישיר | להעביר את `isLimited`/`recordAttempt`/`clearAttempts` לתוך `authorize(credentials, request)` ב-`lib/auth.ts` (יש שם גישה לכותרות); להשאיר ב-action רק את הודעת `rate_limited` למשתמש. בדיקת e2e: POST ישיר ל-callback אחרי המכסה מחזיר כישלון |
+| 🟠 F1 ✅ תוקן (`lib/auth.ts`: המגבלה ב-`authorize`, שגיאת `RateLimited` עם `code=rate_limited`; e2e חדש ב-`auth.spec.ts` מרים שרת שני עם המגבלה פועלת ומוודא שה-POST הישיר נחסם אחרי 8 כשלונות) | **הגבלת הקצב של הכניסה ניתנה לעקיפה.** היא ב-`loginAction` בלבד, אבל Auth.js חושף `POST /api/auth/callback/credentials` ישירות (ו-`/api/auth` ציבורי ב-proxy). עם CSRF token מ-`/api/auth/csrf` אפשר לנסות סיסמאות בלי מגבלה | ההגנה היחידה נגד brute-force לא חלה על המסלול הישיר | להעביר את `isLimited`/`recordAttempt`/`clearAttempts` לתוך `authorize(credentials, request)` ב-`lib/auth.ts` (יש שם גישה לכותרות); להשאיר ב-action רק את הודעת `rate_limited` למשתמש. בדיקת e2e: POST ישיר ל-callback אחרי המכסה מחזיר כישלון |
 
 ### הערות (🟡)
 - מכסות per-IP: הסטודנטים נרשמים מהבית, כל אחד מכתובת משלו, אז 10 הרשמות/שעה לכתובת בסדר. חריג: NAT סלולרי (לקוחות של אותו מפעיל חולקים כתובת); להעלות הרשמה ל-~30/שעה כפשרה. המכסה לפי מייל נשארת ההגנה העיקרית.

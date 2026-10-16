@@ -1,6 +1,6 @@
 "use server";
 
-import { AuthError } from "next-auth";
+import { AuthError, CredentialsSignin } from "next-auth";
 import { TransactionRollbackError, and, eq, inArray, sql } from "drizzle-orm";
 import { headers } from "next/headers";
 import { getToken } from "next-auth/jwt";
@@ -11,14 +11,12 @@ import { users } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/password";
 import { safeNext, sendLink } from "@/lib/services/auth-links";
 import { setPasswordFromToken } from "@/lib/services/credentials";
-import { clearAttempts, clientIp, isLimited, limitKey, recordAttempt } from "@/lib/services/rate-limit";
+import { clientIp, isLimited, limitKey, recordAttempt } from "@/lib/services/rate-limit";
 import type { TokenKind } from "@/lib/services/tokens";
 
 export type FormState = { error?: "invalid" | "weak" | "token" | "generic" | "rate_limited"; done?: boolean };
 
-/** חלונות הגבלת הקצב (ניסיונות כושלים לכניסה; כל בקשה לאיפוס) */
-const LOGIN_EMAIL = { max: 8, windowSec: 15 * 60 };
-const LOGIN_IP = { max: 40, windowSec: 15 * 60 };
+/** חלונות הגבלת הקצב לבקשות איפוס (מגבלת הכניסה נמצאת ב-authorize, lib/auth.ts) */
 const RESET_EMAIL = { max: 5, windowSec: 3600 };
 const RESET_IP = { max: 20, windowSec: 3600 };
 
@@ -27,20 +25,15 @@ const MIN_PASSWORD = 8;
 export async function loginAction(_: FormState, formData: FormData): Promise<FormState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const emailKey = limitKey("login:email", email), ipKey = limitKey("login:ip", clientIp(await headers()));
-  if ((await isLimited(db(), emailKey, LOGIN_EMAIL.max, LOGIN_EMAIL.windowSec)) || (await isLimited(db(), ipKey, LOGIN_IP.max, LOGIN_IP.windowSec))) {
-    return { error: "rate_limited" };
-  }
   try {
     await signIn("credentials", { email, password, redirectTo: safeNext(String(formData.get("next") ?? "")) });
   } catch (e) {
     if (e instanceof AuthError) {
+      if (e instanceof CredentialsSignin && e.code === "rate_limited") return { error: "rate_limited" };
       if (e.type !== "CredentialsSignin") return { error: "generic" };
-      await Promise.all([recordAttempt(db(), emailKey), recordAttempt(db(), ipKey)]);
       return { error: "invalid" };
     }
-    await clearAttempts(db(), emailKey).catch(() => {}); // ה-redirect של Next זורק, וזה כניסה מוצלחת
-    throw e;
+    throw e; // ה-redirect של Next זורק, וזה כניסה מוצלחת
   }
   return {};
 }

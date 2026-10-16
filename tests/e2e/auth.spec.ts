@@ -130,3 +130,41 @@ test("אחרי יציאה, עוגייה ישנה שחוזרת לדפדפן כב�
   await page.goto("/coordinator");
   await expect(page).toHaveURL(/\/login/);
 });
+
+/**
+ * עקיפת הגבלת הקצב (ביקורת Fable): Auth.js חושף POST ישיר ל-/api/auth/callback/credentials.
+ * המגבלה חיה ב-authorize, ולכן חייבת לעצור גם את המסלול הזה. שרת ההרצה הרגיל מכבה את המגבלה
+ * (כל הבדיקות מאותה כתובת), אז כאן עולה שרת שני מאותו build, עם המגבלה פועלת.
+ */
+test.describe("הגבלת קצב במסלול הישיר של Auth.js", () => {
+  test.skip(({ isMobile }) => !!isMobile, "מספיק פעם אחת");
+  const PORT = 3177, BASE = `http://localhost:${PORT}`;
+  let server: import("node:child_process").ChildProcess | undefined;
+
+  test.beforeAll(async () => {
+    const { spawn } = await import("node:child_process");
+    const env = { ...process.env }; delete env.DISABLE_RATE_LIMIT;
+    server = spawn(process.execPath, ["node_modules/next/dist/bin/next", "start", "-p", String(PORT)], { env, stdio: "ignore" }); // ישירות, לא דרך pnpm, כדי ש-kill יסגור את השרת עצמו
+    for (let i = 0; i < 60; i++) {
+      try { if ((await fetch(`${BASE}/login`)).ok) return; } catch {}
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    throw new Error("שרת הבדיקה לא עלה");
+  });
+  test.afterAll(() => { server?.kill(); });
+
+  test("אחרי 8 כשלונות, גם POST ישיר ל-callback נחסם עם code=rate_limited", async ({ playwright }) => {
+    // כתובת ייחודית לריצה: המכסה לפי IP לא תצטבר בין ריצות
+    const ctx = await playwright.request.newContext({ baseURL: BASE, extraHTTPHeaders: { "x-forwarded-for": `10.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}` } });
+    const email = `rl-${Date.now()}@demo.test`;
+    const codes: string[] = [];
+    for (let i = 1; i <= 9; i++) {
+      const { csrfToken } = await (await ctx.get("/api/auth/csrf")).json();
+      const res = await ctx.post("/api/auth/callback/credentials", { form: { csrfToken, email, password: `wrong${i}`, redirect: "false" }, maxRedirects: 0 });
+      codes.push(new URL(res.headers()["location"] ?? "/", BASE).searchParams.get("code") ?? String(res.status()));
+    }
+    await ctx.dispose();
+    expect(codes.slice(0, 8).every((c) => c === "credentials")).toBe(true);
+    expect(codes[8]).toBe("rate_limited");
+  });
+});
