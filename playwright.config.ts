@@ -12,7 +12,7 @@ export default defineConfig({
     reuseExistingServer: false,
     timeout: 240_000,
     // כל הכניסות בבדיקות מגיעות מאותה כתובת, אז הגבלת הקצב כבויה כאן (נבדקת בבדיקות האינטגרציה)
-    env: { DISABLE_RATE_LIMIT: "1" },
+    env: { DISABLE_RATE_LIMIT: "1", CRON_SECRET: "e2e-cron-secret" },
   },
   use: {
     trace: "retain-on-failure",
