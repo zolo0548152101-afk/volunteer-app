@@ -17,11 +17,13 @@ export type RegisterState = { error?: string };
 
 export async function registerAction(_: RegisterState, fd: FormData): Promise<RegisterState> {
   const str = (k: string) => String(fd.get(k) ?? "");
+  // כשל ולידציה בטופס לא נספר במכסה (הוא לא יוצר חשבון ולא חושף מיילים)
   if (str("password") !== str("confirm")) return { error: "weak_password" };
   const email = str("email").trim();
-  // הרשמה פתוחה לכולם: מגבילים לפי כתובת, כדי שלא יציפו חשבונות (וגם לא יסרקו מיילים רשומים)
+  // הרשמה פתוחה לכולם: מגבילים לפי כתובת, כדי שלא יציפו חשבונות (וגם לא יסרקו מיילים רשומים).
+  // 30 לשעה ולא פחות: לקוחות של אותו מפעיל סלולרי (NAT) חולקים כתובת
   const ipKey = limitKey("register:ip", clientIp(await headers()));
-  if (await isLimited(db(), ipKey, 10, 3600)) return { error: "rate_limited" };
+  if (await isLimited(db(), ipKey, 30, 3600)) return { error: "rate_limited" };
   await recordAttempt(db(), ipKey);
   try {
     const locale = (await getLocale()) === "en" ? "en" : "he";
