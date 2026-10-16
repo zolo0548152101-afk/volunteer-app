@@ -9,10 +9,7 @@ function baseUrl() {
   return process.env.APP_URL ?? (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 }
 
-/** רק נתיבים פנימיים; מונע הפניה לאתר זר דרך ?next= */
-export function safeNext(next: string | null | undefined): string {
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
-}
+export { safeNext } from "@/lib/safe-next";
 
 /** שולח קישור הזמנה / איפוס. לא פעולת שרת: נקרא רק מקוד שרת שכבר בדק הרשאה. */
 export async function sendLink(u: { id: string; organizationId: string; email: string; locale: string }, kind: "invite" | "password_reset") {

@@ -6,6 +6,7 @@ import { customFields, customFieldValues, hourReports, placements } from "@/lib/
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
 import { buildReport, dashboard, hoursCertificate } from "@/lib/services/analytics";
+import { decide, submitReport } from "@/lib/services/reports";
 import { reportToXlsx } from "@/lib/export/xlsx";
 
 type Seed = Awaited<ReturnType<typeof seedDemo>>;
@@ -74,14 +75,15 @@ describe("דוחות: המספרים מול המסד", () => {
   });
 
   it("היעדרות נספרת רק עם counts_toward_target", async () => {
-    const [r] = await db().select().from(hourReports).where(and(eq(hourReports.studentId, st2.id), eq(hourReports.reportType, "absence")));
-    if (r) {
-      const before = (await buildReport(db(), manager, "students")).rows.find((x) => x.studentId === st2.id)!.approved as number;
-      await db().update(hourReports).set({ countsTowardTarget: !r.countsTowardTarget }).where(eq(hourReports.id, r.id));
-      const after = (await buildReport(db(), manager, "students")).rows.find((x) => x.studentId === st2.id)!.approved as number;
-      expect(after).not.toBe(before);
-      await db().update(hourReports).set({ countsTowardTarget: r.countsTowardTarget }).where(eq(hourReports.id, r.id));
-    }
+    // ה-seed אינו כולל היעדרות, אז יוצרים אחת ומאשרים אותה דרך השירות
+    const id = await submitReport(db(), st2, { type: "absence", volunteerDate: new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10), reportedHours: 4, absenceReason: "reserve_duty" });
+    await decide(db(), manager, id, { kind: "approve", countsTowardTarget: true });
+    const approvedFor = async () => (await buildReport(db(), manager, "students")).rows.find((x) => x.studentId === st2.id)!.approved as number;
+    const counted = await approvedFor();
+    await db().update(hourReports).set({ countsTowardTarget: false }).where(eq(hourReports.id, id));
+    const notCounted = await approvedFor();
+    expect(counted - notCounted).toBeCloseTo(4, 2);
+    expect(notCounted).toBeCloseTo(await approvedOf(st2.id), 2);
   });
 
   it("לפי חודש: סכום החודשים = סך המאושר בארגון", async () => {
@@ -116,8 +118,8 @@ describe("דוחות: המספרים מול המסד", () => {
     const row = (await buildReport(db(), manager, "milestones")).rows.find((r) => r.student === `${s.students[0].firstName} ${s.students[0].lastName}`)!;
     expect(row.approved).toBeCloseTo(approved, 2);
     const reached = [45, 90, 140].filter((h) => approved >= h).pop();
-    expect(String(row.reachedMilestone ?? "")).toContain(reached ? String(reached) : "");
-    if (!reached) expect(row.reachedMilestone).toBeNull();
+    if (reached) expect(String(row.reachedMilestone)).toContain(String(reached));
+    else expect(row.reachedMilestone).toBeNull();
     const next = [45, 90, 140].find((h) => approved < h)!;
     expect(row.toNext).toBeCloseTo(next - approved, 2);
   });
