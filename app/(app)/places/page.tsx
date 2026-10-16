@@ -8,6 +8,7 @@ import { listPlaces, type StaffPlace } from "@/lib/services/places";
 import { loadCategories } from "@/lib/services/lookups";
 import { PlaceFields } from "@/components/places/place-fields";
 import { PlaceError } from "@/components/places/place-error";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function PlacesPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const actor = await requireActor();
@@ -41,7 +42,7 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
           <h2 id="new-h" className="text-lg font-medium">{t("newPlace")}</h2>
           <form action={createPlaceAction} className="mt-3 flex flex-col gap-3">
             <PlaceFields categories={categories} />
-            <button type="submit" className="rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground">{t("create")}</button>
+            <SubmitButton className="rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground">{t("create")}</SubmitButton>
           </form>
         </section>
       )}

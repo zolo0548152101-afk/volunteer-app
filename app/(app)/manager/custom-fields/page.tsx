@@ -3,6 +3,7 @@ import { saveFieldAction } from "@/lib/actions/settings";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/session";
 import { ENTITIES, FIELD_TYPES, listAllFields } from "@/lib/services/custom-field-admin";
+import { SubmitButton } from "@/components/submit-button";
 
 const input = "rounded-lg border border-border bg-background px-3 py-2";
 const ROLES = ["student", "coordinator", "interviewer", "manager"] as const;
@@ -33,7 +34,7 @@ export default async function CustomFieldsPage({ searchParams }: { searchParams:
       </fieldset>
       <label className="flex items-center gap-2"><input type="checkbox" name="required" defaultChecked={f?.required} />{t("required")}</label>
       {f && <label className="flex items-center gap-2"><input type="checkbox" name="isActive" defaultChecked={f.isActive} />{t("active")}</label>}
-      <button type="submit" className="col-span-2 self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{f ? t("save") : t("add")}</button>
+      <SubmitButton className="col-span-2 self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{f ? t("save") : t("add")}</SubmitButton>
     </form>
   );
   return (

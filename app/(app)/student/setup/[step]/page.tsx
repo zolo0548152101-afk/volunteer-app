@@ -9,6 +9,7 @@ import { loadLookup } from "@/lib/services/lookups";
 import { AcademicSection, BankSection, PrefsSection } from "@/components/student/sections";
 import { CustomFields } from "@/components/custom-fields/custom-fields";
 import { ProfileError } from "@/components/student/profile-error";
+import { SubmitButton } from "@/components/submit-button";
 
 const STEPS = ["academic", "prefs", "bank"] as const;
 
@@ -39,7 +40,7 @@ export default async function SetupStep({ params, searchParams }: { params: Prom
         {last && <CustomFields fields={fields} values={values} />}
         <div className="flex gap-3">
           {n > 1 && <a href={`/student/setup/${n - 1}`} className="rounded-lg border border-border px-4 py-2.5">{t("back")}</a>}
-          <button type="submit" className="flex-1 rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground">{last ? t("finish") : t("next")}</button>
+          <SubmitButton className="flex-1 rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground">{last ? t("finish") : t("next")}</SubmitButton>
         </div>
       </form>
     </main>

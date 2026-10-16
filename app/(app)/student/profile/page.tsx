@@ -8,6 +8,7 @@ import { loadLookup } from "@/lib/services/lookups";
 import { AcademicSection, BankSection, PrefsSection } from "@/components/student/sections";
 import { CustomFields } from "@/components/custom-fields/custom-fields";
 import { ProfileError } from "@/components/student/profile-error";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function ProfilePage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
   const [{ error }, actor, t] = await Promise.all([searchParams, requireRole("student"), getTranslations("profile")]);
@@ -22,7 +23,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
       <input type="hidden" name="back" value="/student/profile" />
       <h2 className="text-lg font-medium">{t(`sections.${key}`)}</h2>
       {body}{extra}
-      <button type="submit" className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("save")}</button>
+      <SubmitButton className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("save")}</SubmitButton>
     </form>
   );
   return (

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import type { ReportRow } from "@/lib/services/reports";
+import { SubmitButton } from "@/components/submit-button";
 
 export type Pl = { id: string; placeName: string; windowLabel: string; defaultHours: number; startTime: string; endTime: string; defaultDate: string };
 const input = "min-h-11 w-full rounded-lg border border-border bg-background px-3 py-2 text-base";
@@ -83,7 +84,7 @@ export function ReportForm({ placements, absence: absenceInitial, report, action
         </div>
       </details>
 
-      <button type="submit" className="min-h-12 rounded-lg bg-primary px-4 py-2.5 text-base font-medium text-primary-foreground">{report ? t("resubmit") : t("submit")}</button>
+      <SubmitButton className="min-h-12 rounded-lg bg-primary px-4 py-2.5 text-base font-medium text-primary-foreground">{report ? t("resubmit") : t("submit")}</SubmitButton>
     </form>
   );
 }

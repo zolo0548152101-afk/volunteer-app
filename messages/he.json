@@ -54,7 +54,7 @@
     "cancel": "ביטול",
     "edit": "עריכה",
     "delete": "מחיקה",
-    "loading": "טוען. לא כמו המודל, באמת טוען",
+    "loading": "רגע, טוענים. אפשר לנשום עמוק",
     "empty": "אין כאן כלום. עדיין",
     "back": "חזרה",
     "next": "המשך",
@@ -62,7 +62,8 @@
     "yes": "כן",
     "no": "לא",
     "hours": "שעות",
-    "comingSoon": "בקרוב"
+    "comingSoon": "בקרוב",
+    "sending": "שולחים…"
   },
   "statuses": {
     "pending": "ממתין לאישור",
@@ -515,7 +516,20 @@
     "needsCorrection": "החזרה לתיקון",
     "reject": "דחייה",
     "unapproveReason": "סיבה לביטול האישור",
-    "unapprove": "ביטול אישור"
+    "unapprove": "ביטול אישור",
+    "filters": "סינון",
+    "filterStudent": "סטודנט",
+    "filterPlace": "מקום",
+    "filterMonth": "חודש",
+    "filterAll": "הכול",
+    "applyFilters": "הצגה",
+    "clearFilters": "ניקוי סינון",
+    "pick": "בחירה לאישור מרובה: {student}",
+    "bulkApprove": "אישור המסומנים בשעות שדווחו",
+    "bulkHint": "מסמנים דיווחים ומאשרים בלחיצה אחת. לשינוי שעות, מאשרים כל דיווח בנפרד",
+    "bulkDone": "אושרו {n} דיווחים",
+    "bulkPartial": "אושרו {n} דיווחים, ו-{failed} לא אושרו (כבר טופלו או לא בטיפולך)",
+    "bulkNone": "לא סימנת דיווחים לאישור"
   },
   "nav2": {
     "reports": "דיווחי שעות",

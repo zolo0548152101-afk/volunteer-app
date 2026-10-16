@@ -180,14 +180,49 @@ export async function reportablePlacements(db: Db, actor: SessionUser) {
   });
 }
 
-/** תיבת הדואר של הרכז: דיווחים של הסטודנטים שהוא אחראי עליהם (מנהל: כולם) */
-export async function listInbox(db: Db, actor: SessionUser, opts: { status?: ReportStatus; studentId?: string } = {}): Promise<ReportRow[]> {
-  assertCan(actor, "read", "hour_report", { organizationId: actor.organizationId, coordinatorIds: [actor.id] });
+export type InboxFilters = { status?: ReportStatus; studentId?: string; placeId?: string; month?: string };
+
+/** תנאי ההיקף של התיבה: מנהל רואה את כל הארגון, רכז רק דיווחים של סטודנטים שמשויכים אליו (ב-SQL, לפני ה-limit) */
+function inboxScope(actor: SessionUser) {
   const conds = [eq(hourReports.organizationId, actor.organizationId)];
+  if (!actor.roles.includes("manager")) conds.push(eq(users.coordinatorId, actor.id));
+  return conds;
+}
+
+/** תיבת הדואר של הרכז: דיווחים של הסטודנטים שהוא אחראי עליהם (מנהל: כולם) */
+export async function listInbox(db: Db, actor: SessionUser, opts: InboxFilters = {}): Promise<ReportRow[]> {
+  assertCan(actor, "read", "hour_report", { organizationId: actor.organizationId, coordinatorIds: [actor.id] });
+  const conds = inboxScope(actor);
   if (opts.status) conds.push(eq(hourReports.status, opts.status));
   if (opts.studentId) conds.push(eq(hourReports.studentId, opts.studentId));
+  if (opts.placeId) conds.push(eq(hourReports.placeId, opts.placeId));
+  if (opts.month && /^\d{4}-\d{2}$/.test(opts.month)) conds.push(sql`to_char(${hourReports.volunteerDate}, 'YYYY-MM') = ${opts.month}`);
   const rows = await reportSelect(db).where(and(...conds)).orderBy(hourReports.submittedAt).limit(500);
+  // הגנה כפולה: ה-SQL כבר צמצם להיקף, ו-can מאשר כל שורה מול המטריצה
   return rows.filter((x) => can(actor, "read", "hour_report", { organizationId: actor.organizationId, ownerId: x.r.studentId, coordinatorIds: x.studentCoordinator ? [x.studentCoordinator] : [] })).map(shape);
+}
+
+/** אפשרויות הסינון בתיבה: הסטודנטים והמקומות שיש להם דיווחים במצב הנבחר, בהיקף של המשתמש */
+export async function inboxFilterOptions(db: Db, actor: SessionUser, status: ReportStatus) {
+  assertCan(actor, "read", "hour_report", { organizationId: actor.organizationId, coordinatorIds: [actor.id] });
+  const conds = [...inboxScope(actor), eq(hourReports.status, status)];
+  const students = await db.selectDistinct({ id: users.id, first: users.firstName, last: users.lastName }).from(hourReports).innerJoin(users, eq(users.id, hourReports.studentId)).where(and(...conds)).orderBy(users.lastName, users.firstName);
+  const places = await db.selectDistinct({ id: volunteerPlaces.id, name: volunteerPlaces.name }).from(hourReports).innerJoin(users, eq(users.id, hourReports.studentId)).innerJoin(volunteerPlaces, eq(volunteerPlaces.id, hourReports.placeId)).where(and(...conds)).orderBy(volunteerPlaces.name);
+  return { students: students.map((s) => ({ id: s.id, name: `${s.first} ${s.last}` })), places };
+}
+
+/**
+ * אישור מרובה של דיווחים ממתינים, בשעות שדווחו. כל דיווח באותה טרנזקציה משלו: דיווח שנכשל
+ * (טופל כבר, לא בהיקף הרכז) לא מפיל את האחרים.
+ */
+export async function approveMany(db: Db, actor: SessionUser, ids: string[]): Promise<{ approved: number; failed: number }> {
+  let approved = 0, failed = 0;
+  for (const id of [...new Set(ids)].slice(0, 200)) {
+    try { await decide(db, actor, id, { kind: "approve" }); approved++; } catch (e) {
+      if (e instanceof ReportError || e instanceof NotFoundError || e instanceof ForbiddenError) failed++; else throw e;
+    }
+  }
+  return { approved, failed };
 }
 
 /* ───────────── החלטת הרכז ───────────── */

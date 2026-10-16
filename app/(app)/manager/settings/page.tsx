@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireRole } from "@/lib/session";
 import { loadAdminSettings, LOOKUP_KINDS } from "@/lib/services/settings";
 import type { RuleKind } from "@/lib/services/reminders";
+import { SubmitButton } from "@/components/submit-button";
 
 const input = "rounded-lg border border-border bg-background px-3 py-2";
 const btn = "self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground";
@@ -29,7 +30,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           <fieldset className="flex gap-4"><legend className="text-sm">{t("languages")}</legend>
             {(["he", "en"] as const).map((l) => <label key={l} className="flex items-center gap-1 text-sm"><input type="checkbox" name="languages" value={l} defaultChecked={s.languages.includes(l)} />{t(`lang.${l}`)}</label>)}
           </fieldset>
-          <button type="submit" className={btn}>{t("save")}</button>
+          <SubmitButton className={btn}>{t("save")}</SubmitButton>
         </form>
       ))}
 
@@ -43,7 +44,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               {field(t("startDate"), <input name="startDate" type="date" required defaultValue={String(y.startDate)} className={input} />)}
               {field(t("endDate"), <input name="endDate" type="date" required defaultValue={String(y.endDate)} className={input} />)}
               <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" name="makeCurrent" defaultChecked={y.isCurrent} />{t("isCurrent")}</label>
-              <button type="submit" className={btn}>{t("save")}</button>
+              <SubmitButton className={btn}>{t("save")}</SubmitButton>
             </form>
           ))}
           <form action={saveYearAction} className="grid grid-cols-2 gap-3 rounded-xl border border-dashed border-border p-3">
@@ -53,7 +54,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             {field(t("startDate"), <input name="startDate" type="date" required className={input} />)}
             {field(t("endDate"), <input name="endDate" type="date" required className={input} />)}
             <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" name="makeCurrent" />{t("isCurrent")}</label>
-            <button type="submit" className={btn}>{t("add")}</button>
+            <SubmitButton className={btn}>{t("add")}</SubmitButton>
           </form>
         </div>
       ))}
@@ -68,7 +69,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               {field(t("maxHoursPerDay"), <input name="maxHoursPerDay" type="number" step="0.5" min="0" max="24" defaultValue={p?.maxHoursPerDay != null ? Number(p.maxHoursPerDay) : ""} className={input} />)}
               <label className="flex items-center gap-2 self-end text-sm"><input type="checkbox" name="isActive" defaultChecked={p?.isActive ?? true} />{t("active")}</label>
               <label className="col-span-2 flex flex-col gap-1 text-sm">{t("milestones")}<textarea name="milestones" rows={3} defaultValue={(p?.milestones ?? []).map((m) => `${m.hours}: ${m.label}`).join("\n")} className={input} /><span className="text-xs text-muted">{t("milestonesHint")}</span></label>
-              <button type="submit" className={btn}>{p ? t("save") : t("add")}</button>
+              <SubmitButton className={btn}>{p ? t("save") : t("add")}</SubmitButton>
             </form>
           ))}
         </div>
@@ -94,7 +95,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   {(["email", "sms", "whatsapp"] as const).map((c) => <label key={c} className="flex items-center gap-1 text-sm"><input type="checkbox" name="channels" value={c} defaultChecked={r.channels.includes(c)} />{t(`channel.${c}`)}</label>)}
                 </fieldset>
                 {k !== "coordinator_digest" && <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" name="copyManager" defaultChecked={r.copyManager} />{t("copyManager")}</label>}
-                <button type="submit" className={btn}>{t("save")}</button>
+                <SubmitButton className={btn}>{t("save")}</SubmitButton>
               </form>
             );
           })}
@@ -115,7 +116,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                       <input name="labelEn" aria-label={t("labelEn")} defaultValue={l.labelEn ?? ""} className={input} dir="ltr" />
                       <input name="sortOrder" type="number" aria-label={t("sortOrder")} defaultValue={l.sortOrder} className={input} />
                       <label className="flex items-center gap-1"><input type="checkbox" name="isActive" defaultChecked={l.isActive} />{t("active")}</label>
-                      <button type="submit" className="rounded-lg border border-border px-3 py-2">{t("save")}</button>
+                      <SubmitButton className="rounded-lg border border-border px-3 py-2">{t("save")}</SubmitButton>
                     </form>
                   </li>
                 ))}
@@ -124,7 +125,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                 <input type="hidden" name="kind" value={kind} />
                 <input name="labelHe" aria-label={t("labelHe")} placeholder={t("labelHe")} required className={input} />
                 <input name="labelEn" aria-label={t("labelEn")} placeholder={t("labelEn")} className={input} dir="ltr" />
-                <button type="submit" className="rounded-lg border border-border px-3 py-2">{t("add")}</button>
+                <SubmitButton className="rounded-lg border border-border px-3 py-2">{t("add")}</SubmitButton>
               </form>
             </div>
           ))}

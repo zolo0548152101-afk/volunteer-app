@@ -12,6 +12,7 @@ import { ForbiddenError } from "@/lib/permissions";
 import { PlaceFields } from "@/components/places/place-fields";
 import { WindowFields } from "@/components/places/window-form";
 import { PlaceError } from "@/components/places/place-error";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function PlaceCard({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }) {
   const [{ id }, { error }, actor, t, td] = await Promise.all([params, searchParams, requireActor(), getTranslations("places"), getTranslations("days")]);
@@ -72,13 +73,13 @@ export default async function PlaceCard({ params, searchParams }: { params: Prom
                       <input type="hidden" name="placeId" value={id} />
                       <input type="hidden" name="windowId" value={w.id} />
                       <WindowFields w={w} />
-                      <button type="submit" className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("save")}</button>
+                      <SubmitButton className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("save")}</SubmitButton>
                     </form>
                     <form action={toggleWindowAction} className="mt-2">
                       <input type="hidden" name="placeId" value={id} />
                       <input type="hidden" name="windowId" value={w.id} />
                       <input type="hidden" name="active" value={w.isActive ? "0" : "1"} />
-                      <button type="submit" className="text-sm underline">{w.isActive ? t("deactivate") : t("activate")}</button>
+                      <SubmitButton className="text-sm underline">{w.isActive ? t("deactivate") : t("activate")}</SubmitButton>
                     </form>
                   </details>
                 )}
@@ -92,13 +93,13 @@ export default async function PlaceCard({ params, searchParams }: { params: Prom
               <form action={createWindowAction} className="mt-3 flex flex-col gap-3">
                 <input type="hidden" name="placeId" value={id} />
                 <WindowFields />
-                <button type="submit" className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("addWindow")}</button>
+                <SubmitButton className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("addWindow")}</SubmitButton>
               </form>
               <h2 className="mt-8 text-lg font-medium">{t("editPlace")}</h2>
               <form action={updatePlaceAction} className="mt-3 flex flex-col gap-3">
                 <input type="hidden" name="placeId" value={id} />
                 <PlaceFields place={staff as StaffPlace} categories={categories} />
-                <button type="submit" className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("save")}</button>
+                <SubmitButton className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("save")}</SubmitButton>
               </form>
             </>
           )}

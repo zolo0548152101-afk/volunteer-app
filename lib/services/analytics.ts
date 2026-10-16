@@ -10,7 +10,7 @@ import { academicYears } from "@/lib/db/schema";
 import { windowUsageRows } from "@/lib/db/queries/capacity";
 import { assertCan, ForbiddenError, type SessionUser } from "@/lib/permissions";
 import { round2 } from "@/lib/services/capacity";
-import { listFields, loadValues } from "@/lib/services/custom-fields";
+import { listFields, loadValuesMany } from "@/lib/services/custom-fields";
 import { loadRules } from "@/lib/services/cron";
 
 export const REPORT_KINDS = ["students", "places", "coordinators", "months", "milestones", "absences"] as const;
@@ -65,6 +65,7 @@ export async function buildReport(db: Db, actor: SessionUser, kind: ReportKind, 
     // שדות מותאמים של סטודנט שהמשתמש רשאי לראות מגיעים גם לדוח ולייצוא
     const fields = await listFields(db, actor, "student");
     const rows: Record<string, Cell>[] = [];
+    const allValues = await loadValuesMany(db, org, res.rows.map((r) => r.id), fields);
     for (const r of res.rows) {
       const target = r.target === null ? null : num(r.target), approved = num(r.approved);
       const row: Record<string, Cell> = {
@@ -72,7 +73,7 @@ export async function buildReport(db: Db, actor: SessionUser, kind: ReportKind, 
         remaining: target === null ? null : round2(Math.max(0, target - approved)), progress: target ? round2((approved / target) * 100) : null,
       };
       if (fields.length) {
-        const vals = await loadValues(db, org, r.id, fields);
+        const vals = allValues.get(r.id)!;
         for (const f of fields) { const v = vals[f.id]; row[`cf:${f.labelHe}`] = Array.isArray(v) ? v.join(", ") : typeof v === "boolean" ? (v ? "כן" : "לא") : (v as Cell); }
       }
       rows.push(row);

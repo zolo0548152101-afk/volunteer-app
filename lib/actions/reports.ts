@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { ForbiddenError } from "@/lib/permissions";
 import { requireActor } from "@/lib/session";
-import { decide, ReportError, resubmitReport, submitReport, type AbsenceReason, type SubmitInput } from "@/lib/services/reports";
+import { approveMany, decide, ReportError, resubmitReport, submitReport, type AbsenceReason, type SubmitInput } from "@/lib/services/reports";
 import { NotFoundError } from "@/lib/services/users";
 
 function code(e: unknown): string {
@@ -61,4 +61,15 @@ export async function decideAction(fd: FormData) {
     else if (kind === "unapprove") await decide(db(), actor, id, { kind: "unapprove", reason: notes });
     else throw new ReportError("bad_transition");
   });
+}
+
+/** אישור מרובה של דיווחים ממתינים בשעות שדווחו; חוזר לתיבה עם סיכום */
+export async function bulkApproveAction(fd: FormData) {
+  const back = safeBack(str(fd, "back"), "/reports");
+  const ids = fd.getAll("ids").map(String).filter(Boolean);
+  let result = { approved: 0, failed: 0 };
+  let error: string | undefined;
+  try { if (ids.length > 0) result = await approveMany(db(), await requireActor(), ids); } catch (e) { error = code(e); }
+  const sep = back.includes("?") ? "&" : "?";
+  redirect(error ? `${back}${sep}error=${error}` : `${back}${sep}bulk=${result.approved}-${result.failed}`);
 }

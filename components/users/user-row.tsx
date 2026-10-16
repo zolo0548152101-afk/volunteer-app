@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { resendInviteAction, setRolesAction, setStatusAction } from "@/lib/actions/users";
 import { roles } from "@/lib/permissions";
 import type { SafeUser } from "@/lib/services/users";
+import { SubmitButton } from "@/components/submit-button";
 
 export async function UserRow({ user, coordinatorName, self }: { user: SafeUser; coordinatorName: string | null; self: boolean }) {
   const t = await getTranslations("users");
@@ -25,20 +26,20 @@ export async function UserRow({ user, coordinatorName, self }: { user: SafeUser;
             <input type="checkbox" name="roles" value={r} defaultChecked={user.roles.includes(r)} /> {tr(r)}
           </label>
         ))}
-        <button type="submit" className="text-sm underline">{t("saveRoles")}</button>
+        <SubmitButton className="text-sm underline">{t("saveRoles")}</SubmitButton>
       </form>
       <div className="mt-2 flex gap-4 text-sm">
         {user.status !== "active" || !self ? (
           <form action={resendInviteAction}>
             <input type="hidden" name="userId" value={user.id} />
-            <button type="submit" className="underline">{user.status === "invited" ? t("resendInvite") : t("sendReset")}</button>
+            <SubmitButton className="underline">{user.status === "invited" ? t("resendInvite") : t("sendReset")}</SubmitButton>
           </form>
         ) : null}
         {!self && (
           <form action={setStatusAction}>
             <input type="hidden" name="userId" value={user.id} />
             <input type="hidden" name="status" value={user.status === "inactive" ? "active" : "inactive"} />
-            <button type="submit" className="underline">{user.status === "inactive" ? t("activate") : t("deactivate")}</button>
+            <SubmitButton className="underline">{user.status === "inactive" ? t("activate") : t("deactivate")}</SubmitButton>
           </form>
         )}
       </div>

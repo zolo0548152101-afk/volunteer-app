@@ -10,6 +10,7 @@ import { loadLookup } from "@/lib/services/lookups";
 import { NotFoundError } from "@/lib/services/users";
 import { ForbiddenError } from "@/lib/permissions";
 import { DAYS } from "@/lib/services/places";
+import { SubmitButton } from "@/components/submit-button";
 
 const input = "rounded-lg border border-border bg-transparent px-2 py-1.5 text-base";
 
@@ -91,7 +92,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
             <input name="city" defaultValue={sp.city} placeholder={t("city")} aria-label={t("city")} className={input} />
             <select name="category" defaultValue={sp.category ?? ""} aria-label={t("category")} className={input}><option value="">{t("allCategories")}</option>{cats.map((c) => <option key={c.key} value={c.key}>{c.label}</option>)}</select>
             <select name="day" defaultValue={sp.day ?? ""} aria-label={t("day")} className={input}><option value="">{t("allDays")}</option>{DAYS.map((d) => <option key={d} value={d}>{td(d)}</option>)}</select>
-            <button type="submit" className="rounded-lg border border-border px-3 py-1.5">{t("filter")}</button>
+            <SubmitButton className="rounded-lg border border-border px-3 py-1.5">{t("filter")}</SubmitButton>
           </form>
           {cands.length === 0 && <p className="mt-3 text-muted">{t("noCandidates")}</p>}
           <ul className="mt-3 flex flex-col gap-2">
@@ -106,7 +107,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
                 </div>
                 <form action={addLineAction}>
                   <input type="hidden" name="interviewId" value={id} /><input type="hidden" name="windowId" value={c.windowId} />
-                  <button type="submit" className="rounded-lg bg-primary px-3 py-1.5 text-primary-foreground">{t("addLine")}</button>
+                  <SubmitButton className="rounded-lg bg-primary px-3 py-1.5 text-primary-foreground">{t("addLine")}</SubmitButton>
                 </form>
               </li>
             ))}
@@ -132,7 +133,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
               {DAYS.map((d) => <label key={d} className="flex items-center gap-1 text-sm"><input type="checkbox" name={`l_${i}_days`} value={d} defaultChecked={l.assignedDays.includes(d)} /> {td(d)}</label>)}
             </div>
             <label className="mt-2 flex flex-col gap-1 text-sm">{t("description")}<input name={`l_${i}_desc`} defaultValue={l.description ?? ""} className={input} /></label>
-            {editable && <button type="submit" name="remove" value={String(i)} className="mt-2 text-sm underline">{t("removeLine")}</button>}
+            {editable && <SubmitButton name="remove" value={String(i)} className="mt-2 text-sm underline">{t("removeLine")}</SubmitButton>}
           </fieldset>
         ))}
 
@@ -153,7 +154,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
 
         {editable && (
           <div className="flex flex-col gap-3 rounded-xl border border-border p-3">
-            <button type="submit" className="self-start rounded-lg border border-border px-4 py-2">{t("saveDraft")}</button>
+            <SubmitButton className="self-start rounded-lg border border-border px-4 py-2">{t("saveDraft")}</SubmitButton>
             {!student.coordinatorId && (
               <label className="flex flex-col gap-1 text-sm">{t("chooseCoordinator")}
                 <select name="coordinatorId" required defaultValue="" className={input}><option value="">—</option>
@@ -162,14 +163,14 @@ export default async function InterviewPage({ params, searchParams }: { params: 
             {ev.needsManagerOverride && !ev.blocked && (isManager
               ? <label className="flex flex-col gap-1 text-sm">{t("overrideReason")}<input name="overrideReason" className={input} /></label>
               : <p className="text-sm text-amber-700">{t("needsManager")}</p>)}
-            <button type="submit" formAction={finalizeAction} className="rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground">{isInterview ? t("finalize") : t("finalizeReassign")}</button>
+            <SubmitButton formAction={finalizeAction} className="rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground">{isInterview ? t("finalize") : t("finalizeReassign")}</SubmitButton>
           </div>
         )}
       </form>
       {editable && (
         <form action={cancelAction} className="mt-3">
           <input type="hidden" name="interviewId" value={id} /><input type="hidden" name="studentId" value={iv.studentId} />
-          <button type="submit" className="text-sm underline">{t("cancel")}</button>
+          <SubmitButton className="text-sm underline">{t("cancel")}</SubmitButton>
         </form>
       )}
     </main>

@@ -95,3 +95,15 @@ test("טופס הדיווח: מתג היעדרות מחליף את השיבוץ 
   await expect(page.getByLabel("סיבת ההיעדרות")).toBeVisible();
   await expect(page.getByLabel("שיבוץ")).toBeHidden();
 });
+
+test("תיבת הרכז: מסננים ואישור מרובה מוצגים; הצ'קבוקס נגיש בשם הסטודנט", async ({ page }) => {
+  await login(page, "coord1@demo.test");
+  await page.goto("/reports");
+  await expect(page.getByLabel("סטודנט", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("מקום", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("חודש", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "אישור המסומנים בשעות שדווחו" })).toBeVisible();
+  await expect(page.getByRole("checkbox", { name: /בחירה לאישור מרובה/ }).first()).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  expect(overflow).toBe(false);
+});

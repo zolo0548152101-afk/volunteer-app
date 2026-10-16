@@ -12,6 +12,7 @@ import { loadLookup } from "@/lib/services/lookups";
 import { NotFoundError } from "@/lib/services/users";
 import { ForbiddenError } from "@/lib/permissions";
 import { CustomFields } from "@/components/custom-fields/custom-fields";
+import { SubmitButton } from "@/components/submit-button";
 
 export default async function StudentCard({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; done?: string }> }) {
   const [{ id }, sp, actor, t, ti, td, tdt] = await Promise.all([params, searchParams, requireActor(), getTranslations("studentCard"), getTranslations("interviews"), getTranslations("days"), getTranslations("degreeTypes")]);
@@ -40,11 +41,11 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
         {draft && <Link href={`/interviews/${draft.id}`} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("continueDraft")}</Link>}
         {!draft && canInterview && (
           <form action={startInterviewAction}><input type="hidden" name="studentId" value={id} /><input type="hidden" name="kind" value="interview" />
-            <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("startInterview")}</button></form>
+            <SubmitButton className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("startInterview")}</SubmitButton></form>
         )}
         {!draft && canReassign && (
           <form action={startInterviewAction}><input type="hidden" name="studentId" value={id} /><input type="hidden" name="kind" value="reassignment" />
-            <button type="submit" className="rounded-lg border border-border px-4 py-2">{t("reassign")}</button></form>
+            <SubmitButton className="rounded-lg border border-border px-4 py-2">{t("reassign")}</SubmitButton></form>
         )}
       </div>
 

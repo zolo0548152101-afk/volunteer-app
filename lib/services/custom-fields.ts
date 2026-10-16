@@ -34,6 +34,16 @@ export async function loadValues(db: DbOrTx, organizationId: string, entityId: s
   return Object.fromEntries(fields.map((f) => [f.id, byField.get(f.id) ?? null]));
 }
 
+/** כמו loadValues לכמה ישויות בשאילתה אחת (מונע שאילתה לכל סטודנט בדוחות וייצוא) */
+export async function loadValuesMany(db: DbOrTx, organizationId: string, entityIds: string[], fields: FieldDef[]): Promise<Map<string, Record<string, FieldValue>>> {
+  const out = new Map<string, Record<string, FieldValue>>(entityIds.map((id) => [id, Object.fromEntries(fields.map((f) => [f.id, null as FieldValue]))]));
+  if (fields.length === 0 || entityIds.length === 0) return out;
+  const rows = await db.select().from(customFieldValues)
+    .where(and(eq(customFieldValues.organizationId, organizationId), inArray(customFieldValues.entityId, entityIds), inArray(customFieldValues.fieldId, fields.map((f) => f.id))));
+  for (const r of rows) { const rec = out.get(r.entityId); if (rec) rec[r.fieldId] = r.value as FieldValue; }
+  return out;
+}
+
 export class CustomFieldError extends Error {
   constructor(public fieldKey: string, public code: "required" | "invalid") {
     super(`${code}:${fieldKey}`);

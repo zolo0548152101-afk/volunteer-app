@@ -54,7 +54,7 @@
     "cancel": "Cancel",
     "edit": "Edit",
     "delete": "Delete",
-    "loading": "Loading. Not like a model, actually loading",
+    "loading": "Hang on, loading. Take a deep breath",
     "empty": "Nothing here. Yet",
     "back": "Back",
     "next": "Continue",
@@ -62,7 +62,8 @@
     "yes": "Yes",
     "no": "No",
     "hours": "hours",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "sending": "Sending…"
   },
   "statuses": {
     "pending": "Pending approval",
@@ -515,7 +516,20 @@
     "needsCorrection": "Return for fix",
     "reject": "Reject",
     "unapproveReason": "Reason for un-approving",
-    "unapprove": "Un-approve"
+    "unapprove": "Un-approve",
+    "filters": "Filters",
+    "filterStudent": "Student",
+    "filterPlace": "Place",
+    "filterMonth": "Month",
+    "filterAll": "All",
+    "applyFilters": "Show",
+    "clearFilters": "Clear filters",
+    "pick": "Select for bulk approval: {student}",
+    "bulkApprove": "Approve selected as reported",
+    "bulkHint": "Tick reports and approve them in one go. To change hours, approve each report on its own",
+    "bulkDone": "{n} reports approved",
+    "bulkPartial": "{n} reports approved, {failed} were not (already handled or not yours)",
+    "bulkNone": "No reports selected"
   },
   "nav2": {
     "reports": "Hour reports",

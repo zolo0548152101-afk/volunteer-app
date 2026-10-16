@@ -333,6 +333,7 @@ export const placements = pgTable(
     index("placements_student_idx").on(t.studentId),
     index("placements_interview_idx").on(t.interviewId),
     index("placements_window_active_idx").on(t.timeWindowId).where(sql`${t.isActive}`),
+    index("placements_place_active_idx").on(t.placeId).where(sql`${t.isActive}`),
     // אותו חלון פעמיים לאותו סטודנט (בשיבוצים פעילים) = חסימה
     uniqueIndex("placements_student_window_active_uq")
       .on(t.studentId, t.timeWindowId)
@@ -384,6 +385,9 @@ export const hourReports = pgTable(
   },
   (t) => [
     index("hour_reports_org_idx").on(t.organizationId),
+    index("hour_reports_org_status_idx").on(t.organizationId, t.status),
+    index("hour_reports_year_idx").on(t.academicYearId),
+    index("hour_reports_place_idx").on(t.placeId),
     index("hour_reports_student_idx").on(t.studentId, t.volunteerDate),
     index("hour_reports_coordinator_status_idx").on(t.coordinatorId, t.status),
     index("hour_reports_pending_idx").on(t.submittedAt).where(sql`${t.status} = 'pending'`),

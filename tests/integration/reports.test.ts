@@ -4,7 +4,7 @@ import { closeDb, db } from "@/lib/db";
 import { auditLog, hourReports, placements } from "@/lib/db/schema";
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
-import { decide, getMyReport, listInbox, listMyReports, myProgress, reportablePlacements, resubmitReport, submitReport, type SubmitInput } from "@/lib/services/reports";
+import { approveMany, decide, getMyReport, listInbox, listMyReports, myProgress, reportablePlacements, resubmitReport, submitReport, type SubmitInput } from "@/lib/services/reports";
 import { NotFoundError } from "@/lib/services/users";
 
 type Seed = Awaited<ReturnType<typeof seedDemo>>;
@@ -188,5 +188,44 @@ describe("שיבוץ שהסתיים, ותאריך מחוץ לתקופת השיב
     await decide(db(), manager, id, { kind: "unapprove", reason: "בדיקה" });
     const [b] = await db().select().from(hourReports).where(eq(hourReports.id, id));
     expect(b.submittedAt.getTime()).toBeGreaterThan(a.submittedAt.getTime());
+  });
+});
+
+describe("תיבת הרכז: היקף ב-SQL, מסננים ואישור מרובה (ביקורת Fable)", () => {
+  let a: string, b: string, placeId: string;
+  beforeAll(async () => {
+    const [p] = await db().select().from(placements).where(eq(placements.id, placementId));
+    placeId = p.placeId;
+    a = await submitReport(db(), st, vol({ volunteerDate: daysAgo(13) }));
+    b = await submitReport(db(), st, vol({ volunteerDate: daysAgo(14) }));
+  });
+
+  it("רכז רואה רק סטודנטים שלו, גם כשיש הרבה דיווחים; מנהל רואה הכול", async () => {
+    const mine = await listInbox(db(), c1, { status: "pending" });
+    expect(mine.map((r) => r.id)).toEqual(expect.arrayContaining([a, b]));
+    expect((await listInbox(db(), c2, { status: "pending" })).map((r) => r.id)).not.toEqual(expect.arrayContaining([a]));
+    expect((await listInbox(db(), manager, { status: "pending" })).length).toBeGreaterThanOrEqual(mine.length);
+  });
+
+  it("מסנני סטודנט, מקום וחודש", async () => {
+    expect((await listInbox(db(), c1, { status: "pending", studentId: st.id })).every((r) => r.studentId === st.id)).toBe(true);
+    expect((await listInbox(db(), c1, { status: "pending", studentId: other.id })).length).toBe(0);
+    expect((await listInbox(db(), c1, { status: "pending", placeId })).map((r) => r.id)).toEqual(expect.arrayContaining([a, b]));
+    expect((await listInbox(db(), c1, { status: "pending", placeId: "00000000-0000-0000-0000-000000000000" })).length).toBe(0);
+    const month = daysAgo(13).slice(0, 7);
+    const inMonth = await listInbox(db(), c1, { status: "pending", month });
+    expect(inMonth.length).toBeGreaterThan(0);
+    expect(inMonth.every((r) => r.volunteerDate.startsWith(month))).toBe(true);
+  });
+
+  it("אישור מרובה: מאשר בשעות שדווחו; דיווח שכבר טופל או של רכז אחר נספר ככישלון ולא מפיל את השאר", async () => {
+    await decide(db(), c1, b, { kind: "approve" }); // b כבר טופל
+    const r = await approveMany(db(), c1, [a, b, "00000000-0000-0000-0000-000000000000"]);
+    expect(r).toEqual({ approved: 1, failed: 2 });
+    const [ra] = await db().select().from(hourReports).where(eq(hourReports.id, a));
+    expect(ra).toMatchObject({ status: "approved", approvedHours: ra.reportedHours });
+    // רכז אחר לא מאשר דיווח של סטודנט שאינו שלו
+    const c = await submitReport(db(), st, vol({ volunteerDate: daysAgo(15) }));
+    expect(await approveMany(db(), c2, [c])).toEqual({ approved: 0, failed: 1 });
   });
 });
