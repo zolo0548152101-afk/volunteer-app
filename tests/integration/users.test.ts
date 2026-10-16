@@ -4,7 +4,9 @@ import { closeDb, db } from "@/lib/db";
 import { auditLog, users } from "@/lib/db/schema";
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
-import { setPasswordFromToken } from "@/lib/services/credentials";
+import { resolveLogin, setPasswordFromToken } from "@/lib/services/credentials";
+import { hashPassword } from "@/lib/password";
+import { DEMO_EMAILS, DEMO_PASSWORD } from "@/lib/db/seed";
 import { issueToken } from "@/lib/services/tokens";
 import { assignCoordinator, getUser, inviteUser, listUsers, NotFoundError, setRoles, setStatus, ValidationError } from "@/lib/services/users";
 
@@ -180,5 +182,19 @@ describe("הסלמת הרשאות ושימור חשבונות (ביקורת Fabl
     expect(await setPasswordFromToken(db(), { kind: "invite", raw, passwordHash: "h" })).toBe(true);
     const [row] = await db().select().from(users).where(eq(users.id, u.id));
     expect(row.status).toBe("active");
+  });
+});
+
+describe("כניסה כשאותו מייל קיים בכמה ארגונים (ביקורת Fable)", () => {
+  it("הסיסמה מכריעה מי נכנס, וסיסמה שגויה לא נכנסת לאף חשבון", async () => {
+    // other הוא ארגון שני עם אותם מיילי דמו. מחליפים את הסיסמה של המנהל שלו
+    await db().update(users).set({ passwordHash: await hashPassword("other-pass-9") }).where(eq(users.id, other.manager.id));
+    const mine = await resolveLogin(db(), DEMO_EMAILS.manager.toUpperCase(), DEMO_PASSWORD);
+    const theirs = await resolveLogin(db(), DEMO_EMAILS.manager, "other-pass-9");
+    expect(mine?.organizationId).toBeDefined();
+    expect(theirs?.id).toBe(other.manager.id);
+    expect(mine?.id).not.toBe(theirs?.id);
+    expect(await resolveLogin(db(), DEMO_EMAILS.manager, "wrong")).toBeNull();
+    expect(await resolveLogin(db(), "nobody@nowhere.test", "x")).toBeNull();
   });
 });

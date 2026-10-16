@@ -111,6 +111,8 @@ export const users = pgTable(
   },
   (t) => [
     uniqueIndex("users_org_email_uq").on(t.organizationId, sql`lower(${t.email})`),
+    // כניסה ואיפוס סיסמה מחפשים לפי מייל בלבד (האינדקס הייחודי מוביל בארגון ולכן לא משרת אותם)
+    index("users_email_lower_idx").on(sql`lower(${t.email})`),
     index("users_org_idx").on(t.organizationId),
     index("users_coordinator_idx").on(t.coordinatorId),
   ],

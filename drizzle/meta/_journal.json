@@ -29,6 +29,13 @@
       "when": 1792106344283,
       "tag": "0003_sessions_invalid_before",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792124945402,
+      "tag": "0004_users_email_lower_idx",
+      "breakpoints": true
     }
   ]
 }

@@ -40,12 +40,13 @@ export async function logoutAction() {
 export async function requestResetAction(_: FormState, formData: FormData): Promise<FormState> {
   const parsed = z.string().email().safeParse(String(formData.get("email") ?? "").trim());
   if (!parsed.success) return { error: "invalid" };
-  const [u] = await db()
+  // אותו מייל בכמה ארגונים: כל חשבון מקבל קישור משלו (הקישור מחייב את החשבון, לא את המייל)
+  const matches = await db()
     .select()
     .from(users)
     .where(and(sql`lower(${users.email}) = ${parsed.data.toLowerCase()}`, inArray(users.status, ["active", "invited"])))
-    .limit(1);
-  if (u) await sendLink(u, "password_reset");
+    .limit(5);
+  for (const u of matches) await sendLink(u, "password_reset");
   return { done: true };
 }
 
