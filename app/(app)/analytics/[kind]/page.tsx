@@ -41,7 +41,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         <a href={`/api/export/${kind}${qs ? `?${qs}` : ""}`} className="rounded-lg bg-primary px-3 py-2 text-primary-foreground">{t("exportExcel")}</a>
       </form>
       {table.rows.length === 0 ? <p className="mt-4 text-muted">{t("noRows")}</p> : (
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-4 overflow-x-auto" role="region" aria-label={t(`kinds.${kind}`)} tabIndex={0}>
           <table className="w-full text-sm">
             <thead><tr>{table.columns.map((c) => <th key={c.key} scope="col" className="border-b border-border px-2 py-2 text-start font-medium">{c.key.startsWith("cf:") ? c.key.slice(3) : t(`columns.${c.key}`)}</th>)}</tr></thead>
             <tbody>

@@ -15,7 +15,8 @@
     "dashboard": "Dashboard",
     "users": "Users",
     "settings": "Settings",
-    "logout": "Log out"
+    "logout": "Log out",
+    "skipToContent": "Skip to content"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -715,5 +716,23 @@
   "nav4": {
     "analytics": "Dashboard and reports",
     "certificate": "Hours certificate"
+  },
+  "a11y": {
+    "title": "Accessibility statement",
+    "intro": "We want every student, coordinator and interviewer to use the system without difficulty, on any device.",
+    "whatWeDidTitle": "What we did",
+    "did": {
+      "standard": "Built to WCAG 2.1 level AA guidelines",
+      "keyboard": "All forms and navigation work with the keyboard alone",
+      "screenReader": "Every field has a label, every button a name, and errors are announced to screen readers",
+      "contrast": "Sufficient color contrast, and information is never conveyed by color alone",
+      "mobile": "Mobile friendly, with no horizontal scrolling and large tap targets",
+      "rtl": "Hebrew right-to-left by default, English left-to-right"
+    },
+    "limitsTitle": "Known limitations",
+    "limits": "We tested with automated tools and partial manual testing, not with every screen reader. Dashboard charts come with a table holding the same information. The hours certificate is produced for printing or saving as PDF through the browser.",
+    "contactTitle": "Ran into a problem?",
+    "contact": "If something isn't accessible, write to us and we'll fix it.",
+    "back": "Back"
   }
 }

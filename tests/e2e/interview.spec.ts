@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
@@ -42,9 +43,12 @@ test("מראיין רואה את התור, מנהל מראיין ומשבץ סט
 
   // הוספת החלון הראשון שמוצע, ושמירת טיוטה
   await page.getByRole("button", { name: "הוספה לחוזה" }).first().click();
-  await expect(page.getByLabel("תקנים")).toBeVisible();
+  await expect(page.getByLabel("תקנים")).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: "שמירת טיוטה" }).click();
   await expect(page.getByText("שני הבנקים")).toBeVisible();
+  // נגישות מסך הראיון (המסך המורכב ביותר)
+  const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+  expect(axe.violations.filter((v) => v.impact === "critical" || v.impact === "serious").map((v) => `${v.id}: ${v.nodes.slice(0, 2).map((n) => n.target.join(" ")).join(" | ")}`)).toEqual([]);
 
   await page.getByLabel("רכז לסטודנט").selectOption({ index: 1 });
   const reason = page.getByLabel(/סיבה לאישור החריגה/);

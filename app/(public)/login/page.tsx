@@ -32,6 +32,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             {otherLocale === "en" ? "English" : "עברית"}
           </button>
         </form>
+        <a href="/accessibility" className="mt-3 inline-block text-sm underline">{t("a11y.title")}</a>
       </div>
     </main>
   );

@@ -72,10 +72,12 @@ export default async function InterviewPage({ params, searchParams }: { params: 
           </div>
         ) : <p className="mt-2 text-sm text-muted">{t("noBank")}</p>}
         {(blocks.length > 0 || warns.length > 0) && (
-          <ul className="mt-3 flex flex-col gap-1 text-sm" role="status">
-            {blocks.map((i, n) => <li key={`b${n}`} className="text-red-700">⛔ {ti(i.code)}{i.timeWindowId ? ` (${label(i.timeWindowId)})` : ""}</li>)}
-            {warns.map((i, n) => <li key={`w${n}`} className="text-amber-700">⚠ {ti(i.code)}</li>)}
-          </ul>
+          <div role="status">
+            <ul className="mt-3 flex flex-col gap-1 text-sm">
+              {blocks.map((i, n) => <li key={`b${n}`} className="text-red-700">⛔ {ti(i.code)}{i.timeWindowId ? ` (${label(i.timeWindowId)})` : ""}</li>)}
+              {warns.map((i, n) => <li key={`w${n}`} className="text-amber-700">⚠ {ti(i.code)}</li>)}
+            </ul>
+          </div>
         )}
         <p className="mt-1 text-xs text-muted">{t("evalNote")}</p>
       </section>
