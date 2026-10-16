@@ -32,6 +32,10 @@ export const TEMPLATES = {
     he: { subject: "הדיווח שלך אושר", body: "דיווח השעות שלך אושר." },
     en: { subject: "Your report was approved", body: "Your hour report was approved." },
   },
+  "report.approved_many": {
+    he: { subject: "{count} דיווחים שלך אושרו", body: "{count} דיווחי שעות שלך אושרו." },
+    en: { subject: "{count} of your reports were approved", body: "{count} of your hour reports were approved." },
+  },
   "report.rejected": {
     he: { subject: "הדיווח שלך נדחה", body: "דיווח השעות שלך נדחה. הערת הרכז: {notes}" },
     en: { subject: "Your report was rejected", body: "Your hour report was rejected. Coordinator's note: {notes}" },

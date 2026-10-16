@@ -225,10 +225,19 @@ export async function inboxFilterOptions(db: Db, actor: SessionUser, status: Rep
  */
 export async function approveMany(db: Db, actor: SessionUser, ids: string[]): Promise<{ approved: number; failed: number }> {
   let approved = 0, failed = 0;
+  const perStudent = new Map<string, number>();
   for (const id of [...new Set(ids)].slice(0, 200)) {
-    try { await decide(db, actor, id, { kind: "approve" }); approved++; } catch (e) {
+    try {
+      const out = await applyDecision(db, actor, id, { kind: "approve" });
+      approved++;
+      perStudent.set(out.studentId, (perStudent.get(out.studentId) ?? 0) + 1);
+    } catch (e) {
       if (e instanceof ReportError || e instanceof NotFoundError || e instanceof ForbiddenError) failed++; else throw e;
     }
+  }
+  // הודעה אחת לסטודנט, לא אחת לכל דיווח
+  for (const [studentId, count] of perStudent) {
+    await notifyUser(db, studentId, count === 1 ? "report.approved" : "report.approved_many", { count });
   }
   return { approved, failed };
 }
@@ -241,7 +250,14 @@ export type Decision =
   | { kind: "unapprove"; reason: string };
 
 export async function decide(db: Db, actor: SessionUser, reportId: string, d: Decision): Promise<void> {
-  const out = await db.transaction(async (tx) => {
+  const out = await applyDecision(db, actor, reportId, d);
+  const template: TemplateId = d.kind === "unapprove" ? "report.unapproved" : (`report.${out.status}` as TemplateId);
+  await notifyUser(db, out.studentId, template, { notes: d.kind === "unapprove" ? d.reason.trim() : (out.notes ?? "") });
+}
+
+/** ההחלטה עצמה (טרנזקציה + יומן), בלי הודעה; approveMany שולח הודעה מאוחדת */
+async function applyDecision(db: Db, actor: SessionUser, reportId: string, d: Decision) {
+  return db.transaction(async (tx) => {
     const [old] = await tx.select().from(hourReports).where(and(eq(hourReports.id, reportId), eq(hourReports.organizationId, actor.organizationId))).for("update");
     if (!old) throw new NotFoundError();
     const [st] = await tx.select({ coordinatorId: users.coordinatorId }).from(users).where(eq(users.id, old.studentId));
@@ -283,8 +299,6 @@ export async function decide(db: Db, actor: SessionUser, reportId: string, d: De
     await writeAudit(tx, { organizationId: actor.organizationId, actorId: actor.id }, { entity: "hour_report", entityId: old.id, action, reason }, old, row);
     return { studentId: old.studentId, status: row.status, notes: row.coordinatorNotes };
   });
-  const template: TemplateId = d.kind === "unapprove" ? "report.unapproved" : (`report.${out.status}` as TemplateId);
-  await notifyUser(db, out.studentId, template, { notes: d.kind === "unapprove" ? d.reason.trim() : (out.notes ?? "") });
 }
 
 async function notifyUser(db: Db, userId: string | null, template: TemplateId, data: Record<string, unknown>) {

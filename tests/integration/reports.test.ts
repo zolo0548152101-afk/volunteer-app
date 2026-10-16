@@ -6,6 +6,7 @@ import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
 import { approveMany, decide, getMyReport, listInbox, listMyReports, myProgress, reportablePlacements, resubmitReport, submitReport, type SubmitInput } from "@/lib/services/reports";
 import { NotFoundError } from "@/lib/services/users";
+import { registerProvider, resetProviders, type NotifyInput } from "@/lib/services/notify";
 
 type Seed = Awaited<ReturnType<typeof seedDemo>>;
 let s: Seed;
@@ -227,5 +228,17 @@ describe("תיבת הרכז: היקף ב-SQL, מסננים ואישור מרוב
     // רכז אחר לא מאשר דיווח של סטודנט שאינו שלו
     const c = await submitReport(db(), st, vol({ volunteerDate: daysAgo(15) }));
     expect(await approveMany(db(), c2, [c])).toEqual({ approved: 0, failed: 1 });
+  });
+
+  it("אישור מרובה שולח הודעה אחת לסטודנט (מאוחדת), לא אחת לכל דיווח", async () => {
+    const x = await submitReport(db(), st, vol({ volunteerDate: daysAgo(2) }));
+    const y = await submitReport(db(), st, vol({ volunteerDate: daysAgo(3) }));
+    const sent: NotifyInput[] = [];
+    registerProvider("email", { async send(i) { sent.push(i); } });
+    try {
+      expect(await approveMany(db(), c1, [x, y])).toEqual({ approved: 2, failed: 0 });
+    } finally { resetProviders(); }
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ template: "report.approved_many", data: { count: 2 } });
   });
 });
