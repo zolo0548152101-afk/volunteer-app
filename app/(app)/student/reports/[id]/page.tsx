@@ -19,7 +19,7 @@ export default async function EditReport({ params, searchParams }: { params: Pro
       <h1 className="text-xl font-semibold">{t("titleEdit")}</h1>
       {report.coordinatorNotes && report.status === "needs_correction" && <p className="mt-2 rounded-lg border border-amber-300 p-3 text-sm">{t("coordinatorAsked", { note: report.coordinatorNotes })}</p>}
       <ReportErrorBanner code={sp.error} />
-      {editable ? <ReportForm placements={pls} absence={report.reportType === "absence"} report={report} action={resubmitReportAction} max="24" /> : <p className="mt-3 text-muted">{t("locked")}</p>}
+      {editable ? <ReportForm placements={pls} absence={report.reportType === "absence"} report={report} action={resubmitReportAction} max="24" today={new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" })} /> : <p className="mt-3 text-muted">{t("locked")}</p>}
     </main>
   );
 }

@@ -10,6 +10,7 @@ import { getStudentForStaff } from "@/lib/services/students";
 import { listFields, loadValues } from "@/lib/services/custom-fields";
 import { loadLookup } from "@/lib/services/lookups";
 import { NotFoundError } from "@/lib/services/users";
+import { ForbiddenError } from "@/lib/permissions";
 import { CustomFields } from "@/components/custom-fields/custom-fields";
 
 export default async function StudentCard({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; done?: string }> }) {
@@ -18,7 +19,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
   try {
     s = await getStudentForStaff(db(), actor, id);
     history = await studentHistory(db(), actor, id);
-  } catch (e) { if (e instanceof NotFoundError) notFound(); throw e; }
+  } catch (e) { if (e instanceof NotFoundError || e instanceof ForbiddenError) notFound(); throw e; }
   const [fields, cats] = await Promise.all([listFields(db(), actor, "student"), loadLookup(db(), actor.organizationId, "volunteer_type")]);
   const values = await loadValues(db(), actor.organizationId, id, fields);
   const canInterview = can(actor, "create", "interview", { organizationId: actor.organizationId });

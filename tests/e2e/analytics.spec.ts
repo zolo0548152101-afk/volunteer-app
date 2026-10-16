@@ -50,3 +50,21 @@ test("תעודת שעות: סטודנט רואה את שלו, לא של אחר",
   const other = await page.request.get("/certificate/00000000-0000-0000-0000-000000000000");
   expect(other.status()).toBe(404);
 });
+
+test("מנהל: אין גלילה אופקית בהגדרות ובלוח הבקרה, והתוויות בגרף לא נכנסות לעמודות", async ({ page }) => {
+  await login(page, "manager@demo.test");
+  for (const path of ["/manager/settings", "/analytics"]) {
+    await page.goto(path);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(overflow, path).toBe(false);
+  }
+  // הגרף מצויר LTR, כדי ש-text-anchor לא יתהפך בעברית
+  const dir = await page.locator("svg[aria-hidden=true]").first().evaluate((el) => getComputedStyle(el).direction);
+  expect(dir).toBe("ltr");
+});
+
+test("דף לא קיים מציג 404 בעברית, לא את דף Next באנגלית", async ({ page }) => {
+  await login(page, "manager@demo.test");
+  await page.goto("/students/00000000-0000-0000-0000-000000000000");
+  await expect(page.getByRole("heading", { name: "הדף הזה לא נמצא" })).toBeVisible();
+});

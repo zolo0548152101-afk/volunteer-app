@@ -70,9 +70,12 @@
     "needs_correction": "Needs correction"
   },
   "errors": {
-    "generic": "Something went wrong. Try again in a moment",
-    "forbidden": "You don't have permission to do that",
-    "required": "Required field"
+    "notFoundTitle": "This page wasn't found",
+    "notFoundBody": "The link may be old, or you may not have access to it. Either way, you can head back home from here.",
+    "errorTitle": "Something went wrong",
+    "errorBody": "The action didn't complete. You can try again, and if it keeps happening, contact your administrator.",
+    "retry": "Try again",
+    "home": "Back to home"
   },
   "users": {
     "title": "Users",
@@ -415,7 +418,7 @@
     "places": "Volunteer places"
   },
   "reportForm": {
-    "title": "Report volunteer hours",
+    "title": "Report hours",
     "titleAbsence": "Report an absence",
     "titleEdit": "Fix report",
     "placement": "Placement",
@@ -439,7 +442,9 @@
     "switchToAbsence": "Report an absence",
     "myReports": "My reports",
     "coordinatorAsked": "The coordinator asked for a fix: {note}",
-    "locked": "This report was already handled and can't be edited"
+    "locked": "This report was already handled and can't be edited",
+    "moreDetails": "More details (times and notes)",
+    "absenceToggle": "This is an absence report (I didn't attend)"
   },
   "reportErrors": {
     "bad_date": "Invalid date",
@@ -734,5 +739,23 @@
     "contactTitle": "Ran into a problem?",
     "contact": "If something isn't accessible, write to us and we'll fix it.",
     "back": "Back"
+  },
+  "studentHome": {
+    "progressTitle": "Your progress",
+    "ofTarget": "{approved} of {target} approved hours",
+    "noTarget": "{approved} approved hours",
+    "pending": "{n} hours awaiting approval",
+    "progressLabel": "Progress: {approved} of {target} approved hours, {pending} pending",
+    "nextMilestone": "Next milestone: {label} at {hours} h. {left} h to go",
+    "allMilestones": "You've passed every milestone. Well done",
+    "reportCta": "Report hours",
+    "reportCtaHint": "Under 30 seconds, everything is pre-filled",
+    "contractTitle": "Your contract",
+    "contractWeekly": "{n} h per week",
+    "noContract": "You don't have an active placement yet. It will show up here after your interview",
+    "recentTitle": "Recent reports",
+    "recentEmpty": "You haven't reported anything yet. It's all ahead of you",
+    "allReports": "All reports",
+    "absenceTag": "Absence"
   }
 }

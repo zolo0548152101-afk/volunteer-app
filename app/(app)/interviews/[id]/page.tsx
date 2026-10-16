@@ -8,6 +8,7 @@ import { getDraft, listCandidateWindows, listCoordinatorsWithLoad } from "@/lib/
 import { getStudentForStaff } from "@/lib/services/students";
 import { loadLookup } from "@/lib/services/lookups";
 import { NotFoundError } from "@/lib/services/users";
+import { ForbiddenError } from "@/lib/permissions";
 import { DAYS } from "@/lib/services/places";
 
 const input = "rounded-lg border border-border bg-transparent px-2 py-1.5 text-base";
@@ -15,7 +16,7 @@ const input = "rounded-lg border border-border bg-transparent px-2 py-1.5 text-b
 export default async function InterviewPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; city?: string; category?: string; day?: string; q?: string }> }) {
   const [{ id }, sp, actor, t, td, ti] = await Promise.all([params, searchParams, requireActor(), getTranslations("interviews"), getTranslations("days"), getTranslations("issues")]);
   let draft;
-  try { draft = await getDraft(db(), actor, id); } catch (e) { if (e instanceof NotFoundError) notFound(); throw e; }
+  try { draft = await getDraft(db(), actor, id); } catch (e) { if (e instanceof NotFoundError || e instanceof ForbiddenError) notFound(); throw e; }
   const { interview: iv, lines, evaluation: ev } = draft;
   const student = await getStudentForStaff(db(), actor, iv.studentId);
   const editable = iv.status === "draft";

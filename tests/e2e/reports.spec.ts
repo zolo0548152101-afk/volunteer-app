@@ -11,6 +11,8 @@ async function login(page: import("@playwright/test").Page, email: string) {
   await expect(page).not.toHaveURL(/\/login/);
 }
 
+const yesterday = new Date(Date.now() - 86_400_000).toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" });
+
 async function cleanup() {
   if (!process.env.DATABASE_URL) return;
   const { db, closeDb } = await import("../../lib/db");
@@ -26,8 +28,14 @@ test("סטודנט מדווח, רכז מאשר עם שינוי שעות, הסט�
   await login(page, "student2@demo.test");
   await page.goto("/student/report");
   await expect(page.getByLabel("שעות")).not.toHaveValue("");
-  await page.getByLabel("תאריך").fill("2026-10-14");
-  await page.getByLabel("שעות").fill("3");
+  // רק שלושה שדות גלויים; שעות והערות מקופלות
+  await expect(page.getByLabel("שיבוץ")).toBeVisible();
+  await expect(page.getByLabel("תאריך")).toBeVisible();
+  await expect(page.locator("input[name=reportedHours]")).toBeVisible();
+  await expect(page.getByLabel("הערות")).toBeHidden();
+  await page.getByLabel("תאריך").fill(yesterday);
+  await page.locator("input[name=reportedHours]").fill("3");
+  await page.getByText("עוד פרטים").click();
   await page.getByLabel("הערות").fill("e2e-report");
   await page.getByRole("button", { name: "שליחה לאישור" }).click();
   await expect(page).toHaveURL(/\/student\/reports\?sent=1/);
@@ -35,7 +43,7 @@ test("סטודנט מדווח, רכז מאשר עם שינוי שעות, הסט�
 
   // כפילות ביום הזה: הודעה עניינית, הטופס נשאר
   await page.goto("/student/report");
-  await page.getByLabel("תאריך").fill("2026-10-14");
+  await page.getByLabel("תאריך").fill(yesterday);
   await page.getByRole("button", { name: "שליחה לאישור" }).click();
   await expect(page.locator("p[role=alert]")).toContainText("כבר דיווחת");
   await page.getByRole("button", { name: "יציאה" }).click();
@@ -66,4 +74,24 @@ test("רכז אחר ומראיין לא רואים את תיבת הדיווחי�
   await login(page, "interviewer@demo.test");
   await page.goto("/reports");
   await expect(page).not.toHaveURL(/\/reports/);
+});
+
+test("בית הסטודנט: התקדמות, חוזה, כפתור דיווח ודיווחים אחרונים", async ({ page }) => {
+  await login(page, "student1@demo.test");
+  await page.goto("/student");
+  await expect(page.getByRole("link", { name: /דיווח שעות/ })).toBeVisible();
+  await expect(page.getByRole("progressbar")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "החוזה שלך" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "הדיווחים האחרונים" })).toBeVisible();
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  expect(overflow).toBe(false);
+});
+
+test("טופס הדיווח: מתג היעדרות מחליף את השיבוץ בסיבה", async ({ page }) => {
+  await login(page, "student1@demo.test");
+  await page.goto("/student/report");
+  await expect(page.getByLabel("שיבוץ")).toBeVisible();
+  await page.getByLabel("זה דיווח על היעדרות").check();
+  await expect(page.getByLabel("סיבת ההיעדרות")).toBeVisible();
+  await expect(page.getByLabel("שיבוץ")).toBeHidden();
 });

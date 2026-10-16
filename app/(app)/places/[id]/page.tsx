@@ -8,6 +8,7 @@ import { requireActor } from "@/lib/session";
 import { getPlace, type StaffPlace } from "@/lib/services/places";
 import { loadCategories } from "@/lib/services/lookups";
 import { NotFoundError } from "@/lib/services/users";
+import { ForbiddenError } from "@/lib/permissions";
 import { PlaceFields } from "@/components/places/place-fields";
 import { WindowFields } from "@/components/places/window-form";
 import { PlaceError } from "@/components/places/place-error";
@@ -18,7 +19,7 @@ export default async function PlaceCard({ params, searchParams }: { params: Prom
   try {
     data = await getPlace(db(), actor, id);
   } catch (e) {
-    if (e instanceof NotFoundError) notFound();
+    if (e instanceof NotFoundError || e instanceof ForbiddenError) notFound();
     throw e;
   }
   const categories = await loadCategories(db(), actor.organizationId);

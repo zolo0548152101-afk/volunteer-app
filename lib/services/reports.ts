@@ -12,6 +12,7 @@ import type { Db, Tx } from "@/lib/db";
 import { academicYears, hourReports, placeTimeWindows, placements, programs, studentProfiles, users, volunteerPlaces } from "@/lib/db/schema";
 import { assertCan, can, ForbiddenError, type SessionUser } from "@/lib/permissions";
 import { writeAudit } from "@/lib/services/audit";
+import { lastContractDay } from "@/lib/services/report-dates";
 import { round2 } from "@/lib/services/capacity";
 import { notify } from "@/lib/services/notify";
 import type { TemplateId } from "@/lib/notifications/templates";
@@ -169,6 +170,9 @@ export async function reportablePlacements(db: Db, actor: SessionUser) {
       id: x.p.id, placeName: x.placeName, windowLabel: x.windowLabel,
       defaultHours: x.p.defaultReportHours !== null ? Number(x.p.defaultReportHours) : perDay,
       startTime: startEnd?.[1] ?? "", endTime: startEnd?.[2] ?? "",
+      days: x.p.assignedDays as string[], weeklyHours: Number(x.p.weeklyHours), assignedHours: x.p.assignedHours,
+      /** יום החוזה האחרון שכבר התקיים: ברירת המחדל לתאריך הדיווח */
+      defaultDate: lastContractDay(x.p.assignedDays, todayIL()),
     };
   });
 }
@@ -252,3 +256,18 @@ export async function myProgress(db: Db, actor: SessionUser) {
   return { approved: Number(r?.approved ?? 0), pending: Number(r?.pending ?? 0) };
 }
 
+
+/** כל מה שדף הבית של הסטודנט מציג: התקדמות מול יעד, אבני דרך, חוזה פעיל וחמשת הדיווחים האחרונים */
+export async function studentHome(db: Db, actor: SessionUser) {
+  const [progress, contract, recent, [prof]] = await Promise.all([
+    myProgress(db, actor),
+    reportablePlacements(db, actor),
+    listMyReports(db, actor).then((r) => r.slice(0, 5)),
+    db.select({ override: studentProfiles.targetHoursOverride, trackHours: programs.requiredHours, milestones: programs.milestones })
+      .from(studentProfiles).leftJoin(programs, eq(programs.id, studentProfiles.trackId)).where(eq(studentProfiles.userId, actor.id)).limit(1),
+  ]);
+  const target = prof ? (prof.override !== null ? Number(prof.override) : prof.trackHours !== null ? Number(prof.trackHours) : null) : null;
+  const milestones = [...((prof?.milestones as { hours: number; label: string }[] | null) ?? [])].sort((a, b) => a.hours - b.hours);
+  const next = milestones.find((m) => m.hours > progress.approved) ?? null;
+  return { ...progress, target, milestones, next, contract, recent };
+}

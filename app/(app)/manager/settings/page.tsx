@@ -109,7 +109,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               <ul className="mt-2 flex flex-col gap-2">
                 {s.lookups[kind].map((l) => (
                   <li key={l.id}>
-                    <form action={saveLookupAction} className="grid grid-cols-[1fr_1fr_5rem_auto_auto] items-end gap-2 text-sm">
+                    <form action={saveLookupAction} className="grid grid-cols-2 items-end gap-2 text-sm sm:grid-cols-[1fr_1fr_5rem_auto_auto]">
                       <input type="hidden" name="id" value={l.id} /><input type="hidden" name="kind" value={kind} />
                       <input name="labelHe" aria-label={t("labelHe")} required defaultValue={l.labelHe} className={input} />
                       <input name="labelEn" aria-label={t("labelEn")} defaultValue={l.labelEn ?? ""} className={input} dir="ltr" />
@@ -120,7 +120,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   </li>
                 ))}
               </ul>
-              <form action={saveLookupAction} className="mt-2 grid grid-cols-[1fr_1fr_auto] items-end gap-2 text-sm">
+              <form action={saveLookupAction} className="mt-2 grid grid-cols-2 items-end gap-2 text-sm sm:grid-cols-[1fr_1fr_auto]">
                 <input type="hidden" name="kind" value={kind} />
                 <input name="labelHe" aria-label={t("labelHe")} placeholder={t("labelHe")} required className={input} />
                 <input name="labelEn" aria-label={t("labelEn")} placeholder={t("labelEn")} className={input} dir="ltr" />

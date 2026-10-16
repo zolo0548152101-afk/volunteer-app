@@ -11,17 +11,20 @@ export default async function NewReport({ searchParams }: { searchParams: Promis
   const [sp, t, actor] = await Promise.all([searchParams, getTranslations("reportForm"), requireRole("student")]);
   const absence = sp.absence === "1";
   const pls = await reportablePlacements(db(), actor);
+  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" });
   return (
     <main className="mx-auto w-full max-w-xl p-4">
       <h1 className="text-xl font-semibold">{absence ? t("titleAbsence") : t("title")}</h1>
       <ReportErrorBanner code={sp.error} />
       {!absence && pls.length === 0 ? (
-        <p className="mt-3 text-muted">{t("noPlacements")}</p>
+        <>
+          <p className="mt-3 text-muted">{t("noPlacements")}</p>
+          <Link href="/student/report?absence=1" className="mt-3 inline-flex min-h-11 items-center underline">{t("switchToAbsence")}</Link>
+        </>
       ) : (
-        <ReportForm placements={pls} absence={absence} action={submitReportAction} max="24" />
+        <ReportForm placements={pls} absence={absence} action={submitReportAction} max="24" today={today} />
       )}
-      <Link href={absence ? "/student/report" : "/student/report?absence=1"} className="mt-6 inline-block underline">{absence ? t("switchToVolunteer") : t("switchToAbsence")}</Link>
-      <Link href="/student/reports" className="ms-4 mt-6 inline-block underline">{t("myReports")}</Link>
+      <Link href="/student/reports" className="mt-6 inline-flex min-h-11 items-center underline">{t("myReports")}</Link>
     </main>
   );
 }

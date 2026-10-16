@@ -70,9 +70,12 @@
     "needs_correction": "חוזר לתיקון"
   },
   "errors": {
-    "generic": "משהו השתבש. נסו שוב בעוד רגע",
-    "forbidden": "אין לך הרשאה לפעולה הזו",
-    "required": "שדה חובה"
+    "notFoundTitle": "הדף הזה לא נמצא",
+    "notFoundBody": "אולי הקישור ישן, אולי אין לך הרשאה לראות אותו. בכל מקרה, מכאן אפשר לחזור הביתה.",
+    "errorTitle": "משהו השתבש",
+    "errorBody": "הפעולה לא הושלמה. אפשר לנסות שוב, ואם זה חוזר, לפנות למנהל המערכת.",
+    "retry": "ניסיון נוסף",
+    "home": "חזרה לבית"
   },
   "users": {
     "title": "משתמשים",
@@ -415,7 +418,7 @@
     "places": "מקומות התנדבות"
   },
   "reportForm": {
-    "title": "דיווח שעות התנדבות",
+    "title": "דיווח שעות",
     "titleAbsence": "דיווח היעדרות",
     "titleEdit": "תיקון דיווח",
     "placement": "שיבוץ",
@@ -439,7 +442,9 @@
     "switchToAbsence": "דיווח היעדרות",
     "myReports": "הדיווחים שלי",
     "coordinatorAsked": "הרכז ביקש תיקון: {note}",
-    "locked": "הדיווח כבר טופל ואי אפשר לערוך אותו"
+    "locked": "הדיווח כבר טופל ואי אפשר לערוך אותו",
+    "moreDetails": "עוד פרטים (שעות והערות)",
+    "absenceToggle": "זה דיווח על היעדרות (לא הגעתי)"
   },
   "reportErrors": {
     "bad_date": "התאריך לא תקין",
@@ -734,5 +739,23 @@
     "contactTitle": "נתקלתם בבעיה?",
     "contact": "אם משהו לא נגיש, כתבו לנו ונתקן.",
     "back": "חזרה"
+  },
+  "studentHome": {
+    "progressTitle": "ההתקדמות שלך",
+    "ofTarget": "{approved} מתוך {target} שעות מאושרות",
+    "noTarget": "{approved} שעות מאושרות",
+    "pending": "{n} שעות ממתינות לאישור",
+    "progressLabel": "התקדמות: {approved} מתוך {target} שעות מאושרות, {pending} ממתינות",
+    "nextMilestone": "הפעימה הבאה: {label} ב-{hours} ש'. עוד {left} ש'",
+    "allMilestones": "עברת את כל הפעימות. כל הכבוד",
+    "reportCta": "דיווח שעות",
+    "reportCtaHint": "פחות מחצי דקה, הכול ממולא מראש",
+    "contractTitle": "החוזה שלך",
+    "contractWeekly": "{n} ש' בשבוע",
+    "noContract": "עוד אין לך שיבוץ פעיל. אחרי הראיון הוא יופיע כאן",
+    "recentTitle": "הדיווחים האחרונים",
+    "recentEmpty": "עוד לא דיווחת על כלום. הכול לפניך",
+    "allReports": "כל הדיווחים",
+    "absenceTag": "היעדרות"
   }
 }
