@@ -42,8 +42,8 @@ export default async function CustomFieldsPage({ searchParams }: { searchParams:
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <p className="mt-1 text-sm text-muted">{t("intro")}</p>
-      {sp.saved && <Flash tone="status" className="mt-3 rounded-lg border border-green-300 p-2 text-sm text-green-800">{t("saved")}</Flash>}
-      {sp.error && KNOWN.includes(sp.error) && <Flash tone="error" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${sp.error}`)}</Flash>}
+      {sp.saved && <Flash tone="status" className="mt-3 rounded-lg border border-ok/50 p-2 text-sm text-ok-fg">{t("saved")}</Flash>}
+      {sp.error && KNOWN.includes(sp.error) && <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{t(`errors.${sp.error}`)}</Flash>}
       {ENTITIES.map((e) => (
         <section key={e} className="mt-8">
           <h2 className="text-lg font-medium">{t(`entities.${e}`)}</h2>

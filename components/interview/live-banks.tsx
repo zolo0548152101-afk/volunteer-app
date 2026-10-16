@@ -55,13 +55,13 @@ export function LiveBanks({ formId, live, lines, editable }: Props) {
             <p>{t("bankLine1", { approved: ev.bank.approved, target: ev.bank.target, remaining: ev.bank.remainingNeed })}</p>
             <p>{t("bankLine2", { weeks: ev.bank.weeksRemaining, needed: ev.bank.neededWeekly })}</p>
             <p>{t("bankLine3", { contract: ev.bank.contractWeekly, planned: ev.bank.plannedHours })}</p>
-            <p className={`mt-1 font-medium ${ev.bank.status === "ok" ? "text-green-700" : "text-amber-700"}`}>{t(`bankStatus.${ev.bank.status}`, { gap: Math.abs(ev.bank.gap) })}</p>
+            <p className={`mt-1 font-medium ${ev.bank.status === "ok" ? "text-ok-fg" : "text-warn-fg"}`}>{t(`bankStatus.${ev.bank.status}`, { gap: Math.abs(ev.bank.gap) })}</p>
           </div>
           <div className="rounded-xl border border-border p-3 text-sm">
             <p className="font-medium">{t("institutionBank")}</p>
             {Object.keys(ev.windows).length === 0 && <p className="text-muted">{t("noLines")}</p>}
             {Object.entries(ev.windows).map(([wid, u]) => (
-              <p key={wid} className={u.remainingSlots < 0 || u.remainingHours < 0 ? "text-red-700" : undefined}>{label(wid)}: {t("windowLeft", { remainingSlots: u.remainingSlots, remainingHours: u.remainingHours })}</p>
+              <p key={wid} className={u.remainingSlots < 0 || u.remainingHours < 0 ? "text-bad-fg" : undefined}>{label(wid)}: {t("windowLeft", { remainingSlots: u.remainingSlots, remainingHours: u.remainingHours })}</p>
             ))}
           </div>
         </div>
@@ -70,8 +70,8 @@ export function LiveBanks({ formId, live, lines, editable }: Props) {
       <div role="status" aria-live="polite">
         {(blocks.length > 0 || warns.length > 0) && (
           <ul className="mt-3 flex flex-col gap-1 text-sm">
-            {blocks.map((i, n) => <li key={`b${n}`} className="text-red-700">⛔ {ti(i.code)}{i.timeWindowId ? ` (${label(i.timeWindowId)})` : ""}</li>)}
-            {warns.map((i, n) => <li key={`w${n}`} className="text-amber-700">⚠ {ti(i.code)}</li>)}
+            {blocks.map((i, n) => <li key={`b${n}`} className="text-bad-fg">⛔ {ti(i.code)}{i.timeWindowId ? ` (${label(i.timeWindowId)})` : ""}</li>)}
+            {warns.map((i, n) => <li key={`w${n}`} className="text-warn-fg">⚠ {ti(i.code)}</li>)}
           </ul>
         )}
       </div>

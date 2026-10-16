@@ -38,7 +38,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
       <Link href={`/students/${iv.studentId}`} className="text-sm underline">{t("backToStudent")}</Link>
       <h1 className="mt-2 text-xl font-semibold">{isInterview ? t("interviewWith", { name: `${student.firstName} ${student.lastName}` }) : t("reassignFor", { name: `${student.firstName} ${student.lastName}` })}</h1>
       {!editable && <p className="mt-2 rounded-lg border border-border p-3 text-sm">{t(`status.${iv.status}`)}</p>}
-      {errorKey && <Flash tone="error" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${errorKey}`)}</Flash>}
+      {errorKey && <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{t(`errors.${errorKey}`)}</Flash>}
 
       <section className="mt-4 rounded-xl border border-border p-3 text-sm" aria-labelledby="stu-h">
         <h2 id="stu-h" className="font-medium">{t("studentDetails")}</h2>
@@ -76,8 +76,8 @@ export default async function InterviewPage({ params, searchParams }: { params: 
                   <p className="font-medium">{c.placeName} · {c.label}</p>
                   <p className="text-muted">{[c.city, c.category ? catLabel.get(c.category) : null, c.days.map((d) => td(d)).join(", "), c.startTime && c.endTime ? `\u2066${c.startTime.slice(0, 5)}–${c.endTime.slice(0, 5)}\u2069` : null].filter(Boolean).join(" · ")}</p>
                   <p>{t("remaining", { slots: c.remainingSlots, hours: c.remainingHours })}
-                    {c.overlapDays.length > 0 && <span className="ms-2 text-green-700">{t("overlap", { days: c.overlapDays.map((d) => td(d)).join(", ") })}</span>}
-                    {c.typeMatch && <span className="ms-2 text-green-700">{t("typeMatch")}</span>}</p>
+                    {c.overlapDays.length > 0 && <span className="ms-2 text-ok-fg">{t("overlap", { days: c.overlapDays.map((d) => td(d)).join(", ") })}</span>}
+                    {c.typeMatch && <span className="ms-2 text-ok-fg">{t("typeMatch")}</span>}</p>
                 </div>
                 <form action={addLineAction}>
                   <input type="hidden" name="interviewId" value={id} /><input type="hidden" name="windowId" value={c.windowId} />
@@ -136,7 +136,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
             )}
             {ev.needsManagerOverride && !ev.blocked && (isManager
               ? <label className="flex flex-col gap-1 text-sm">{t("overrideReason")}<input name="overrideReason" className={input} /></label>
-              : <p className="text-sm text-amber-700">{t("needsManager")}</p>)}
+              : <p className="text-sm text-warn-fg">{t("needsManager")}</p>)}
             <SubmitButton formAction={finalizeAction} className="rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground">{isInterview ? t("finalize") : t("finalizeReassign")}</SubmitButton>
           </div>
         )}

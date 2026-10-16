@@ -36,8 +36,8 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{s.firstName} {s.lastName}</h1>
-      {sp.done && <Flash tone="status" className="mt-2 rounded-lg border border-green-300 p-3 text-sm text-green-800">{t("done")}</Flash>}
-      {errorKey && <Flash tone="error" className="mt-2 rounded-lg border border-red-300 p-3 text-sm text-red-700">{ti(`errors.${errorKey}`)}</Flash>}
+      {sp.done && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-3 text-sm text-ok-fg">{t("done")}</Flash>}
+      {errorKey && <Flash tone="error" className="mt-2 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{ti(`errors.${errorKey}`)}</Flash>}
       <div className="mt-3 flex flex-wrap gap-3">
         <Link href={`/certificate/${id}`} className="rounded-lg border border-border px-4 py-2">{ti("certificateLink")}</Link>
         {draft && <Link href={`/interviews/${draft.id}`} className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("continueDraft")}</Link>}

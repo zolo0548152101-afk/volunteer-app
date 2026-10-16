@@ -38,7 +38,7 @@
 הערת עיצוב: `loading.tsx` ברמת קבוצת `(app)` נבדק והוסר: הוא מסמן סטרימינג והופך 404 ל-200, וזה שבר בדיקת אבטחה. אקסל כבר RTL (`rightToLeft` ב-`lib/export/xlsx.ts`); "כן/לא" בדוחות נשאר בעברית במכוון (הדוחות ללא locale; ברירת המחדל עברית).
 
 ## מה נשאר
-- W27 (פערי e2e מול WORKPLAN), W29 חלקי: כפילויות `str/num/run/go/code` ב-6 קבצי actions וכפילויות עזר בשירותים נשארו. ידוע ופתוח: W24 (ראו E5).
+- W24 (ראו E5, לבדיקת Fable), `run`/`code` ב-actions שונים בפועל ולכן לא אוחדו, `test.skip` ידניים (8), העלאת קבצים וספקי הודעות אמיתיים (מחכים למפתחות).
 - העלאת קובץ (Vercel Blob), ספקי הודעות אמיתיים.
 
 | E1 | `app/global-error.tsx` (גיבוי כשהמעטפת קורסת, דו-לשוני, בלי תלות ב-i18n); `error.tsx` עבר ל-`retry()` (ב-Next הזה `reset` לא טוען מחדש); מכסת הרשמה 30/שעה לכתובת (NAT סלולרי); כשל ולידציה בהרשמה לא נספר במכסה | הקומיט הנוכחי |
@@ -47,6 +47,13 @@
 | E4 | W5: `logSend` מקבל `db` ולא טרנזקציה, ונקרא מיד אחרי כל שליחה, כך שכשל מאוחד בהרצה לא מוחק רישום של מייל שכבר יצא. עותקי מנהל נרשמים ביומן (`report_escalation_copy`, `student_inactivity_copy`) ולא נספרים כשליחה לנמען הראשי. בדיקה חדשה ב-`cron.test.ts` | `fix(cron)` |
 | E5 | **W24 לא בוצע, במכוון.** בדיקת התפקיד ב-`interviews.ts:54` (`manager`/`coordinator` בלבד) היא שמוציאה מראיין משיבוץ מחדש; `can` לבדו לא עושה זאת כי ל-interviewer יש `create placement`. תיקון נקי = פעולת `reassign` חדשה ב-`permissions.ts`, וזה שינוי הרשאות שדורש אישור (WORKPLAN כלל 2). **שאלה למשתמש/Fable** | – |
 | E6 | W26 כבר היה מטופל (`forbidOnly`, `retries`, `trace`, `pnpm build` ב-webServer); נשארו `test.skip` ידניים (8), לא מטופלים. W29: `login()` של 7 קבצי e2e הוחלף בעוזר אחד `tests/e2e/helpers.ts` | הקומיט הנוכחי |
+| E7 | W27: `tests/e2e/workflows.spec.ts` (desktop): הזמנה → קביעת סיסמה (חד-פעמי) → כניסה → איפוס סיסמה; דיווח → החזרה לתיקון (בלי הערה נחסם) → תיקון → אישור → ביטול אישור של מנהל (רכז לא רואה את הכפתור); cron עם הסוד הנכון מחזיר סיכום (ה-webServer קיבל `CRON_SECRET` לבדיקות); דוחות מנהל רכזים/חודשים/היעדרויות. האסימון נוצר בבדיקה ישירות ב-SQL כי הגולמי נשלח רק במייל | `11910e4` |
+| E8 | W29: `lib/actions/_form.ts` (`str`, `trimmed`, `num`, `numOrNull`) ו-`lib/services/_util.ts` (`clean`, `todayIL`, `isDate`, `slug`) במקום עותקים ב-4 קבצי actions ו-6 שירותים; `DAYS` של students מיובא מ-places | `refactor` |
+| E9 | מצב כהה נבדק בצילומי מסך (לוח בקרה, ניווט, תיבת אישורים; מחשב וטלפון): תקין. צבעים קשיחים ישנים (`text-red-700`, `border-green-300` וכו', 31 מופעים) הוחלפו בטוקנים הסמנטיים (`text-bad-fg`, `border-ok/50`...), כי "דחייה" כמעט לא נראתה בכהה | `style` |
+
+### לבדיקת Fable (מוצ"ש)
+- **W24 פתוח:** ניסיון להוסיף פעולה `reassign` ל-`lib/permissions.ts` נחסם על ידי ה-classifier של הסביבה (שינוי הרשאות). לא עקפתי. התכנון: `Action` חדש `reassign`; מנהל מקבל אוטומטית (`allActions`); רכז `reassign placement assigned`; ב-`interviews.ts` `authorize` להחליף את `roles.includes` ב-`assertCan(actor, "reassign", "placement", subject)`; ב-`students/[id]/page.tsx` `canReassign = can(actor, "reassign", "placement", {...})`; לעדכן את `permissions-matrix.test.ts`. אחרי שמאשרים, 20 דקות עבודה.
+- בעת בדיקת E7: ב-`reports` פעולת `unapprove` חוזרת ל-`/reports` (ממתינים) ולא ל-`status=approved` שממנה נלחצה. כנראה כמתוכנן (הדיווח עבר לממתינים), אבל כדאי לאשר כהתנהגות רצויה.
 
 ## ביקורת Fable על התיקונים (16.10.2026)
 

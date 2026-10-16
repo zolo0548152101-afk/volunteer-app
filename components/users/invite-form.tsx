@@ -37,7 +37,7 @@ export function InviteForm({ coordinators }: { coordinators: { id: string; name:
         </select>
       </label>
       <FormError id={errId} message={state.error ? t(`errors.${state.error}` as never) : undefined} />
-      {state.ok && <p role="status" className="text-sm text-green-700">{t("invited")}</p>}
+      {state.ok && <p role="status" className="text-sm text-ok-fg">{t("invited")}</p>}
       <Submit pending={pending}>{t("invite")}</Submit>
     </form>
   );

@@ -21,5 +21,5 @@ export function Submit({ children, pending }: { children: React.ReactNode; pendi
 }
 
 export function FormError({ message, id }: { message?: string; id?: string }) {
-  return message ? <p id={id} role="alert" className="text-sm text-red-600">{message}</p> : null;
+  return message ? <p id={id} role="alert" className="text-sm text-bad-fg">{message}</p> : null;
 }

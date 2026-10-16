@@ -31,7 +31,7 @@ export function BulkAssign({ coordinators, students }: {
         </select>
       </label>
       <FormError message={state.error ? t(`errors.${state.error}` as never) : undefined} />
-      {state.ok && <p role="status" className="text-sm text-green-700">{t("assigned")}</p>}
+      {state.ok && <p role="status" className="text-sm text-ok-fg">{t("assigned")}</p>}
       <Submit pending={pending}>{t("assign")}</Submit>
     </form>
   );

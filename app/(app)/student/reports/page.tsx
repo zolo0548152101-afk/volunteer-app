@@ -12,7 +12,7 @@ export default async function MyReports({ searchParams }: { searchParams: Promis
   return (
     <main className="mx-auto w-full max-w-xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
-      {sp.sent && <Flash tone="status" className="mt-2 rounded-lg border border-green-300 p-3 text-sm text-green-800">{t("sent")}</Flash>}
+      {sp.sent && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-3 text-sm text-ok-fg">{t("sent")}</Flash>}
       <p className="mt-2 text-sm text-muted">{t("progress", { approved: progress.approved, pending: progress.pending })}</p>
       <div className="mt-3 flex gap-4">
         <Link href="/student/report" className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("newReport")}</Link>

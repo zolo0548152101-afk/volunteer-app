@@ -87,7 +87,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
                 <label className="flex flex-col gap-1">{t("notesLabel")}<input name="notes" className={input} /></label>
                 <div className="flex gap-2">
                   <SubmitButton name="kind" value="needs_correction" className="rounded-lg border border-border px-3 py-1.5">{t("needsCorrection")}</SubmitButton>
-                  <SubmitButton name="kind" value="reject" className="rounded-lg border border-red-300 px-3 py-1.5 text-red-700">{t("reject")}</SubmitButton>
+                  <SubmitButton name="kind" value="reject" className="rounded-lg border border-bad/50 px-3 py-1.5 text-bad-fg">{t("reject")}</SubmitButton>
                 </div>
               </form>
             )}

@@ -17,12 +17,12 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const current = s.years.find((y) => y.isCurrent);
   const field = (label: string, node: React.ReactNode) => <label className="flex flex-col gap-1 text-sm">{label}{node}</label>;
   const section = (id: string, title: string, body: React.ReactNode) => (
-    <section id={id} className="mt-8 scroll-mt-4"><h2 className="text-lg font-medium">{title}</h2>{sp.saved === id && <Flash tone="status" className="mt-2 rounded-lg border border-green-300 p-2 text-sm text-green-800">{t("saved")}</Flash>}{body}</section>
+    <section id={id} className="mt-8 scroll-mt-4"><h2 className="text-lg font-medium">{title}</h2>{sp.saved === id && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-2 text-sm text-ok-fg">{t("saved")}</Flash>}{body}</section>
   );
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
-      {sp.error && KNOWN.includes(sp.error) && <Flash tone="error" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${sp.error}`)}</Flash>}
+      {sp.error && KNOWN.includes(sp.error) && <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{t(`errors.${sp.error}`)}</Flash>}
 
       {section("general", t("general"), (
         <form action={saveGeneralAction} className="mt-3 flex flex-col gap-3">

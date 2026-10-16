@@ -7,5 +7,5 @@ const KNOWN = ["bad_date", "future_date", "outside_year", "no_year", "bad_hours"
 export async function ReportErrorBanner({ code }: { code?: string }) {
   if (!code || !KNOWN.includes(code)) return null;
   const t = await getTranslations("reportErrors");
-  return <Flash tone="error" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(code)}</Flash>;
+  return <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{t(code)}</Flash>;
 }

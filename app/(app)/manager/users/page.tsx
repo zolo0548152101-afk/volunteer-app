@@ -22,7 +22,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
-      {error && ERRORS.includes(error) && <Flash tone="error" className="mt-3 rounded-lg border border-red-300 p-3 text-sm text-red-700">{t(`errors.${error}` as never)}</Flash>}
+      {error && ERRORS.includes(error) && <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{t(`errors.${error}` as never)}</Flash>}
 
       <section className="mt-6" aria-labelledby="invite-h">
         <h2 id="invite-h" className="text-lg font-medium">{t("inviteTitle")}</h2>
