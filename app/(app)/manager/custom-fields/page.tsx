@@ -65,7 +65,7 @@ export default async function CustomFieldsPage({ searchParams }: { searchParams:
               <Link href={`/manager/custom-fields?page=${p.key}`} aria-current={p.key === current ? "page" : undefined}
                 className={`flex min-h-14 flex-col justify-center rounded-xl border px-3 py-2 text-sm ${p.key === current ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>
                 <span className="font-medium">{t(`pages.${p.key}.title`)}</span>
-                <span className="text-xs opacity-80">{t("fieldCount", { n: onPage(p.key).filter((f) => f.isActive).length })}</span>
+                <span className="text-xs">{t("fieldCount", { n: onPage(p.key).filter((f) => f.isActive).length })}</span>
               </Link>
             </li>
           ))}

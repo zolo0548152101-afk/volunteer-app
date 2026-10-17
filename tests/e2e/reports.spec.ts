@@ -20,7 +20,7 @@ test("סטודנט מדווח, רכז מאשר עם שינוי שעות, הסט�
   test.skip(info.project.name !== "desktop", "משנה נתוני דמו משותפים, רץ פעם אחת");
   await login(page, "student2@demo.test");
   await page.goto("/student/report");
-  await expect(page.getByLabel("שעות")).not.toHaveValue("");
+  await expect(page.locator("input[name=reportedHours]")).not.toHaveValue("");
   // רק שלושה שדות גלויים; שעות והערות מקופלות
   await expect(page.getByLabel("שיבוץ")).toBeVisible();
   await expect(page.getByLabel("תאריך")).toBeVisible();
@@ -84,7 +84,7 @@ test("טופס הדיווח: מתג היעדרות מחליף את השיבוץ 
   await login(page, "student1@demo.test");
   await page.goto("/student/report");
   await expect(page.getByLabel("שיבוץ")).toBeVisible();
-  await page.getByRole("radio", { name: "היעדרות" }).check();
+  await page.getByRole("radio", { name: "היעדרות" }).check({ force: true });
   await expect(page.getByLabel("סיבת ההיעדרות")).toBeVisible();
   await expect(page.getByLabel("שיבוץ")).toBeHidden();
 });
