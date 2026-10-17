@@ -113,47 +113,74 @@ function validBirthDate(s: string): boolean {
 
 const digitsOnly = (v: string) => v.replace(/[\s-]/g, "");
 
-/** שומר חלק מהפרופיל. הסטודנט עורך רק שדות מותרים: מסלול, יעד ושנה לא בידיו. */
-export async function saveSection(db: Db, actor: SessionUser, section: Section, data: Record<string, string | string[]>): Promise<void> {
-  const subject = { organizationId: actor.organizationId, ownerId: actor.id };
-  assertCan(actor, "update", section === "bank" ? "bank_details" : "student_profile", subject);
+type Patch = Partial<typeof studentProfiles.$inferInsert>;
+
+/** בונה את העדכון לחלק בפרופיל. `sensitive` = מותר לגעת בת"ז (סטודנט עצמו או מנהל); בלעדיו שדה ת"ז נשאר כמות שהוא */
+function buildPatch(section: Section, data: Record<string, string | string[]>, sensitive: boolean): Patch {
   const str = (k: string) => clean(typeof data[k] === "string" ? (data[k] as string) : null);
   const arr = (k: string) => (Array.isArray(data[k]) ? (data[k] as string[]) : typeof data[k] === "string" && data[k] ? [data[k] as string] : []);
-  let set: Partial<typeof studentProfiles.$inferInsert> = {};
   if (section === "academic") {
-    const nid = str("nationalId");
-    if (nid && !isValidIsraeliId(nid)) throw new StudentError("bad_id");
     const dob = str("dateOfBirth");
     if (dob && !validBirthDate(dob)) throw new StudentError("bad_date");
     const dt = str("degreeType"), dy = str("degreeYear");
-    set = {
-      nationalId: nid ? nid.padStart(9, "0") : null, dateOfBirth: dob, city: str("city"), institution: str("institution"),
+    const set: Patch = {
+      dateOfBirth: dob, city: str("city"), institution: str("institution"),
       degreeType: dt && (DEGREE_TYPES as readonly string[]).includes(dt) ? (dt as (typeof DEGREE_TYPES)[number]) : null,
       degreeYear: dy && (DEGREE_YEARS as readonly string[]).includes(dy) ? (dy as (typeof DEGREE_YEARS)[number]) : null,
       fieldOfStudy: str("fieldOfStudy"),
     };
-  } else if (section === "prefs") {
-    set = {
+    if (sensitive) {
+      const nid = str("nationalId");
+      if (nid && !isValidIsraeliId(nid)) throw new StudentError("bad_id");
+      set.nationalId = nid ? nid.padStart(9, "0") : null;
+    }
+    return set;
+  }
+  if (section === "prefs") {
+    return {
       preferredTypes: arr("preferredTypes"), preferredActivities: str("preferredActivities"),
       availableDays: arr("availableDays").filter((d): d is Day => (DAYS as string[]).includes(d)),
       availableHours: str("availableHours"), generalPreferences: str("generalPreferences"), studentNotes: str("studentNotes"),
     };
-  } else {
-    const account = str("bankAccount"), branch = str("bankBranch");
-    if ((account && !/^\d{4,12}$/.test(digitsOnly(account))) || (branch && !/^\d{1,4}$/.test(digitsOnly(branch)))) throw new StudentError("bad_bank");
-    set = { bankName: str("bankName"), bankBranch: branch ? digitsOnly(branch) : null, bankAccount: account ? digitsOnly(account) : null, accountOwner: str("accountOwner") };
   }
+  const account = str("bankAccount"), branch = str("bankBranch");
+  if ((account && !/^\d{4,12}$/.test(digitsOnly(account))) || (branch && !/^\d{1,4}$/.test(digitsOnly(branch)))) throw new StudentError("bad_bank");
+  return { bankName: str("bankName"), bankBranch: branch ? digitsOnly(branch) : null, bankAccount: account ? digitsOnly(account) : null, accountOwner: str("accountOwner") };
+}
+
+async function applyPatch(db: Db, actor: SessionUser, studentId: string, section: Section, set: Patch, action: string): Promise<void> {
   await db.transaction(async (tx) => {
-    const [before] = await tx.select({ p: studentProfiles }).from(studentProfiles).where(eq(studentProfiles.userId, actor.id)).for("update");
+    const [before] = await tx.select({ p: studentProfiles }).from(studentProfiles)
+      .where(and(eq(studentProfiles.userId, studentId), eq(studentProfiles.organizationId, actor.organizationId))).for("update");
     if (!before) throw new NotFoundError();
-    await audited(tx, { organizationId: actor.organizationId, actorId: actor.id }, { entity: "student_profile", entityId: actor.id, action: `update_${section}` },
+    await audited(tx, { organizationId: actor.organizationId, actorId: actor.id }, { entity: "student_profile", entityId: studentId, action },
       // בנק ות"ז: ברישום רק *אילו* שדות השתנו, לא הערכים
       async () => (section === "prefs" ? { ...pick(before.p, Object.keys(set)) } : { changed: Object.keys(set) }),
       async () => {
-        await tx.update(studentProfiles).set(set).where(eq(studentProfiles.userId, actor.id));
+        await tx.update(studentProfiles).set(set).where(eq(studentProfiles.userId, studentId));
         return section === "prefs" ? set : { changed: Object.keys(set) };
       });
   });
+}
+
+/** שומר חלק מהפרופיל. הסטודנט עורך רק שדות מותרים: מסלול, יעד ושנה לא בידיו. */
+export async function saveSection(db: Db, actor: SessionUser, section: Section, data: Record<string, string | string[]>): Promise<void> {
+  const subject = { organizationId: actor.organizationId, ownerId: actor.id };
+  assertCan(actor, "update", section === "bank" ? "bank_details" : "student_profile", subject);
+  await applyPatch(db, actor, actor.id, section, buildPatch(section, data, true), `update_${section}`);
+}
+
+/**
+ * עריכת פרטי סטודנט על ידי צוות (מנהל: כל הסטודנטים; רכז: שלו; מראיין: כולם).
+ * רק פרטים אקדמיים והעדפות. ת"ז נוגעים בה רק מי שרשאי לבנק (מנהל); בנק לא נערך כאן לעולם.
+ */
+export async function saveStudentByStaff(db: Db, actor: SessionUser, studentId: string, section: "academic" | "prefs", data: Record<string, string | string[]>): Promise<void> {
+  const [u] = await db.select().from(users).where(and(eq(users.id, studentId), eq(users.organizationId, actor.organizationId))).limit(1);
+  if (!u || !u.roles.includes("student")) throw new NotFoundError();
+  const subject = subjectOf(u);
+  assertCan(actor, "update", "student_profile", subject);
+  const sensitive = can(actor, "update", "bank_details", subject);
+  await applyPatch(db, actor, studentId, section, buildPatch(section, data, sensitive), `staff_update_${section}`);
 }
 
 const pick = (o: Record<string, unknown>, keys: string[]) => Object.fromEntries(keys.map((k) => [k, o[k]]));

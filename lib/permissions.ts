@@ -120,6 +120,7 @@ export const RULES: RuleTable = {
   coordinator: [
     r("read", "user", "assigned"),
     r("read", "student_profile", "assigned"),
+    r("update", "student_profile", "assigned"), // עריכת פרטים אקדמיים והעדפות (בלי ת"ז ובנק: נאכף בשירות)
     r("read", "place", "any"),
     r("read", "time_window", "any"),
     r("read", "program", "any"),
@@ -138,6 +139,7 @@ export const RULES: RuleTable = {
   interviewer: [
     r("read", "user", "any"),
     r("read", "student_profile", "any"),
+    r("update", "student_profile", "any"), // עריכת פרטים אקדמיים והעדפות (בלי ת"ז ובנק: נאכף בשירות)
     r("read", "place", "any"),
     r("read", "time_window", "any"),
     r("read", "program", "any"),

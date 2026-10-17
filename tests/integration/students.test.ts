@@ -5,7 +5,7 @@ import { auditLog, customFields, studentProfiles, users } from "@/lib/db/schema"
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
 import { CustomFieldError, listFields, loadValues, saveValues } from "@/lib/services/custom-fields";
-import { completeProfile, getMyProfile, getStudentForStaff, listAwaitingInterview, registerStudent, saveSection, StudentError } from "@/lib/services/students";
+import { completeProfile, getMyProfile, getStudentForStaff, listAwaitingInterview, registerStudent, saveSection, saveStudentByStaff, StudentError } from "@/lib/services/students";
 import { verifyPassword } from "@/lib/password";
 
 type Seed = Awaited<ReturnType<typeof seedDemo>>;
@@ -161,5 +161,32 @@ describe("שדות מותאמים", () => {
     await saveValues(db(), st1, "student", st1.id, { [fStudent]: ["m"] });
     const vals = await loadValues(db(), s.organizationId, st1.id, await listFields(db(), st1, "student"));
     expect(vals[fStudent]).toBe("m");
+  });
+});
+
+describe("עריכת פרטי סטודנט על ידי צוות", () => {
+  const data = { city: "חיפה", institution: "הטכניון", degreeType: "bachelor", nationalId: "000000018" };
+  it("מנהל, מראיין ורכז של הסטודנט עורכים; רכז אחר ומי שלא צוות לא; נרשם בלוג", async () => {
+    const target = s.students[0];
+    const mine = (await db().select().from(users).where(eq(users.id, target.id)))[0].coordinatorId;
+    const owner = [c1, c2].find((c) => c.id === mine)!, notOwner = [c1, c2].find((c) => c.id !== mine)!;
+    await saveStudentByStaff(db(), owner, target.id, "academic", data);
+    await saveStudentByStaff(db(), interviewer, target.id, "prefs", { availableHours: "ערבים" });
+    await saveStudentByStaff(db(), manager, target.id, "academic", { ...data, city: "עכו" });
+    const [p] = await db().select().from(studentProfiles).where(eq(studentProfiles.userId, target.id));
+    expect(p).toMatchObject({ city: "עכו", availableHours: "ערבים" });
+    await expect(saveStudentByStaff(db(), notOwner, target.id, "academic", data)).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(saveStudentByStaff(db(), st1 === undefined ? manager : act(s.students[1], s.organizationId, ["student"]), target.id, "academic", data)).rejects.toBeInstanceOf(ForbiddenError);
+    const logs = await db().select().from(auditLog).where(eq(auditLog.entityId, target.id));
+    expect(logs.some((l) => l.action === "staff_update_academic" && l.actorId === owner.id)).toBe(true);
+  });
+  it("רכז לא נוגע בת\"ז; מנהל כן", async () => {
+    const target = s.students[0];
+    const mine = (await db().select().from(users).where(eq(users.id, target.id)))[0].coordinatorId;
+    const owner = [c1, c2].find((c) => c.id === mine)!;
+    await saveStudentByStaff(db(), manager, target.id, "academic", { ...data, nationalId: "000000018" });
+    await saveStudentByStaff(db(), owner, target.id, "academic", { ...data, nationalId: "123456782" });
+    const [p] = await db().select().from(studentProfiles).where(eq(studentProfiles.userId, target.id));
+    expect(p.nationalId).toBe("000000018");
   });
 });

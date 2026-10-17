@@ -28,13 +28,13 @@ const EXPECTED: Record<Exclude<Role, "manager">, string[]> = {
     "read hour_report own", "create hour_report own", "update hour_report own",
   ],
   coordinator: [
-    "read user assigned", "read student_profile assigned",
+    "read user assigned", "read student_profile assigned", "update student_profile assigned",
     "read place any", "read time_window any", "read program any", "read academic_year any", "read custom_field any",
     "read placement assigned", "create placement assigned", "update placement assigned", "reassign placement assigned",
     "read hour_report assigned", "update hour_report assigned", "approve hour_report assigned", "export hour_report assigned",
   ],
   interviewer: [
-    "read user any", "read student_profile any",
+    "read user any", "read student_profile any", "update student_profile any",
     "read place any", "read time_window any", "read program any", "read academic_year any", "read custom_field any",
     "read interview any", "create interview any", "update interview any",
     "read placement any", "create placement any", "update placement any",

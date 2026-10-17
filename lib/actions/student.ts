@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
 import { ForbiddenError } from "@/lib/permissions";
 import { requireActor } from "@/lib/session";
 import { CustomFieldError, customInputFromForm, saveValues } from "@/lib/services/custom-fields";
-import { completeProfile, registerStudent, registrationOrgId, saveSection, StudentError, type Section } from "@/lib/services/students";
+import { completeProfile, registerStudent, registrationOrgId, saveSection, saveStudentByStaff, StudentError, type Section } from "@/lib/services/students";
 import { getLocale } from "next-intl/server";
 import { clientIp, isLimited, limitKey, recordAttempt } from "@/lib/services/rate-limit";
 
@@ -77,4 +77,28 @@ export async function saveSectionAction(fd: FormData) {
   }
   revalidatePath("/student", "layout");
   redirect(error ? `${back}${back.includes("?") ? "&" : "?"}error=${error}` : next);
+}
+
+/** עריכת פרטי סטודנט מכרטיס הסטודנט (מנהל / רכז של הסטודנט / מראיין) */
+export async function saveStudentByStaffAction(fd: FormData) {
+  const id = String(fd.get("studentId") ?? "");
+  const back = /^[0-9a-f-]{36}$/i.test(id) ? `/students/${id}` : "/";
+  let error: string | undefined;
+  try {
+    const section = String(fd.get("section"));
+    if (section !== "academic" && section !== "prefs") throw new Error("bad section");
+    const actor = await requireActor();
+    const data: Record<string, string | string[]> = {};
+    for (const k of new Set(fd.keys())) {
+      if (k.startsWith("cf_") || k.startsWith("$ACTION")) continue;
+      const all = fd.getAll(k).map(String);
+      data[k] = all.length > 1 || ["preferredTypes", "availableDays"].includes(k) ? all : all[0];
+    }
+    await saveStudentByStaff(db(), actor, id, section, data);
+    await saveValues(db(), actor, "student", id, customInputFromForm(fd));
+  } catch (e) {
+    error = errCode(e);
+  }
+  revalidatePath(back);
+  redirect(error ? `${back}?error=${error}` : `${back}?done=saved`);
 }

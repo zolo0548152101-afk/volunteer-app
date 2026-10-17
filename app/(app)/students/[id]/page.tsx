@@ -12,6 +12,8 @@ import { listFields, loadValues } from "@/lib/services/custom-fields";
 import { loadLookup } from "@/lib/services/lookups";
 import { NotFoundError } from "@/lib/services/users";
 import { ForbiddenError } from "@/lib/permissions";
+import { saveStudentByStaffAction } from "@/lib/actions/student";
+import { AcademicSection, PrefsSection } from "@/components/student/sections";
 import { CustomFields } from "@/components/custom-fields/custom-fields";
 import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
@@ -29,14 +31,18 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
   const canReassign = can(actor, "reassign", "placement", { organizationId: actor.organizationId, ownerId: id, coordinatorIds: s.coordinatorId ? [s.coordinatorId] : [] });
   const active = history.placements.filter((p) => p.isActive);
   const catLabel = new Map(cats.map((c) => [c.key, c.label]));
+  const canEdit = can(actor, "update", "student_profile", { organizationId: actor.organizationId, ownerId: id, coordinatorIds: s.coordinatorId ? [s.coordinatorId] : [] });
+  const canEditId = s.nationalId !== undefined && can(actor, "update", "bank_details", { organizationId: actor.organizationId, ownerId: id });
+  const institutions = canEdit ? (await loadLookup(db(), actor.organizationId, "institution")).map((i) => i.label) : [];
+  const profileForEdit = { ...s, nationalId: s.nationalId ?? null, bankName: null, bankBranch: null, bankAccount: null, accountOwner: null, bankDocument: null } as unknown as Parameters<typeof AcademicSection>[0]["p"];
   const draft = history.interviews.find((i) => i.status === "draft");
-  const errorKey = ["forbidden", "not_found", "already_has_draft", "not_student", "generic"].includes(sp.error ?? "") ? sp.error : null;
+  const errorKey = ["forbidden", "not_found", "bad_date", "bad_id", "cf_required", "already_has_draft", "not_student", "generic"].includes(sp.error ?? "") ? sp.error : null;
   const row = (k: string, v: React.ReactNode) => <div key={k}><dt className="text-muted">{k}</dt><dd>{v || "—"}</dd></div>;
 
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{s.firstName} {s.lastName}</h1>
-      {sp.done && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-3 text-sm text-ok-fg">{t("done")}</Flash>}
+      {sp.done && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-3 text-sm text-ok-fg">{sp.done === "saved" ? t("saved") : t("done")}</Flash>}
       {errorKey && <Flash tone="error" className="mt-2 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{ti(`errors.${errorKey}`)}</Flash>}
       <div className="mt-3 flex flex-wrap gap-3">
         <Link href={`/certificate/${id}`} className="rounded-lg border border-border px-4 py-2">{ti("certificateLink")}</Link>
@@ -67,6 +73,22 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
         {s.nationalId !== undefined && row(t("nationalId"), <span dir="ltr">{s.nationalId}</span>)}
       </dl>
       {fields.length > 0 && <div className="mt-4"><CustomFields fields={fields.map((f) => ({ ...f, canEdit: false }))} values={values} /></div>}
+
+      {canEdit && (
+        <details className="mt-6 rounded-xl border border-border p-3">
+          <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t("editDetails")}</summary>
+          <p className="mt-1 text-sm text-muted">{t("editHint")}</p>
+          {(["academic", "prefs"] as const).map((section) => (
+            <form key={section} action={saveStudentByStaffAction} className="mt-4 flex flex-col gap-3">
+              <input type="hidden" name="studentId" value={id} /><input type="hidden" name="section" value={section} />
+              <h2 className="text-base font-medium">{t(`editSection.${section}`)}</h2>
+              {section === "academic" ? <AcademicSection p={profileForEdit} institutions={institutions} hideId={!canEditId} /> : <PrefsSection p={profileForEdit} types={cats} />}
+              {section === "prefs" && fields.some((f) => f.canEdit) && <CustomFields fields={fields} values={values} />}
+              <SubmitButton className="min-h-11 self-start rounded-lg bg-primary px-4 text-primary-foreground">{t("saveDetails")}</SubmitButton>
+            </form>
+          ))}
+        </details>
+      )}
 
       <h2 className="mt-8 text-lg font-medium">{t("currentPlacements")}</h2>
       {active.length === 0 && <p className="text-muted">{t("noPlacements")}</p>}

@@ -378,7 +378,10 @@
       "not_student": "This user is not a student",
       "forbidden": "You don't have permission to do that",
       "not_found": "Not found",
-      "generic": "Something went wrong. Try again in a moment"
+      "generic": "Something went wrong. Try again in a moment",
+      "bad_date": "Invalid date",
+      "bad_id": "Invalid national ID",
+      "cf_required": "A required field is missing"
     },
     "certificateLink": "Hours certificate"
   },
@@ -422,7 +425,15 @@
     },
     "listTitle": "Students",
     "emptyList": "No students to show",
-    "unassigned": "No coordinator"
+    "unassigned": "No coordinator",
+    "saved": "Details saved",
+    "editDetails": "Edit student details",
+    "editHint": "Changes are logged. National ID and bank details are not editable here",
+    "editSection": {
+      "academic": "Academic details",
+      "prefs": "Preferences and extra fields"
+    },
+    "saveDetails": "Save"
   },
   "queue": {
     "title": "Awaiting interview",

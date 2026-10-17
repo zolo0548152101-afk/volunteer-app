@@ -16,13 +16,13 @@ function T({ label, name, value, type = "text", required = false, inputMode, aut
   );
 }
 
-export async function AcademicSection({ p, institutions }: { p: ProfileData; institutions: string[] }) {
+export async function AcademicSection({ p, institutions, hideId = false }: { p: ProfileData; institutions: string[]; hideId?: boolean }) {
   const t = await getTranslations("profile");
   const dt = await getTranslations("degreeTypes");
   const dy = await getTranslations("degreeYears");
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <IdInput label={t("nationalId")} defaultValue={p.nationalId} />
+      {!hideId && <IdInput label={t("nationalId")} defaultValue={p.nationalId} />}
       <T label={t("dateOfBirth")} name="dateOfBirth" value={p.dateOfBirth} type="date" />
       <T label={t("city")} name="city" value={p.city} autoComplete="address-level2" />
       <label className="flex flex-col gap-1 text-sm">
