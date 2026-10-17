@@ -34,3 +34,8 @@ test("כותרות אבטחה: אין הטמעה ב-iframe, Referrer מוגבל"
   expect(h["referrer-policy"]).toBe("strict-origin-when-cross-origin");
   expect(h["x-content-type-options"]).toBe("nosniff");
 });
+
+test("כניסת פיתוח כבויה כברירת מחדל: /dev-login מחזיר 404", async ({ page }) => {
+  const res = await page.goto("/dev-login");
+  expect(res?.status()).toBe(404);
+});

@@ -3,10 +3,12 @@
 import { AuthError, CredentialsSignin } from "next-auth";
 import { TransactionRollbackError, and, eq, inArray, sql } from "drizzle-orm";
 import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 import { readSessionToken } from "@/lib/session-token";
 import { z } from "zod";
 import { signIn, signOut } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { devLoginEnabled } from "@/lib/dev-login";
 import { users } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/password";
 import { safeNext, sendLink } from "@/lib/services/auth-links";
@@ -37,6 +39,12 @@ export async function loginAction(_: FormState, formData: FormData): Promise<For
     throw e; // ה-redirect של Next זורק, וזה כניסה מוצלחת
   }
   return {};
+}
+
+/** כניסת פיתוח: משתמש הדגמה לפי מזהה. מושבתת בייצור ובלי ENABLE_DEV_LOGIN (ראו lib/dev-login.ts) */
+export async function devLoginAction(formData: FormData) {
+  if (!devLoginEnabled()) notFound();
+  await signIn("dev", { userId: String(formData.get("userId") ?? ""), redirectTo: "/" });
 }
 
 export async function logoutAction() {

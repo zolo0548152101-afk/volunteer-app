@@ -851,5 +851,11 @@
     },
     "provenance": "All numbers are computed live from approved reports and active placements. Updated {at}.",
     "reports": "Reports"
+  },
+  "devLogin": {
+    "title": "Sign in as a demo user",
+    "hint": "Test environment only, no password. Pick who you are right now.",
+    "empty": "No demo users in this environment",
+    "enter": "Enter"
   }
 }
