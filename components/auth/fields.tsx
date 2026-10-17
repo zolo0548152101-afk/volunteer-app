@@ -1,3 +1,4 @@
+const LTR_TYPES = new Set(["email", "tel", "password", "url"]);
 const input = "min-h-11 rounded-lg border border-border bg-transparent px-3 py-2 text-base";
 
 /** errorId: מזהה הודעת השגיאה שמתייחסת לשדה הזה (רק כשהיא מתייחסת אליו). מחבר אותה לשדה לקוראי מסך. */
@@ -7,7 +8,7 @@ export function Field({ label, name, type = "text", autoComplete, minLength, err
   return (
     <label className="flex flex-col gap-1 text-sm">
       {label}
-      <input name={name} type={type} autoComplete={autoComplete} minLength={minLength} required aria-invalid={errorId ? true : undefined} aria-describedby={errorId} className={input} />
+      <input name={name} type={type} dir={LTR_TYPES.has(type) ? "ltr" : undefined} autoComplete={autoComplete} minLength={minLength} required aria-invalid={errorId ? true : undefined} aria-describedby={errorId} className={input} />
     </label>
   );
 }

@@ -75,8 +75,8 @@ export function ReportForm({ placements, absence: absenceInitial, report, action
         <summary className="flex min-h-11 cursor-pointer items-center underline">{t("moreDetails")}</summary>
         <div className="mt-2 flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1">{t("start")}<input name="startTime" type="time" value={start} onChange={(e) => setStart(e.target.value)} className={input} /></label>
-            <label className="flex flex-col gap-1">{t("end")}<input name="endTime" type="time" value={end} onChange={(e) => setEnd(e.target.value)} className={input} /></label>
+            <label className="flex flex-col gap-1">{t("start")}<input name="startTime" type="time" dir="ltr" value={start} onChange={(e) => setStart(e.target.value)} className={input} /></label>
+            <label className="flex flex-col gap-1">{t("end")}<input name="endTime" type="time" dir="ltr" value={end} onChange={(e) => setEnd(e.target.value)} className={input} /></label>
           </div>
           <label className="flex flex-col gap-1">{t("notes")}
             <textarea name="studentNotes" rows={3} defaultValue={report?.studentNotes ?? ""} className={input} />

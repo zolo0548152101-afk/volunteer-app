@@ -18,7 +18,7 @@ export function InviteForm({ coordinators }: { coordinators: { id: string; name:
         <Field label={t("email")} name="email" type="email" autoComplete="off" errorId={state.error === "email_taken" ? errId : undefined} />
         <label className="flex flex-col gap-1 text-sm">
           {t("phone")}
-          <input name="phone" type="tel" className="rounded-lg border border-border bg-transparent px-3 py-2 text-base" />
+          <input name="phone" type="tel" dir="ltr" className="rounded-lg border border-border bg-transparent px-3 py-2 text-base" />
         </label>
       </div>
       <fieldset className="flex flex-wrap gap-4">

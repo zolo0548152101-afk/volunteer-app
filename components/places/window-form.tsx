@@ -20,8 +20,8 @@ export async function WindowFields({ w }: { w?: WindowView }) {
           </label>
         ))}
       </fieldset>
-      <label className="flex flex-col gap-1 text-sm">{t("from")}<input name="startTime" type="time" defaultValue={w?.startTime?.slice(0, 5) ?? ""} className={input} /></label>
-      <label className="flex flex-col gap-1 text-sm">{t("to")}<input name="endTime" type="time" defaultValue={w?.endTime?.slice(0, 5) ?? ""} className={input} /></label>
+      <label className="flex flex-col gap-1 text-sm">{t("from")}<input name="startTime" type="time" dir="ltr" defaultValue={w?.startTime?.slice(0, 5) ?? ""} className={input} /></label>
+      <label className="flex flex-col gap-1 text-sm">{t("to")}<input name="endTime" type="time" dir="ltr" defaultValue={w?.endTime?.slice(0, 5) ?? ""} className={input} /></label>
       <label className="flex flex-col gap-1 text-sm">{t("slots")}<input name="slots" type="number" step="0.25" min="0" defaultValue={w?.slots ?? ""} required className={input} /></label>
       <label className="flex flex-col gap-1 text-sm">{t("hoursPerSlot")}<input name="hoursPerSlot" type="number" step="0.25" min="0.25" defaultValue={w?.hoursPerSlot ?? ""} required className={input} /></label>
       <label className="flex flex-col gap-1 text-sm sm:col-span-2">{t("task")}<input name="taskDescription" defaultValue={w?.taskDescription ?? ""} className={input} /></label>
