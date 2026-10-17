@@ -5,6 +5,8 @@ import path from "node:path";
 try {
   process.loadEnvFile(path.resolve(import.meta.dirname, ".env.local"));
 } catch {}
+// בדיקות לעולם לא שולחות מייל אמיתי, גם אם RESEND_API_KEY נמצא ב-.env.local
+process.env.RESEND_API_KEY = "";
 
 // בדיקות מול Neon (ענף dev). יוצרות ארגון משלהן ומוחקות אותו בסוף.
 export default defineConfig({
