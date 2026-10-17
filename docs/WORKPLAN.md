@@ -4,7 +4,7 @@
 > מסמך הדרישות המלא (PRD): https://claude.ai/code/artifact/394e615d-6286-404d-8fbe-4a34c6fab746
 > ה-PRD הוא מקור האמת. אם משהו כאן סותר אותו – ה-PRD קובע, ותציין את הסתירה.
 >
-> **סטטוס (17.10.2026, מוצ"ש):** ביקורת CHECKPOINT 7 רצה: `docs/review-checkpoint-7.md`. **לא עבר** בגלל 🔴 אחד (כניסה בייצור/HTTPS שבורה: `getToken` בלי `secureCookie`) + 2 פערי תפעול לפני משתמשים אמיתיים. הייצור פרוס ב-`https://volunteer.yaminwin26.app` (ריפו `zolo0548152101-afk/volunteer-app`, push ל-`main` = פריסה). לתקן לפי "הנחיות לסונט" שם.
+> **סטטוס (17.10.2026, מוצ"ש):** ביקורת CHECKPOINT 7 רצה: `docs/review-checkpoint-7.md`. **לא עבר** בגלל 🔴 אחד (כניסה בייצור/HTTPS שבורה: `getToken` בלי `secureCookie`) + 2 פערי תפעול לפני משתמשים אמיתיים. הייצור פרוס ב-`https://volunteer.yaminwin26.app` (ריפו `zolo0548152101-afk/volunteer-app`; הפרויקט לא מחובר ל-git, פריסה ב-`create_deployment`). 🔴 1–2 ו-O1–O9 תוקנו אחרי הביקורת (ראו `docs/fixes-after-review.md`, "תיקונים אחרי CHECKPOINT 7"); נשארו פעולות משתמש: O10 (החלפת סודות) ו-🔴 3 (דומיין שולח ב-Resend).
 >
 > **סטטוס (16.10.2026):** שלבים 0–10 בנויים (10 = לוח בקרה וניווט, נוסף בדרך). תיבות הסימון למטה לא עודכנו שלב-שלב; המצב האמיתי בדוחות `docs/stage-N-report.md`, `docs/review-stages-2-9.md` ו-`docs/fixes-after-review.md`. נשאר: CHECKPOINT 7 (קבלה סופית), ספקי הודעות והעלאת קבצים (מחכים למפתחות), W5/W24/W26/W27/W29, מצב כהה.
 

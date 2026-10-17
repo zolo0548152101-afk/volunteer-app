@@ -85,3 +85,32 @@
 - כדאי (לא חוסם): `notifyUser` שנכשל ב-`approveMany` זורק אחרי שהאישורים כבר נשמרו; זה היה כך גם קודם ב-`decide`. כשיחובר ספק אמיתי, לעטוף שליחות ב-try/catch עם רישום ל-`notification_log` במקום לזרוק.
 
 שלב 10 (לוח הבקרה והניווט) נבנה על ידי Fable ולא נסקר על ידי מודל אחר; נשאר לקבלה הסופית.
+
+## תיקונים אחרי CHECKPOINT 7 (17.10.2026, ערב) – Sonnet
+
+מקור: `docs/review-checkpoint-7.md`, לפי "הנחיות לסונט". כל שורה: ממצא → קומיט → בדיקה.
+
+| ממצא | תיקון | קומיט | בדיקה |
+|---|---|---|---|
+| 🔴 1 כניסה בייצור (HTTPS) שבורה | `lib/session-token.ts`: `readSessionToken` מעביר `secureCookie` לפי `x-forwarded-proto`; בשימוש ב-`getActor` וב-`logoutAction` | `d13c924` | `session-token.test.ts` (4). **אומת ידנית על preview אמיתי:** csrf → callback → עוגיית `__Secure-authjs.session-token` → `/manager` 200; בלי עוגייה 307 ל-`/login` |
+| 🔴 2 כשל שליחת הזמנה/איפוס מוצג כהצלחה | `sendLink` מחזיר `NotifyResult` ורושם ל-`notification_log` (`auth.invite`/`auth.reset`); הזמנה/שליחה מחדש מציגות `email_failed`; איפוס סיסמה ממשיך להחזיר תשובה אחידה (ובלבד שנרשם) | `ac5201b` | `auth-links.test.ts` (אינטגרציה: ספק שזורק → `ok=false` ביומן) |
+| O1 אישור מרובה סופר היעדרות | `approveMany` מדלג על היעדרויות (`skipped`), בטופס אין צ'קבוקס להיעדרות | `43c311c` | `reports.test.ts` "אישור מרובה מדלג על היעדרות" |
+| O2 בדיקות אינטגרציה עלולות לשלוח מייל אמיתי | `RESEND_API_KEY=""` ב-`vitest.integration.config.mts` | `9852b7e` | – (קונפיג) |
+| O3 קונסול מדפיס טוקנים | `redactData` ללינק/טוקן; בייצור בלי מפתח Resend → `no_provider` | `3dbfea9` | `notify.test.ts` (2 חדשות) |
+| O4 seed על מסד ייצור | `scripts/seed.ts` מסרב אם יש ארגון, אלא אם `ALLOW_SEED=1` | `639d09d` | – (סקריפט) |
+| O5 מנהל בטלפון בלי הגדרות/משתמשים | פריט "עוד" בניווט התחתון (`more-menu.tsx`): נפתח, נסגר במעבר עמוד וב-Esc | `a88a376` | e2e "מנהל בטלפון מגיע להגדרות ולמשתמשים דרך 'עוד'" (mobile) |
+| O6 ניגודיות תג המונה | `bg-warn-bg text-warn-fg` | `a88a376` | axe ב-a11y/dashboard e2e |
+| O7 dir=ltr (W23) | email/tel/password/time | `6b39070` | axe + e2e קיימים |
+| O8 אזור פונקציות | `vercel.json` → `regions: ["fra1"]` | `523d74e` | נבדק אחרי פריסה (ראו למטה) |
+| O9 מיגרציות ייצור | **נוהל כתוב** ב-README ("ייצור"), לא בשלב הבנייה: מיגרציה הרסנית לא צריכה לרוץ בלי אישור. תוקנה גם הטענה השגויה "push = פריסה": הפרויקט לא מחובר ל-git | `523d74e` | – |
+| 🟡 (חלק) | `isDate` לא מתגלגל (30.2); `esc` + regex הקישור במייל; `DISABLE_RATE_LIMIT` לא פועל בייצור; סיסמה ≤128; מייל המנהל ב-bootstrap באותיות קטנות; `logSend` לא מפיל הרצה | `17a2915` | `util.test.ts`, `email-resend.test.ts` |
+| 🟡 בדיקות | לוח בקרה: ערכים מדויקים (תקועים, 30 יום, חדשים החודש, תפוסה, היקף רכז); cron: כשל בעותק מנהל נרשם `ok=false` | `fc89968` + הבא | `analytics.test.ts` (+3), `cron.test.ts` (+1) |
+
+### פעולות של המשתמש (לא קוד)
+- [ ] **O10:** להחליף את סיסמת ה-role `volunteer_owner` ב-Neon (ענף `main`) ולעדכן `DATABASE_URL` ב-Vercel (production); למחוק את מפתח Resend `volunteer-app production` וליצור חדש (sending-only) ולעדכן `RESEND_API_KEY`; ליצור מחדש את `BLOB_READ_WRITE_TOKEN` כ-sensitive.
+- [ ] **🔴 3:** לאמת דומיין שולח ב-Resend (DNS ב-Vercel עבור `yaminwin26.app`), ואז לשנות `EMAIL_FROM` לכתובת בדומיין. עד אז מייל יוצא רק לבעל חשבון Resend, וכל הזמנה לאחרים תיכשל (עכשיו מוצג למנהל כ-`email_failed`).
+- [ ] להגדיר `A11Y_CONTACT_EMAIL` בייצור.
+
+### נשאר מה-🟡 (לא נעשה בסבב הזה)
+סטיית אזור זמן בגבולות "החודש/30 יום" ב-SQL; כפילות לפי `placementId`; audit לניתוק סטודנטים ב-`setRoles`; `editable` במראיין בטיוטת שיבוץ-מחדש; `aria` של מונה התיבה; `aria-current` ב-analytics; מפתחות i18n מתים ו-plural ל-0; גודל 16px בשדות נוספים; `color-scheme`/`prefers-reduced-motion`; `bootstrap.test.ts`, `workflows.spec.ts` cleanup, 2 `test.skip` בלי הערה.
+
