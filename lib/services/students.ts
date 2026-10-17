@@ -1,6 +1,6 @@
 /**
  * סטודנטים: הרשמה, פרופיל, ותצוגת צוות עם הגבלות שדה.
- * ת"ז וחשבון בנק: סטודנט (עצמו) ומנהל בלבד. רכז/מראיין לא רואים אותם לעולם.
+ * ת"ז וחשבון בנק: לפי מטריצת ההרשאות (bank_details): סטודנט עצמו, מנהל, רכז של הסטודנט ומראיין (החלטת המשתמש 18.10).
  */
 import { and, asc, eq, sql } from "drizzle-orm";
 import type { Db } from "@/lib/db";
@@ -172,13 +172,13 @@ export async function saveSection(db: Db, actor: SessionUser, section: Section, 
 
 /**
  * עריכת פרטי סטודנט על ידי צוות (מנהל: כל הסטודנטים; רכז: שלו; מראיין: כולם).
- * רק פרטים אקדמיים והעדפות. ת"ז נוגעים בה רק מי שרשאי לבנק (מנהל); בנק לא נערך כאן לעולם.
+ * פרטים אקדמיים (כולל ת"ז), העדפות ובנק. ת"ז ובנק דורשים update על bank_details.
  */
-export async function saveStudentByStaff(db: Db, actor: SessionUser, studentId: string, section: "academic" | "prefs", data: Record<string, string | string[]>): Promise<void> {
+export async function saveStudentByStaff(db: Db, actor: SessionUser, studentId: string, section: Section, data: Record<string, string | string[]>): Promise<void> {
   const [u] = await db.select().from(users).where(and(eq(users.id, studentId), eq(users.organizationId, actor.organizationId))).limit(1);
   if (!u || !u.roles.includes("student")) throw new NotFoundError();
   const subject = subjectOf(u);
-  assertCan(actor, "update", "student_profile", subject);
+  assertCan(actor, "update", section === "bank" ? "bank_details" : "student_profile", subject);
   const sensitive = can(actor, "update", "bank_details", subject);
   await applyPatch(db, actor, studentId, section, buildPatch(section, data, sensitive), `staff_update_${section}`);
 }
@@ -208,8 +208,8 @@ export type StaffStudentView = Omit<ProfileData, "nationalId" | "bankName" | "ba
   };
 
 /**
- * פרופיל סטודנט לצוות. מנהל: הכל. רכז (רק שלו) ומראיין: בלי ת"ז ובנק.
- * ההסרה היא בשכבת השאילתה כאן, לא ב-UI.
+ * פרופיל סטודנט לצוות. ת"ז ובנק מוחזרים רק למי ש-can(read, bank_details) על הסטודנט.
+ * ההסרה (למי שאין לו הרשאה) היא בשכבת השאילתה כאן, לא ב-UI.
  */
 export async function getStudentForStaff(db: Db, actor: SessionUser, studentId: string): Promise<StaffStudentView> {
   const [u] = await db.select().from(users).where(and(eq(users.id, studentId), eq(users.organizationId, actor.organizationId))).limit(1);

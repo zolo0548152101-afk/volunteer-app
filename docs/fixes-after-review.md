@@ -123,7 +123,7 @@
 - **דיווחים:** סטודנט עורך דיווח `approved` (לא `rejected`) והוא חוזר ל-`pending` (`approvedAt/approvedBy` מתאפסים, `countsTowardTarget=true`). רכז/מנהל עורכים דרך `editReportByStaff` בלי שינוי סטטוס, `approvedHours ≤ reportedHours`, audit `staff_edit`.
 - **קובץ להיעדרות (רשות):** PDF/JPG/PNG/WebP עד 5MB, זיהוי לפי תוכן (`lib/storage.ts`), Blob פרטי; הורדה רק דרך `/api/reports/[id]/attachment` עם `can(read, hour_report)`. `serverActions.bodySizeLimit = 6mb`.
 - **תיבת דיווחים:** מנהל רואה קבוצות לפי רכז + סינון לפי רכז.
-- **הרשאות חדשות:** `update student_profile` לרכז (assigned) ולמראיין (any). ת"ז ובנק נשארים למנהל/סטודנט בלבד: `saveStudentByStaff` נוגע בת"ז רק אם `can(update, bank_details)`; בנק לא נערך בצוות. נרשם ב-audit `staff_update_*`. snapshot ההרשאות עודכן.
+- **הרשאות חדשות:** `update student_profile` לרכז (assigned) ולמראיין (any). **עודכן 18.10 לפי המשתמש ("ת"ז ובנק לא רגישים"):** `read`+`update bank_details` גם לרכז (assigned) ולמראיין (any); כרטיס הסטודנט מציג ועורך ת"ז ובנק. עדיין לא בשום דוח/ייצוא. **לבדיקת Fable:** הרחבת חשיפה מכוונת של מידע פיננסי לצוות; לשקול RLS/הצפנה לפני משתמשים אמיתיים. נרשם ב-audit `staff_update_*`. snapshot ההרשאות עודכן.
 - **הוספת שדות:** עמודה חדשה `custom_fields.page` (nullable, מיגרציה `0007`, **להריץ ידנית בייצור לפני פריסה**). דפים: `registration` (שלב אחרון בהרשמה, חוסם סיום אם חובה), `profile`, `report_form` (בטופס הדיווח של הסטודנט, וגם מוצג בתיבת הדיווחים). שדות של מקומות ושיבוצים לא מוצגים באף טופס עדיין.
 
 ### ביקורת Fable 18.10 (01:10) על הבאץ' של סונט: דיווחים, עריכת סטודנט, הוספת שדות

@@ -97,18 +97,18 @@ describe("פרופיל ושלבי הרשמה", () => {
   });
 });
 
-describe("הגבלות שדה לצוות", () => {
-  it("מנהל רואה ת״ז ובנק; מראיין ורכז לא (השדות לא קיימים בתשובה)", async () => {
+describe("ת״ז ובנק בתצוגת צוות (החלטת המשתמש 18.10: לא רגישים)", () => {
+  it("מנהל, מראיין והרכז של הסטודנט רואים; רכז אחר לא רואה את הסטודנט כלל", async () => {
     await saveSection(db(), st1, "academic", { nationalId: "123456782" });
     await saveSection(db(), st1, "bank", { bankAccount: "9876543" });
-    const m = await getStudentForStaff(db(), manager, st1.id);
-    expect(m.nationalId).toBeTruthy();
-    expect(m.bankAccount).toBeTruthy();
-    for (const a of [interviewer, c1]) {
+    const mine = (await db().select().from(users).where(eq(users.id, st1.id)))[0].coordinatorId;
+    const owner = [c1, c2].find((c) => c.id === mine)!, notOwner = [c1, c2].find((c) => c.id !== mine)!;
+    for (const a of [manager, interviewer, owner]) {
       const v = await getStudentForStaff(db(), a, st1.id);
-      for (const k of ["nationalId", "bankName", "bankBranch", "bankAccount", "accountOwner", "bankDocument"]) expect(Object.keys(v)).not.toContain(k);
-      expect(v.firstName).toBeTruthy();
+      expect(v.nationalId).toBe("123456782");
+      expect(v.bankAccount).toBe("9876543");
     }
+    await expect(getStudentForStaff(db(), notOwner, st1.id)).rejects.toThrow();
   });
 
   it("רכז לא רואה סטודנט של רכז אחר; סטודנט לא רואה אחרים דרך תצוגת הצוות", async () => {
@@ -180,13 +180,14 @@ describe("עריכת פרטי סטודנט על ידי צוות", () => {
     const logs = await db().select().from(auditLog).where(eq(auditLog.entityId, target.id));
     expect(logs.some((l) => l.action === "staff_update_academic" && l.actorId === owner.id)).toBe(true);
   });
-  it("רכז לא נוגע בת\"ז; מנהל כן", async () => {
+  it("רכז של הסטודנט ומראיין עורכים ת״ז ובנק; ת״ז לא תקינה נדחית", async () => {
     const target = s.students[0];
     const mine = (await db().select().from(users).where(eq(users.id, target.id)))[0].coordinatorId;
     const owner = [c1, c2].find((c) => c.id === mine)!;
-    await saveStudentByStaff(db(), manager, target.id, "academic", { ...data, nationalId: "000000018" });
     await saveStudentByStaff(db(), owner, target.id, "academic", { ...data, nationalId: "123456782" });
+    await saveStudentByStaff(db(), interviewer, target.id, "bank", { bankName: "דיסקונט", bankAccount: "1234567" });
     const [p] = await db().select().from(studentProfiles).where(eq(studentProfiles.userId, target.id));
-    expect(p.nationalId).toBe("000000018");
+    expect(p).toMatchObject({ nationalId: "123456782", bankName: "דיסקונט", bankAccount: "1234567" });
+    await expect(saveStudentByStaff(db(), owner, target.id, "academic", { ...data, nationalId: "123456789" })).rejects.toMatchObject({ code: "bad_id" });
   });
 });

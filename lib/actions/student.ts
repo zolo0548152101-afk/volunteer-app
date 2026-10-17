@@ -86,7 +86,7 @@ export async function saveStudentByStaffAction(fd: FormData) {
   let error: string | undefined;
   try {
     const section = String(fd.get("section"));
-    if (section !== "academic" && section !== "prefs") throw new Error("bad section");
+    if (!SECTIONS.includes(section as Section)) throw new Error("bad section");
     const actor = await requireActor();
     const data: Record<string, string | string[]> = {};
     for (const k of new Set(fd.keys())) {
@@ -94,7 +94,7 @@ export async function saveStudentByStaffAction(fd: FormData) {
       const all = fd.getAll(k).map(String);
       data[k] = all.length > 1 || ["preferredTypes", "availableDays"].includes(k) ? all : all[0];
     }
-    await saveStudentByStaff(db(), actor, id, section, data);
+    await saveStudentByStaff(db(), actor, id, section as Section, data);
     await saveValues(db(), actor, "student", id, customInputFromForm(fd));
   } catch (e) {
     error = errCode(e);

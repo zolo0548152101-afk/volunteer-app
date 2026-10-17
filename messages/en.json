@@ -428,12 +428,15 @@
     "unassigned": "No coordinator",
     "saved": "Details saved",
     "editDetails": "Edit student details",
-    "editHint": "Changes are logged. National ID and bank details are not editable here",
+    "editHint": "Changes are logged",
     "editSection": {
       "academic": "Academic details",
-      "prefs": "Preferences and extra fields"
+      "prefs": "Preferences and extra fields",
+      "bank": "Bank details"
     },
-    "saveDetails": "Save"
+    "saveDetails": "Save",
+    "bank": "Bank account",
+    "branch": "branch"
   },
   "queue": {
     "title": "Awaiting interview",

@@ -94,7 +94,7 @@ const r = (action: Action, entity: Entity, scope: Scope): Rule => ({ action, ent
 
 /**
  * מטריצת ההרשאות לפי PRD סעיף 3. ברירת מחדל חסימה: מה שלא כתוב כאן, אסור.
- * הכללים מגדירים *מי רשאי לפעול על איזו ישות*. הגבלות ברמת שדה (רכז לא רואה ת"ז ובנק,
+ * הכללים מגדירים *מי רשאי לפעול על איזו ישות*. הגבלות ברמת שדה (סטודנט לא רואה קיבולת ואנשי קשר במקום;
  * סטודנט לא רואה קיבולת ואנשי קשר במקום) נאכפות בשכבת השאילתות (lib/db/queries), לא כאן.
  * מעברי מצב של דיווח (מי רשאי לעבור לאן) נאכפים בשירות הדיווחים בשלב 6.
  */
@@ -116,11 +116,13 @@ export const RULES: RuleTable = {
     r("create", "hour_report", "own"),
     r("update", "hour_report", "own"), // רק pending / needs_correction: נאכף בשירות
   ],
-  // הרכז רואה ומנהל את הסטודנטים שמקושרים אליו. בלי ת"ז, בנק, ראיונות, ולוג.
+  // הרכז רואה ומנהל את הסטודנטים שמקושרים אליו, כולל ת"ז ובנק (החלטת המשתמש 18.10: לא רגישים). בלי ראיונות ולוג.
   coordinator: [
     r("read", "user", "assigned"),
     r("read", "student_profile", "assigned"),
-    r("update", "student_profile", "assigned"), // עריכת פרטים אקדמיים והעדפות (בלי ת"ז ובנק: נאכף בשירות)
+    r("update", "student_profile", "assigned"), // עריכת פרטים אקדמיים והעדפות
+    r("read", "bank_details", "assigned"),
+    r("update", "bank_details", "assigned"),
     r("read", "place", "any"),
     r("read", "time_window", "any"),
     r("read", "program", "any"),
@@ -139,7 +141,9 @@ export const RULES: RuleTable = {
   interviewer: [
     r("read", "user", "any"),
     r("read", "student_profile", "any"),
-    r("update", "student_profile", "any"), // עריכת פרטים אקדמיים והעדפות (בלי ת"ז ובנק: נאכף בשירות)
+    r("update", "student_profile", "any"), // עריכת פרטים אקדמיים והעדפות
+    r("read", "bank_details", "any"),
+    r("update", "bank_details", "any"),
     r("read", "place", "any"),
     r("read", "time_window", "any"),
     r("read", "program", "any"),

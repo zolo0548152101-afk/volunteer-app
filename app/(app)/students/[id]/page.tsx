@@ -13,7 +13,7 @@ import { loadLookup } from "@/lib/services/lookups";
 import { NotFoundError } from "@/lib/services/users";
 import { ForbiddenError } from "@/lib/permissions";
 import { saveStudentByStaffAction } from "@/lib/actions/student";
-import { AcademicSection, PrefsSection } from "@/components/student/sections";
+import { AcademicSection, BankSection, PrefsSection } from "@/components/student/sections";
 import { CustomFields } from "@/components/custom-fields/custom-fields";
 import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
@@ -34,7 +34,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
   const canEdit = can(actor, "update", "student_profile", { organizationId: actor.organizationId, ownerId: id, coordinatorIds: s.coordinatorId ? [s.coordinatorId] : [] });
   const canEditId = s.nationalId !== undefined && can(actor, "update", "bank_details", { organizationId: actor.organizationId, ownerId: id });
   const institutions = canEdit ? (await loadLookup(db(), actor.organizationId, "institution")).map((i) => i.label) : [];
-  const profileForEdit = { ...s, nationalId: s.nationalId ?? null, bankName: null, bankBranch: null, bankAccount: null, accountOwner: null, bankDocument: null } as unknown as Parameters<typeof AcademicSection>[0]["p"];
+  const profileForEdit = { ...s, nationalId: s.nationalId ?? null, bankName: s.bankName ?? null, bankBranch: s.bankBranch ?? null, bankAccount: s.bankAccount ?? null, accountOwner: s.accountOwner ?? null, bankDocument: s.bankDocument ?? null } as unknown as Parameters<typeof AcademicSection>[0]["p"];
   const draft = history.interviews.find((i) => i.status === "draft");
   const errorKey = ["forbidden", "not_found", "bad_date", "bad_id", "cf_required", "already_has_draft", "not_student", "generic"].includes(sp.error ?? "") ? sp.error : null;
   const row = (k: string, v: React.ReactNode) => <div key={k}><dt className="text-muted">{k}</dt><dd>{v || "—"}</dd></div>;
@@ -71,6 +71,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
         {row(t("preferences"), s.generalPreferences)}
         {row(t("studentNotes"), s.studentNotes)}
         {s.nationalId !== undefined && row(t("nationalId"), <span dir="ltr">{s.nationalId}</span>)}
+        {s.bankAccount !== undefined && row(t("bank"), [s.bankName, s.bankBranch && `${t("branch")} ${s.bankBranch}`, s.bankAccount, s.accountOwner].filter(Boolean).map((x, i) => <span key={i} dir="auto" className="me-2">{x}</span>))}
       </dl>
       {fields.length > 0 && <div className="mt-4"><CustomFields fields={fields.map((f) => ({ ...f, canEdit: false }))} values={values} /></div>}
 
@@ -78,11 +79,11 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
         <details className="mt-6 rounded-xl border border-border p-3">
           <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t("editDetails")}</summary>
           <p className="mt-1 text-sm text-muted">{t("editHint")}</p>
-          {(["academic", "prefs"] as const).map((section) => (
+          {(["academic", "prefs", ...(canEditId ? ["bank" as const] : [])] as const).map((section) => (
             <form key={section} action={saveStudentByStaffAction} className="mt-4 flex flex-col gap-3">
               <input type="hidden" name="studentId" value={id} /><input type="hidden" name="section" value={section} />
               <h2 className="text-base font-medium">{t(`editSection.${section}`)}</h2>
-              {section === "academic" ? <AcademicSection p={profileForEdit} institutions={institutions} hideId={!canEditId} /> : <PrefsSection p={profileForEdit} types={cats} />}
+              {section === "academic" ? <AcademicSection p={profileForEdit} institutions={institutions} hideId={!canEditId} /> : section === "bank" ? <BankSection p={profileForEdit} /> : <PrefsSection p={profileForEdit} types={cats} />}
               {section === "prefs" && fields.some((f) => f.canEdit) && <CustomFields fields={fields} values={values} />}
               <SubmitButton className="min-h-11 self-start rounded-lg bg-primary px-4 text-primary-foreground">{t("saveDetails")}</SubmitButton>
             </form>

@@ -28,13 +28,13 @@ const EXPECTED: Record<Exclude<Role, "manager">, string[]> = {
     "read hour_report own", "create hour_report own", "update hour_report own",
   ],
   coordinator: [
-    "read user assigned", "read student_profile assigned", "update student_profile assigned",
+    "read user assigned", "read student_profile assigned", "update student_profile assigned", "read bank_details assigned", "update bank_details assigned",
     "read place any", "read time_window any", "read program any", "read academic_year any", "read custom_field any",
     "read placement assigned", "create placement assigned", "update placement assigned", "reassign placement assigned",
     "read hour_report assigned", "update hour_report assigned", "approve hour_report assigned", "export hour_report assigned",
   ],
   interviewer: [
-    "read user any", "read student_profile any", "update student_profile any",
+    "read user any", "read student_profile any", "update student_profile any", "read bank_details any", "update bank_details any",
     "read place any", "read time_window any", "read program any", "read academic_year any", "read custom_field any",
     "read interview any", "create interview any", "update interview any",
     "read placement any", "create placement any", "update placement any",
@@ -95,9 +95,10 @@ describe("רכז", () => {
     expect(can(coord, "read", "hour_report", other)).toBe(false);
   });
 
-  it("לא רואה חשבון בנק של אף סטודנט, גם לא שלו", () => {
-    expect(can(coord, "read", "bank_details", mine)).toBe(false);
-    expect(can(coord, "update", "bank_details", mine)).toBe(false);
+  it("רואה ועורך ת״ז ובנק של הסטודנטים שלו בלבד (החלטת המשתמש 18.10)", () => {
+    expect(can(coord, "read", "bank_details", mine)).toBe(true);
+    expect(can(coord, "update", "bank_details", mine)).toBe(true);
+    expect(can(coord, "read", "bank_details", other)).toBe(false);
   });
 
   it("לא רואה ראיונות, לא מנהל משתמשים ולא מקשר סטודנטים לרכזים", () => {
@@ -142,7 +143,7 @@ describe("מראיין", () => {
   it("לא רואה דיווחי שעות, חשבון בנק, ולא מנהל משתמשים", () => {
     expect(can(interviewer, "read", "hour_report", mine)).toBe(false);
     expect(can(interviewer, "approve", "hour_report", mine)).toBe(false);
-    expect(can(interviewer, "read", "bank_details", mine)).toBe(false);
+    expect(can(interviewer, "read", "bank_details", mine)).toBe(true); // החלטת המשתמש 18.10
     expect(can(interviewer, "create", "user")).toBe(false);
     expect(can(interviewer, "update", "user")).toBe(false);
     expect(can(interviewer, "delete", "user")).toBe(false);
@@ -169,8 +170,7 @@ describe("כמה תפקידים למשתמש אחד", () => {
     expect(can(both, "approve", "hour_report", mine)).toBe(true);
     // ועדיין לא רואה דיווחים של סטודנט של רכז אחר
     expect(can(both, "approve", "hour_report", other)).toBe(false);
-    // ולא רואה בנק
-    expect(can(both, "read", "bank_details", mine)).toBe(false);
+    expect(can(both, "read", "bank_details", other)).toBe(true); // כמראיין: רואה את כולם
   });
 
   it("רכז שהוא גם סטודנט: הסטודנט שבו לא מקבל הרשאות רכז, ולהפך", () => {
