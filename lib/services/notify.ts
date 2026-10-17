@@ -1,10 +1,11 @@
 /**
  * שכבת הודעות אחת לכל המערכת. שאר הקוד קורא רק ל-notify().
  * ספקים אמיתיים (מייל / SMS / וואטסאפ) נרשמים דרך registerProvider
- * בלי לגעת בלוגיקה העסקית. בשלב 0 קיים רק ספק קונסול.
+ * בלי לגעת בלוגיקה העסקית. ברירת מחדל: קונסול; מייל עובר ל-Resend כש-RESEND_API_KEY מוגדר.
  */
 import type { Locale } from "@/i18n/config";
 import { renderTemplate } from "@/lib/notifications/templates";
+import { DEFAULT_FROM, resendProvider } from "@/lib/services/email-resend";
 
 export type Channel = "email" | "sms" | "whatsapp";
 
@@ -36,8 +37,17 @@ const consoleProvider: Provider = {
   },
 };
 
+/** מייל: Resend כש-RESEND_API_KEY מוגדר (נבדק בכל שליחה), אחרת קונסול */
+const defaultEmail: Provider = {
+  async send(input) {
+    const key = process.env.RESEND_API_KEY;
+    if (!key) return consoleProvider.send(input);
+    return resendProvider(key, process.env.EMAIL_FROM || DEFAULT_FROM).send(input);
+  },
+};
+
 const providers: Record<Channel, Provider> = {
-  email: consoleProvider,
+  email: defaultEmail,
   sms: consoleProvider,
   whatsapp: consoleProvider,
 };
@@ -48,7 +58,7 @@ export function registerProvider(channel: Channel, provider: Provider) {
 
 /** מחזיר את הספקים לברירת המחדל (לבדיקות) */
 export function resetProviders() {
-  providers.email = consoleProvider;
+  providers.email = defaultEmail;
   providers.sms = consoleProvider;
   providers.whatsapp = consoleProvider;
 }
