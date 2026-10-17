@@ -49,8 +49,8 @@ export type InterviewFields = {
 function authorize(actor: SessionUser, kind: "interview" | "reassignment", student: { id: string; organizationId: string; coordinatorId: string | null }, action: "create" | "update") {
   if (kind === "interview") assertCan(actor, action, "interview", { organizationId: actor.organizationId });
   else {
-    // שיבוץ מחדש: הרכז של הסטודנט או מנהל (מראיין שיבוץ עושה דרך ראיון)
-    if (!actor.roles.includes("manager") && !actor.roles.includes("coordinator")) throw new ForbiddenError();
+    // שיבוץ מחדש: הרכז של הסטודנט או מנהל (מראיין משבץ דרך ראיון), בהרשאה ייעודית במטריצה
+    assertCan(actor, "reassign", "placement", subjectOf(student));
     assertCan(actor, action, "placement", subjectOf(student));
   }
 }

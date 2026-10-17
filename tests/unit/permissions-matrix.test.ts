@@ -30,7 +30,7 @@ const EXPECTED: Record<Exclude<Role, "manager">, string[]> = {
   coordinator: [
     "read user assigned", "read student_profile assigned",
     "read place any", "read time_window any", "read program any", "read academic_year any", "read custom_field any",
-    "read placement assigned", "create placement assigned", "update placement assigned",
+    "read placement assigned", "create placement assigned", "update placement assigned", "reassign placement assigned",
     "read hour_report assigned", "update hour_report assigned", "approve hour_report assigned", "export hour_report assigned",
   ],
   interviewer: [
@@ -115,6 +115,12 @@ describe("רכז", () => {
 
   it("משבץ מחדש רק סטודנט שלו", () => {
     expect(can(coord, "create", "placement", mine)).toBe(true);
+    // שיבוץ מחדש: רק של סטודנט שלו; מנהל תמיד; מראיין ובעיקר סטודנט אף פעם
+    expect(can(coord, "reassign", "placement", mine)).toBe(true);
+    expect(can(coord, "reassign", "placement", other)).toBe(false);
+    expect(can(manager, "reassign", "placement", other)).toBe(true);
+    expect(can(interviewer, "reassign", "placement", mine)).toBe(false);
+    expect(can(mk("s1", ["student"]), "reassign", "placement", mine)).toBe(false);
     expect(can(coord, "create", "placement", other)).toBe(false);
   });
 

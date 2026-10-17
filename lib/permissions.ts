@@ -15,6 +15,8 @@ export type Action =
   | "delete"
   | "approve"
   | "assign"
+  /** שיבוץ מחדש של סטודנט שכבר שובץ (הרכז שלו או מנהל; מראיין משבץ רק דרך ראיון) */
+  | "reassign"
   | "export"
   /** ניהול חשבונות: תפקידים, סטטוס, שליחת קישורי כניסה. נפרד מ-update (עריכת הפרופיל של עצמך). */
   | "manage";
@@ -63,6 +65,7 @@ const allActions: Action[] = [
   "delete",
   "approve",
   "assign",
+  "reassign",
   "export",
   "manage",
 ];
@@ -125,6 +128,7 @@ export const RULES: RuleTable = {
     r("read", "placement", "assigned"),
     r("create", "placement", "assigned"), // שיבוץ מחדש של סטודנט שלו
     r("update", "placement", "assigned"),
+    r("reassign", "placement", "assigned"),
     r("read", "hour_report", "assigned"),
     r("update", "hour_report", "assigned"), // שינוי approved_hours והערות
     r("approve", "hour_report", "assigned"),

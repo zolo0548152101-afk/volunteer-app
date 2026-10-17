@@ -26,7 +26,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
   const [fields, cats] = await Promise.all([listFields(db(), actor, "student"), loadLookup(db(), actor.organizationId, "volunteer_type")]);
   const values = await loadValues(db(), actor.organizationId, id, fields);
   const canInterview = can(actor, "create", "interview", { organizationId: actor.organizationId });
-  const canReassign = actor.roles.includes("manager") || (actor.roles.includes("coordinator") && s.coordinatorId === actor.id);
+  const canReassign = can(actor, "reassign", "placement", { organizationId: actor.organizationId, ownerId: id, coordinatorIds: s.coordinatorId ? [s.coordinatorId] : [] });
   const active = history.placements.filter((p) => p.isActive);
   const catLabel = new Map(cats.map((c) => [c.key, c.label]));
   const draft = history.interviews.find((i) => i.status === "draft");
