@@ -459,7 +459,15 @@
     "coordinatorAsked": "The coordinator asked for a fix: {note}",
     "locked": "This report was already handled and can't be edited",
     "moreDetails": "More details (times and notes)",
-    "absenceToggle": "This is an absence report (I didn't attend)"
+    "kind": "Report type",
+    "kindVolunteering": "Volunteer hours",
+    "kindAbsence": "Absence",
+    "attachment": "Absence document",
+    "optional": "optional",
+    "attachmentHint": "PDF or image (JPG, PNG, WebP), up to 5MB. Only your coordinator and the manager can see it",
+    "currentAttachment": "Open the attached document",
+    "fileTooLarge": "The file is larger than 5MB",
+    "editApprovedWarning": "This report was already approved. If you save a change, it goes back to your coordinator for approval"
   },
   "reportErrors": {
     "bad_date": "Invalid date",
@@ -478,7 +486,10 @@
     "not_a_student": "This action is for students only",
     "forbidden": "You don't have permission to do that",
     "not_found": "Not found",
-    "generic": "Something went wrong. Try again in a moment"
+    "generic": "Something went wrong. Try again in a moment",
+    "bad_file": "Unsupported file. Attach a PDF or an image (JPG, PNG, WebP)",
+    "file_too_large": "The file is larger than 5MB",
+    "storage_unavailable": "File storage isn't available right now. You can send without a file and attach it later"
   },
   "myReports": {
     "title": "My reports",
@@ -499,7 +510,8 @@
     "coordinatorNote": "Coordinator's note: {note}",
     "fix": "Fix it",
     "edit": "Edit",
-    "back": "Back"
+    "back": "Back",
+    "attachment": "Attached document"
   },
   "inbox": {
     "title": "Hour reports",
@@ -541,7 +553,20 @@
     "bulkHint": "Tick reports and approve them in one go. To change hours, or for absences, approve each report on its own",
     "bulkDone": "{n} reports approved",
     "bulkPartial": "{n} reports approved, {failed} were not (already handled or not yours)",
-    "bulkNone": "No reports selected"
+    "bulkNone": "No reports selected",
+    "filterCoordinator": "Coordinator",
+    "noCoordinator": "No coordinator",
+    "groupCount": "{n} reports",
+    "attachment": "Attachment",
+    "saved": "Report updated",
+    "edit": "Edit report",
+    "editDate": "Date",
+    "editReported": "Reported hours",
+    "editStart": "Start time",
+    "editEnd": "End time",
+    "notesLabelEdit": "Coordinator note",
+    "editSave": "Save changes",
+    "editHint": "Editing does not change the report status"
   },
   "nav2": {
     "reports": "Hour reports",

@@ -459,7 +459,15 @@
     "coordinatorAsked": "הרכז ביקש תיקון: {note}",
     "locked": "הדיווח כבר טופל ואי אפשר לערוך אותו",
     "moreDetails": "עוד פרטים (שעות והערות)",
-    "absenceToggle": "זה דיווח על היעדרות (לא הגעתי)"
+    "kind": "סוג הדיווח",
+    "kindVolunteering": "שעות התנדבות",
+    "kindAbsence": "היעדרות",
+    "attachment": "מסמך להיעדרות",
+    "optional": "רשות",
+    "attachmentHint": "PDF או תמונה (JPG, PNG, WebP), עד 5MB. רק הרכז והמנהל יראו אותו",
+    "currentAttachment": "פתיחת המסמך שצורף",
+    "fileTooLarge": "הקובץ גדול מ-5MB",
+    "editApprovedWarning": "הדיווח כבר אושר. אם תשמרו שינוי, הוא יחזור לאישור הרכז"
   },
   "reportErrors": {
     "bad_date": "התאריך לא תקין",
@@ -478,7 +486,10 @@
     "not_a_student": "הפעולה זמינה לסטודנטים בלבד",
     "forbidden": "אין לך הרשאה לפעולה הזו",
     "not_found": "לא נמצא",
-    "generic": "משהו השתבש. נסו שוב בעוד רגע"
+    "generic": "משהו השתבש. נסו שוב בעוד רגע",
+    "bad_file": "הקובץ לא נתמך. צרפו PDF או תמונה (JPG, PNG, WebP)",
+    "file_too_large": "הקובץ גדול מ-5MB",
+    "storage_unavailable": "אחסון הקבצים לא זמין כרגע. אפשר לשלוח בלי קובץ ולצרף אחר כך"
   },
   "myReports": {
     "title": "הדיווחים שלי",
@@ -499,7 +510,8 @@
     "coordinatorNote": "הערת הרכז: {note}",
     "fix": "לתיקון",
     "edit": "עריכה",
-    "back": "חזרה"
+    "back": "חזרה",
+    "attachment": "מסמך מצורף"
   },
   "inbox": {
     "title": "דיווחי שעות",
@@ -541,7 +553,20 @@
     "bulkHint": "מסמנים דיווחים ומאשרים בלחיצה אחת. לשינוי שעות, או להיעדרות, מאשרים כל דיווח בנפרד",
     "bulkDone": "אושרו {n} דיווחים",
     "bulkPartial": "אושרו {n} דיווחים, ו-{failed} לא אושרו (כבר טופלו או לא בטיפולך)",
-    "bulkNone": "לא סימנת דיווחים לאישור"
+    "bulkNone": "לא סימנת דיווחים לאישור",
+    "filterCoordinator": "רכז",
+    "noCoordinator": "ללא רכז",
+    "groupCount": "{n} דיווחים",
+    "attachment": "קובץ מצורף",
+    "saved": "הדיווח עודכן",
+    "edit": "עריכת הדיווח",
+    "editDate": "תאריך",
+    "editReported": "שעות שדווחו",
+    "editStart": "שעת התחלה",
+    "editEnd": "שעת סיום",
+    "notesLabelEdit": "הערת רכז",
+    "editSave": "שמירת השינויים",
+    "editHint": "עריכה לא משנה את מצב הדיווח"
   },
   "nav2": {
     "reports": "דיווחי שעות",

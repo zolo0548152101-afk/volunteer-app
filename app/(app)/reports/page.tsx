@@ -1,6 +1,6 @@
 import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { bulkApproveAction, decideAction } from "@/lib/actions/reports";
+import { bulkApproveAction, decideAction, editReportAction } from "@/lib/actions/reports";
 import { db } from "@/lib/db";
 import { requireActor } from "@/lib/session";
 import { inboxFilterOptions, listInbox, type ReportStatus } from "@/lib/services/reports";
@@ -13,22 +13,31 @@ import { Flash } from "@/components/flash";
 const STATUSES: ReportStatus[] = ["pending", "needs_correction", "approved", "rejected"];
 const input = "rounded-lg border border-border bg-background px-3 py-2";
 
-export default async function Inbox({ searchParams }: { searchParams: Promise<{ status?: string; error?: string; focus?: string; student?: string; place?: string; month?: string; bulk?: string }> }) {
+export default async function Inbox({ searchParams }: { searchParams: Promise<{ status?: string; error?: string; focus?: string; student?: string; place?: string; month?: string; bulk?: string; coordinator?: string; saved?: string }> }) {
   const [sp, t, format, actor] = await Promise.all([searchParams, getTranslations("inbox"), getFormatter(), requireActor()]);
   const status = (STATUSES as string[]).includes(sp.status ?? "") ? (sp.status as ReportStatus) : "pending";
   const uuid = /^[0-9a-f-]{36}$/i;
   const studentId = uuid.test(sp.student ?? "") ? sp.student : undefined;
   const placeId = uuid.test(sp.place ?? "") ? sp.place : undefined;
   const month = /^\d{4}-\d{2}$/.test(sp.month ?? "") ? sp.month : undefined;
+  const coordinatorId = uuid.test(sp.coordinator ?? "") && actor.roles.includes("manager") ? sp.coordinator : undefined;
+  const isManager = actor.roles.includes("manager");
   let list, options;
   try {
-    [list, options] = await Promise.all([listInbox(db(), actor, { status, studentId, placeId, month }), inboxFilterOptions(db(), actor, status)]);
+    [list, options] = await Promise.all([listInbox(db(), actor, { status, studentId, placeId, month, coordinatorId }), inboxFilterOptions(db(), actor, status)]);
   } catch (e) { if (e instanceof ForbiddenError) redirect("/"); throw e; }
-  const qs = new URLSearchParams({ status, ...(studentId ? { student: studentId } : {}), ...(placeId ? { place: placeId } : {}), ...(month ? { month } : {}) }).toString();
+  const qs = new URLSearchParams({ status, ...(studentId ? { student: studentId } : {}), ...(placeId ? { place: placeId } : {}), ...(month ? { month } : {}), ...(coordinatorId ? { coordinator: coordinatorId } : {}) }).toString();
   const back = `/reports?${qs}`;
-  const filtered = !!(studentId || placeId || month);
+  const filtered = !!(studentId || placeId || month || coordinatorId);
   const [bOk, bFail] = (sp.bulk ?? "").split("-").map(Number);
   const bulkMsg = sp.bulk && Number.isFinite(bOk) ? (bFail ? t("bulkPartial", { n: bOk, failed: bFail }) : bOk ? t("bulkDone", { n: bOk }) : t("bulkNone")) : null;
+  const groups: { key: string; name: string; rows: typeof list }[] = [];
+  for (const r of list) {
+    const key = isManager ? (r.coordinatorName ?? "") : "all";
+    let g = groups.find((x) => x.key === key);
+    if (!g) { g = { key, name: r.coordinatorName ?? t("noCoordinator"), rows: [] }; groups.push(g); }
+    g.rows.push(r);
+  }
   const date = (d: string) => format.dateTime(new Date(`${d}T00:00:00Z`), { dateStyle: "medium", timeZone: "UTC" });
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
@@ -50,6 +59,14 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
             {options.places.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
         </label>
+        {isManager && options.coordinators.length > 0 && (
+          <label className="flex flex-col gap-1">{t("filterCoordinator")}
+            <select name="coordinator" aria-label={t("filterCoordinator")} defaultValue={coordinatorId ?? ""} className={`${input} min-h-11`}>
+              <option value="">{t("filterAll")}</option>
+              {options.coordinators.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </select>
+          </label>
+        )}
         <label className="flex flex-col gap-1">{t("filterMonth")}
           <input name="month" aria-label={t("filterMonth")} type="month" defaultValue={month ?? ""} className={`${input} min-h-11`} />
         </label>
@@ -57,6 +74,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
         {filtered && <Link href={`/reports?status=${status}`} className="inline-flex min-h-11 items-center underline">{t("clearFilters")}</Link>}
       </form>
       <ReportErrorBanner code={sp.error} />
+      {sp.saved && <Flash tone="status" className="mt-3 rounded-lg border border-border p-3 text-sm">{t("saved")}</Flash>}
       {bulkMsg && <Flash tone="status" className="mt-3 rounded-lg border border-border p-3 text-sm">{bulkMsg}</Flash>}
       {status === "pending" && list.length > 0 && (
         <form id="bulk" action={bulkApproveAction} className="mt-3 flex flex-wrap items-center gap-3 text-sm">
@@ -66,8 +84,11 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
         </form>
       )}
       {list.length === 0 && <p className="mt-4 text-muted">{t(`empty.${status}`)}</p>}
-      <ul className="mt-4 flex flex-col gap-3">
-        {list.map((r) => (
+      {groups.map((g) => (
+        <section key={g.key} className="mt-4" aria-label={isManager ? g.name : undefined}>
+          {isManager && <h2 className="text-base font-semibold">{g.name} <span className="text-sm font-normal text-muted">({t("groupCount", { n: g.rows.length })})</span></h2>}
+          <ul className="mt-2 flex flex-col gap-3">
+        {g.rows.map((r) => (
           <li key={r.id} id={r.id} className="rounded-xl border border-border p-3 text-sm">
             <p className="flex flex-wrap items-center gap-x-2 font-medium">
               {status === "pending" && r.reportType !== "absence" && <input type="checkbox" name="ids" value={r.id} form="bulk" aria-label={t("pick", { student: r.studentName })} className="size-5" />}
@@ -76,6 +97,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
             <p>{t("reported", { n: r.reportedHours })}{r.startTime && r.endTime ? <> · <span dir="ltr">{r.startTime.slice(0, 5)}–{r.endTime.slice(0, 5)}</span></> : ""}{r.status === "approved" ? ` · ${t("approved", { n: r.approvedHours })}` : ""}</p>
             {r.studentNotes && <p className="text-muted">{t("studentNote", { note: r.studentNotes })}</p>}
             {r.coordinatorNotes && r.status !== "pending" && <p className="text-muted">{t("coordinatorNote", { note: r.coordinatorNotes })}</p>}
+            {r.attachment && <p><a href={`/api/reports/${r.id}/attachment`} target="_blank" rel="noopener" className="underline">{t("attachment")}</a></p>}
             {status === "pending" && (
               <form action={decideAction} className="mt-2 flex flex-col gap-2">
                 <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
@@ -98,9 +120,25 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
                 <SubmitButton className="rounded-lg border border-border px-3 py-1.5">{t("unapprove")}</SubmitButton>
               </form>
             )}
+            <details className="mt-2">
+              <summary className="inline-flex min-h-11 cursor-pointer items-center underline">{t("edit")}</summary>
+              <form action={editReportAction} className="mt-2 grid grid-cols-2 gap-2">
+                <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
+                <label className="flex flex-col gap-1">{t("editDate")}<input name="volunteerDate" type="date" required defaultValue={r.volunteerDate} className={`${input} min-h-11`} /></label>
+                <label className="flex flex-col gap-1">{t("editReported")}<input name="reportedHours" type="number" step="0.25" min="0" required defaultValue={r.reportedHours} className={`${input} min-h-11`} /></label>
+                <label className="flex flex-col gap-1">{t("editStart")}<input name="startTime" type="time" defaultValue={r.startTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
+                <label className="flex flex-col gap-1">{t("editEnd")}<input name="endTime" type="time" defaultValue={r.endTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
+                <label className="flex flex-col gap-1">{t("approvedHoursLabel")}<input name="approvedHours" type="number" step="0.25" min="0" required defaultValue={r.approvedHours ?? r.reportedHours} className={`${input} min-h-11`} /></label>
+                <label className="col-span-2 flex flex-col gap-1">{t("notesLabelEdit")}<input name="notes" defaultValue={r.coordinatorNotes ?? ""} className={`${input} min-h-11`} /></label>
+                <SubmitButton className="col-span-2 min-h-11 rounded-lg border border-border px-4">{t("editSave")}</SubmitButton>
+              </form>
+              <p className="mt-1 text-muted">{t("editHint")}</p>
+            </details>
           </li>
         ))}
-      </ul>
+          </ul>
+        </section>
+      ))}
     </main>
   );
 }

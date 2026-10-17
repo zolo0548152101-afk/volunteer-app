@@ -12,6 +12,8 @@ const REASONS = ["reserve_duty", "illness", "security_situation", "other"] as co
  * טופס הדיווח: שלושה שדות גלויים (שיבוץ, תאריך, שעות), הכול ממולא מהחוזה. שעות והערות מקופלות.
  * החלפת שיבוץ מעדכנת תאריך, שעות וזמנים לפי החוזה של השיבוץ החדש.
  */
+const MAX_FILE = 5 * 1024 * 1024;
+
 export function ReportForm({ placements, absence: absenceInitial, report, action, max, today }: {
   placements: Pl[]; absence: boolean; report?: ReportRow; action: (fd: FormData) => Promise<void>; max: string; today: string;
 }) {
@@ -24,6 +26,7 @@ export function ReportForm({ placements, absence: absenceInitial, report, action
   const [hours, setHours] = useState(String(report ? report.reportedHours : (first?.defaultHours ?? "")));
   const [start, setStart] = useState(report?.startTime?.slice(0, 5) ?? first?.startTime ?? "");
   const [end, setEnd] = useState(report?.endTime?.slice(0, 5) ?? first?.endTime ?? "");
+  const [fileError, setFileError] = useState(false);
 
   function pick(id: string) {
     setPlacementId(id);
@@ -40,11 +43,22 @@ export function ReportForm({ placements, absence: absenceInitial, report, action
       {report && <input type="hidden" name="reportId" value={report.id} />}
       <input type="hidden" name="type" value={absence ? "absence" : "volunteering"} />
 
+      {editing && report?.status === "approved" && <p className="rounded-lg border border-warn/50 bg-warn-bg p-3 text-sm text-warn-fg">{t("editApprovedWarning")}</p>}
+
       {!editing && (
-        <label className="flex min-h-11 items-center gap-3 text-sm">
-          <input type="checkbox" checked={absence} onChange={(e) => setAbsence(e.target.checked)} className="size-5" />
-          {t("absenceToggle")}
-        </label>
+        <fieldset className="flex flex-col gap-1.5">
+          <legend className="mb-1.5 text-sm">{t("kind")}</legend>
+          <div className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-paper p-1">
+            {([false, true] as const).map((isAbsence) => (
+              <label key={String(isAbsence)} className="relative">
+                <input type="radio" name="kind" value={isAbsence ? "absence" : "volunteering"} checked={absence === isAbsence} onChange={() => setAbsence(isAbsence)} className="peer sr-only" />
+                <span className="flex min-h-11 cursor-pointer items-center justify-center rounded-lg px-3 text-sm font-medium text-ink-2 transition-colors duration-150 peer-checked:bg-card peer-checked:text-ink peer-checked:shadow-sm peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary">
+                  {t(isAbsence ? "kindAbsence" : "kindVolunteering")}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
       )}
 
       {!absence && (
@@ -71,6 +85,18 @@ export function ReportForm({ placements, absence: absenceInitial, report, action
         {!absence && first && <span className="text-xs text-muted">{t("hoursHint")}</span>}
       </label>
 
+      {absence && (
+        <div className="flex flex-col gap-1 text-sm">
+          <label htmlFor="attachment">{t("attachment")} <span className="text-muted">({t("optional")})</span></label>
+          <input id="attachment" name="attachment" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" aria-describedby="attachment-hint"
+            onChange={(e) => setFileError(!!e.target.files?.[0] && e.target.files[0].size > MAX_FILE)}
+            className="min-h-11 w-full rounded-lg border border-dashed border-border bg-background px-3 py-2 text-sm file:me-3 file:min-h-9 file:rounded-md file:border-0 file:bg-paper file:px-3 file:text-sm" />
+          <span id="attachment-hint" className="text-xs text-muted">{t("attachmentHint")}</span>
+          {report?.attachment && <a href={`/api/reports/${report.id}/attachment`} target="_blank" rel="noreferrer" className="underline">{t("currentAttachment")}</a>}
+          {fileError && <span role="alert" className="text-bad-fg">{t("fileTooLarge")}</span>}
+        </div>
+      )}
+
       <details className="text-sm">
         <summary className="flex min-h-11 cursor-pointer items-center underline">{t("moreDetails")}</summary>
         <div className="mt-2 flex flex-col gap-3">
@@ -84,7 +110,7 @@ export function ReportForm({ placements, absence: absenceInitial, report, action
         </div>
       </details>
 
-      <SubmitButton className="min-h-12 rounded-lg bg-primary px-4 py-2.5 text-base font-medium text-primary-foreground">{report ? t("resubmit") : t("submit")}</SubmitButton>
+      <SubmitButton disabled={fileError} className="min-h-12 rounded-lg bg-primary px-4 py-2.5 text-base font-medium text-primary-foreground">{report ? t("resubmit") : t("submit")}</SubmitButton>
     </form>
   );
 }

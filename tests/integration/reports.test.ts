@@ -4,7 +4,7 @@ import { closeDb, db } from "@/lib/db";
 import { auditLog, hourReports, placements } from "@/lib/db/schema";
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
-import { approveMany, decide, getMyReport, listInbox, listMyReports, myProgress, reportablePlacements, resubmitReport, submitReport, type SubmitInput } from "@/lib/services/reports";
+import { approveMany, decide, editReportByStaff, getMyReport, listInbox, listMyReports, myProgress, reportablePlacements, resubmitReport, submitReport, type SubmitInput } from "@/lib/services/reports";
 import { NotFoundError } from "@/lib/services/users";
 import { registerProvider, resetProviders, type NotifyInput } from "@/lib/services/notify";
 
@@ -163,7 +163,7 @@ describe("שיבוץ שהסתיים, ותאריך מחוץ לתקופת השיב
     // השיבוץ מוחלף ונסגר לפני שבוע
     await db().update(placements).set({ isActive: false, endedAt: daysAgo(9) }).where(eq(placements.id, placementId));
     try {
-      await expect(resubmitReport(db(), st, id, vol({ volunteerDate: day, reportedHours: 2 }))).resolves.toBeUndefined();
+      await expect(resubmitReport(db(), st, id, vol({ volunteerDate: day, reportedHours: 2 }))).resolves.toMatchObject({ replacedAttachment: null });
       await expect(submitReport(db(), st, vol({ volunteerDate: daysAgo(1) }))).rejects.toMatchObject({ code: "not_your_placement" }); // אחרי סיום השיבוץ
       await expect(submitReport(db(), st, vol({ volunteerDate: daysAgo(11) }))).resolves.toBeTruthy(); // בתוך התקופה
     } finally {
@@ -248,5 +248,41 @@ describe("תיבת הרכז: היקף ב-SQL, מסננים ואישור מרוב
     expect(await approveMany(db(), c1, [abs, v])).toEqual({ approved: 1, failed: 0, skipped: 1 });
     const [ra] = await db().select().from(hourReports).where(eq(hourReports.id, abs));
     expect(ra.status).toBe("pending");
+  });
+});
+
+describe("עריכת דיווחים שאושרו", () => {
+  it("סטודנט שעורך דיווח מאושר מחזיר אותו ל-pending; נדחה נשאר נעול", async () => {
+    const id = await submitReport(db(), st, vol({ volunteerDate: daysAgo(20), reportedHours: 2 }));
+    await decide(db(), c1, id, { kind: "approve" });
+    expect(await getMyReport(db(), st, id)).toMatchObject({ status: "approved" });
+    await resubmitReport(db(), st, id, vol({ volunteerDate: daysAgo(20), reportedHours: 1.5 }));
+    const r = await getMyReport(db(), st, id);
+    expect(r).toMatchObject({ status: "pending", reportedHours: 1.5, approvedAt: null, approvedBy: null });
+    await decide(db(), c1, id, { kind: "reject", notes: "לא" });
+    await expect(resubmitReport(db(), st, id, vol())).rejects.toMatchObject({ code: "not_editable" });
+  });
+
+  it("רכז עורך בלי לשנות סטטוס; לא מאשר יותר מהמדווח; סטודנט ורכז אחר לא", async () => {
+    const id = await submitReport(db(), st, vol({ volunteerDate: daysAgo(21), reportedHours: 2 }));
+    await decide(db(), c1, id, { kind: "approve" });
+    await editReportByStaff(db(), c1, id, { volunteerDate: daysAgo(21), startTime: null, endTime: null, reportedHours: 3, approvedHours: 2.5, coordinatorNotes: "תוקן" });
+    const [row] = await db().select().from(hourReports).where(eq(hourReports.id, id));
+    expect(row).toMatchObject({ status: "approved", reportedHours: 3, approvedHours: 2.5 });
+    const [log] = await db().select().from(auditLog).where(and(eq(auditLog.entityId, id), eq(auditLog.action, "staff_edit")));
+    expect(log).toBeTruthy();
+    await expect(editReportByStaff(db(), c1, id, { volunteerDate: daysAgo(21), startTime: null, endTime: null, reportedHours: 2, approvedHours: 3, coordinatorNotes: "" })).rejects.toMatchObject({ code: "bad_hours" });
+    await expect(editReportByStaff(db(), st, id, { volunteerDate: daysAgo(21), startTime: null, endTime: null, reportedHours: 2, approvedHours: 2, coordinatorNotes: "" })).rejects.toThrow();
+    await expect(editReportByStaff(db(), c2, id, { volunteerDate: daysAgo(21), startTime: null, endTime: null, reportedHours: 2, approvedHours: 2, coordinatorNotes: "" })).rejects.toThrow();
+  });
+
+  it("צירוף קובץ להיעדרות נשמר, ומנהל רואה קבוצות לפי רכז", async () => {
+    const id = await submitReport(db(), st, { type: "absence", volunteerDate: daysAgo(22), absenceReason: "illness", attachment: "attachments/x/y.pdf" } as SubmitInput);
+    const [row] = await db().select().from(hourReports).where(eq(hourReports.id, id));
+    expect(row.attachment).toBe("attachments/x/y.pdf");
+    const list = await listInbox(db(), manager, { status: "pending" });
+    expect(list.every((r) => "coordinatorName" in r)).toBe(true);
+    const mine = await listInbox(db(), manager, { status: "pending", coordinatorId: c2.id });
+    expect(mine.every((r) => r.coordinatorName !== null)).toBe(true);
   });
 });

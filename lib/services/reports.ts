@@ -21,7 +21,8 @@ import { clean, isDate, todayIL } from "./_util";
 
 export type ReportCode =
   | "bad_date" | "future_date" | "outside_year" | "no_year" | "bad_hours" | "bad_time" | "day_over_max" | "duplicate"
-  | "not_your_placement" | "not_editable" | "reason_required" | "bad_transition" | "bad_reason" | "not_a_student";
+  | "not_your_placement" | "not_editable" | "reason_required" | "bad_transition" | "bad_reason" | "not_a_student"
+  | "bad_file" | "file_too_large" | "storage_unavailable";
 
 export class ReportError extends Error {
   constructor(public code: ReportCode) {
@@ -45,6 +46,8 @@ export type SubmitInput = {
   reportedHours: number;
   studentNotes?: string | null;
   absenceReason?: AbsenceReason | null;
+  /** מפתח אחסון של מסמך מצורף (היעדרות בלבד). undefined = בלי שינוי בעריכה */
+  attachment?: string | null;
 };
 
 /** שדות הדיווח המשותפים לבדיקה (הגשה ותיקון) */
@@ -103,6 +106,7 @@ export async function submitReport(db: Db, actor: SessionUser, input: SubmitInpu
       coordinatorId: me.coordinatorId, academicYearId: year.id, reportType: input.type, volunteerDate: input.volunteerDate,
       startTime: input.startTime || null, endTime: input.endTime || null, reportedHours: hrs, approvedHours: hrs,
       studentNotes: clean(input.studentNotes), absenceReason: input.type === "absence" ? input.absenceReason! : null,
+      attachment: input.type === "absence" ? (input.attachment ?? null) : null,
     }).returning();
     await writeAudit(tx, { organizationId: actor.organizationId, actorId: actor.id }, { entity: "hour_report", entityId: row.id, action: "create" }, null, row);
     return { id: row.id, coordinatorId: me.coordinatorId, name: me.name };
@@ -111,8 +115,11 @@ export async function submitReport(db: Db, actor: SessionUser, input: SubmitInpu
   return res.id;
 }
 
-/** הסטודנט מתקן דיווח שלו כל עוד לא אושר/נדחה. תיקון מחזיר ל-pending */
-export async function resubmitReport(db: Db, actor: SessionUser, reportId: string, input: SubmitInput): Promise<void> {
+/**
+ * הסטודנט מתקן דיווח שלו: ממתין, הוחזר לתיקון, או כבר אושר. כל תיקון מחזיר לאישור הרכז (pending), והאישור הקודם מתבטל.
+ * דיווח שנדחה נעול. מחזיר את המסמך הישן אם הוחלף, כדי שהקורא ימחק אותו אחרי שהשינוי נשמר.
+ */
+export async function resubmitReport(db: Db, actor: SessionUser, reportId: string, input: SubmitInput): Promise<{ replacedAttachment: string | null }> {
   const res = await db.transaction(async (tx) => {
     const me = await loadStudentRow(tx, actor);
     await tx.execute(sql`SELECT 1 FROM users WHERE id = ${actor.id} FOR UPDATE`);
@@ -120,32 +127,64 @@ export async function resubmitReport(db: Db, actor: SessionUser, reportId: strin
     if (!old) throw new NotFoundError();
     assertCan(actor, "update", "hour_report", { organizationId: actor.organizationId, ownerId: old.studentId, coordinatorIds: me.coordinatorId ? [me.coordinatorId] : [] });
     if (old.studentId !== actor.id) throw new NotFoundError();
-    if (old.status !== "pending" && old.status !== "needs_correction") throw new ReportError("not_editable");
+    if (old.status === "rejected") throw new ReportError("not_editable");
     if (old.reportType !== input.type) throw new ReportError("not_editable");
     const { placement, hrs } = await validate(tx, actor, input, old.id);
     const [row] = await tx.update(hourReports).set({
       placementId: placement?.id ?? null, placeId: placement?.placeId ?? null, coordinatorId: me.coordinatorId, volunteerDate: input.volunteerDate,
       startTime: input.startTime || null, endTime: input.endTime || null, reportedHours: hrs, approvedHours: hrs, studentNotes: clean(input.studentNotes),
       absenceReason: input.type === "absence" ? input.absenceReason! : null, status: "pending", submittedAt: new Date(),
+      // תיקון אחרי אישור: האישור (שעות, מי אישר, סימון "נספר ליעד") מתבטל והרכז מחליט מחדש
+      approvedAt: null, approvedBy: null, countsTowardTarget: true,
+      attachment: input.type === "absence" && input.attachment !== undefined ? input.attachment : old.attachment,
     }).where(eq(hourReports.id, old.id)).returning();
     await writeAudit(tx, { organizationId: actor.organizationId, actorId: actor.id }, { entity: "hour_report", entityId: old.id, action: "resubmit" }, old, row);
-    return { coordinatorId: me.coordinatorId, name: me.name };
+    return { coordinatorId: me.coordinatorId, name: me.name, replaced: old.attachment && row.attachment !== old.attachment ? old.attachment : null };
   });
   await notifyUser(db, res.coordinatorId, "report.submitted", { student: res.name });
+  return { replacedAttachment: res.replaced };
+}
+
+export type StaffEdit = { volunteerDate: string; startTime?: string | null; endTime?: string | null; reportedHours: number; approvedHours: number; coordinatorNotes?: string | null };
+
+/**
+ * הרכז של הסטודנט (או מנהל) עורך דיווח בכל סטטוס, בלי לשנות את הסטטוס ובלי לדרוש אישור מחדש.
+ * השעות המאושרות לא עולות על המדווחות. כל עריכה נרשמת ביומן.
+ */
+export async function editReportByStaff(db: Db, actor: SessionUser, reportId: string, e: StaffEdit): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [old] = await tx.select().from(hourReports).where(and(eq(hourReports.id, reportId), eq(hourReports.organizationId, actor.organizationId))).for("update");
+    if (!old) throw new NotFoundError();
+    const [st] = await tx.select({ coordinatorId: users.coordinatorId }).from(users).where(eq(users.id, old.studentId));
+    const subject = { organizationId: actor.organizationId, ownerId: old.studentId, coordinatorIds: st?.coordinatorId ? [st.coordinatorId] : [] };
+    if (!can(actor, "read", "hour_report", subject)) throw new NotFoundError();
+    if (old.studentId === actor.id) throw new ForbiddenError(); // עריכה עצמית של סטודנט היא resubmitReport
+    assertCan(actor, "update", "hour_report", subject);
+    if (!isDate(e.volunteerDate)) throw new ReportError("bad_date");
+    if (e.volunteerDate > todayIL()) throw new ReportError("future_date");
+    if (!timeOk(e.startTime) || !timeOk(e.endTime) || (e.startTime && e.endTime && e.endTime <= e.startTime)) throw new ReportError("bad_time");
+    const rep = round2(e.reportedHours), app = round2(e.approvedHours);
+    if (!Number.isFinite(rep) || rep <= 0 || rep > 24 || !Number.isFinite(app) || app < 0 || app > rep) throw new ReportError("bad_hours");
+    const [row] = await tx.update(hourReports).set({
+      volunteerDate: e.volunteerDate, startTime: e.startTime || null, endTime: e.endTime || null, reportedHours: rep, approvedHours: app, coordinatorNotes: clean(e.coordinatorNotes),
+    }).where(eq(hourReports.id, old.id)).returning();
+    await writeAudit(tx, { organizationId: actor.organizationId, actorId: actor.id }, { entity: "hour_report", entityId: old.id, action: "staff_edit" }, old, row);
+  });
 }
 
 /* ───────────── קריאה ───────────── */
 
-export type ReportRow = typeof hourReports.$inferSelect & { studentName: string; placeName: string | null; windowLabel: string | null };
+export type ReportRow = typeof hourReports.$inferSelect & { studentName: string; placeName: string | null; windowLabel: string | null; coordinatorName: string | null };
 
 const reportSelect = (db: Db) =>
-  db.select({ r: hourReports, first: users.firstName, last: users.lastName, placeName: volunteerPlaces.name, windowLabel: placeTimeWindows.label, studentCoordinator: users.coordinatorId })
+  db.select({ r: hourReports, first: users.firstName, last: users.lastName, placeName: volunteerPlaces.name, windowLabel: placeTimeWindows.label, studentCoordinator: users.coordinatorId,
+      coordinatorName: sql<string | null>`(SELECT c.first_name || ' ' || c.last_name FROM users c WHERE c.id = ${users.coordinatorId})` })
     .from(hourReports).innerJoin(users, eq(users.id, hourReports.studentId))
     .leftJoin(placements, eq(placements.id, hourReports.placementId)).leftJoin(volunteerPlaces, eq(volunteerPlaces.id, hourReports.placeId))
     .leftJoin(placeTimeWindows, eq(placeTimeWindows.id, placements.timeWindowId));
 
 type Joined = Awaited<ReturnType<ReturnType<typeof reportSelect>["limit"]>>[number];
-const shape = (x: Joined): ReportRow => ({ ...x.r, studentName: `${x.first} ${x.last}`, placeName: x.placeName, windowLabel: x.windowLabel });
+const shape = (x: Joined): ReportRow => ({ ...x.r, studentName: `${x.first} ${x.last}`, placeName: x.placeName, windowLabel: x.windowLabel, coordinatorName: x.coordinatorName });
 
 export async function listMyReports(db: Db, actor: SessionUser): Promise<ReportRow[]> {
   assertCan(actor, "read", "hour_report", { organizationId: actor.organizationId, ownerId: actor.id });
@@ -178,7 +217,7 @@ export async function reportablePlacements(db: Db, actor: SessionUser) {
   });
 }
 
-export type InboxFilters = { status?: ReportStatus; studentId?: string; placeId?: string; month?: string };
+export type InboxFilters = { status?: ReportStatus; studentId?: string; placeId?: string; month?: string; coordinatorId?: string };
 
 /** תנאי ההיקף של התיבה: מנהל רואה את כל הארגון, רכז רק דיווחים של סטודנטים שמשויכים אליו (ב-SQL, לפני ה-limit) */
 function inboxScope(actor: SessionUser) {
@@ -194,6 +233,8 @@ export async function listInbox(db: Db, actor: SessionUser, opts: InboxFilters =
   if (opts.status) conds.push(eq(hourReports.status, opts.status));
   if (opts.studentId) conds.push(eq(hourReports.studentId, opts.studentId));
   if (opts.placeId) conds.push(eq(hourReports.placeId, opts.placeId));
+  // סינון לפי רכז רלוונטי למנהל; לרכז ההיקף כבר מוגבל אליו
+  if (opts.coordinatorId) conds.push(eq(users.coordinatorId, opts.coordinatorId));
   if (opts.month && /^\d{4}-\d{2}$/.test(opts.month)) conds.push(sql`to_char(${hourReports.volunteerDate}, 'YYYY-MM') = ${opts.month}`);
   const rows = await reportSelect(db).where(and(...conds)).orderBy(hourReports.submittedAt).limit(500);
   // הגנה כפולה: ה-SQL כבר צמצם להיקף, ו-can מאשר כל שורה מול המטריצה
@@ -214,7 +255,11 @@ export async function inboxFilterOptions(db: Db, actor: SessionUser, status: Rep
   const conds = [...inboxScope(actor), eq(hourReports.status, status)];
   const students = await db.selectDistinct({ id: users.id, first: users.firstName, last: users.lastName }).from(hourReports).innerJoin(users, eq(users.id, hourReports.studentId)).where(and(...conds)).orderBy(users.lastName, users.firstName);
   const places = await db.selectDistinct({ id: volunteerPlaces.id, name: volunteerPlaces.name }).from(hourReports).innerJoin(users, eq(users.id, hourReports.studentId)).innerJoin(volunteerPlaces, eq(volunteerPlaces.id, hourReports.placeId)).where(and(...conds)).orderBy(volunteerPlaces.name);
-  return { students: students.map((s) => ({ id: s.id, name: `${s.first} ${s.last}` })), places };
+  const coordinators = actor.roles.includes("manager")
+    ? await db.execute<{ id: string; name: string }>(sql`SELECT DISTINCT c.id, c.first_name || ' ' || c.last_name AS name FROM hour_reports r JOIN users u ON u.id = r.student_id JOIN users c ON c.id = u.coordinator_id
+        WHERE r.organization_id = ${actor.organizationId} AND r.status = ${status} ORDER BY name`).then((r) => r.rows)
+    : [];
+  return { students: students.map((s) => ({ id: s.id, name: `${s.first} ${s.last}` })), places, coordinators };
 }
 
 /**

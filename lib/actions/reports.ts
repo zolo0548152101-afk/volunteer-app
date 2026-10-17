@@ -4,12 +4,13 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { ForbiddenError } from "@/lib/permissions";
 import { requireActor } from "@/lib/session";
-import { approveMany, decide, ReportError, resubmitReport, submitReport, type AbsenceReason, type SubmitInput } from "@/lib/services/reports";
+import { approveMany, decide, editReportByStaff, ReportError, resubmitReport, submitReport, type AbsenceReason, type SubmitInput } from "@/lib/services/reports";
 import { NotFoundError } from "@/lib/services/users";
+import { deleteAttachment, FileError, saveAttachment } from "@/lib/storage";
 import { trimmed as str } from "./_form";
 
 function code(e: unknown): string {
-  if (e instanceof ReportError) return e.code;
+  if (e instanceof ReportError || e instanceof FileError) return e.code;
   if (e instanceof ForbiddenError) return "forbidden";
   if (e instanceof NotFoundError) return "not_found";
   console.error(e);
@@ -36,15 +37,47 @@ async function run(back: string, ok: string, fn: () => Promise<void>) {
   redirect(error ? `${back}${back.includes("?") ? "&" : "?"}error=${error}` : ok);
 }
 
+/** מסמך מצורף להיעדרות (רשות): נשמר לפני הפעולה, ונמחק אם הפעולה נכשלה, כדי לא להשאיר קובץ יתום */
+async function withAttachment<T>(fd: FormData, orgId: string, input: SubmitInput, fn: (input: SubmitInput) => Promise<T>): Promise<T> {
+  const f = fd.get("attachment");
+  const file = input.type === "absence" && f instanceof File && f.size > 0 ? f : null;
+  const key = file ? await saveAttachment(file, orgId) : undefined;
+  try {
+    return await fn(key ? { ...input, attachment: key } : input);
+  } catch (e) {
+    await deleteAttachment(key);
+    throw e;
+  }
+}
+
 export async function submitReportAction(fd: FormData) {
   const input = inputOf(fd);
   const back = `/student/report${input.type === "absence" ? "?absence=1" : ""}`;
-  await run(back, "/student/reports?sent=1", async () => { await submitReport(db(), await requireActor(), input); });
+  await run(back, "/student/reports?sent=1", async () => {
+    const actor = await requireActor();
+    await withAttachment(fd, actor.organizationId, input, (i) => submitReport(db(), actor, i));
+  });
 }
 
 export async function resubmitReportAction(fd: FormData) {
   const id = str(fd, "reportId");
-  await run(`/student/reports/${id}`, "/student/reports?sent=1", async () => { await resubmitReport(db(), await requireActor(), id, inputOf(fd)); });
+  await run(`/student/reports/${id}`, "/student/reports?sent=1", async () => {
+    const actor = await requireActor();
+    const { replacedAttachment } = await withAttachment(fd, actor.organizationId, inputOf(fd), (i) => resubmitReport(db(), actor, id, i));
+    await deleteAttachment(replacedAttachment);
+  });
+}
+
+/** עריכה על ידי הרכז/המנהל: בלי שינוי סטטוס ובלי אישור מחדש */
+export async function editReportAction(fd: FormData) {
+  const id = str(fd, "reportId");
+  const back = safeBack(str(fd, "back"), "/reports");
+  await run(`${back}${back.includes("?") ? "&" : "?"}focus=${id}`, `${back}${back.includes("?") ? "&" : "?"}saved=1#${id}`, async () => {
+    await editReportByStaff(db(), await requireActor(), id, {
+      volunteerDate: str(fd, "volunteerDate"), startTime: str(fd, "startTime") || null, endTime: str(fd, "endTime") || null,
+      reportedHours: Number(str(fd, "reportedHours")), approvedHours: Number(str(fd, "approvedHours")), coordinatorNotes: str(fd, "notes"),
+    });
+  });
 }
 
 export async function decideAction(fd: FormData) {

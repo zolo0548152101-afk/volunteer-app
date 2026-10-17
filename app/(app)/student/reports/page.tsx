@@ -25,7 +25,8 @@ export default async function MyReports({ searchParams }: { searchParams: Promis
             <p className="font-medium">{formatDay(format, r.volunteerDate)} · {r.reportType === "absence" ? t("absence") : r.placeName} · {t("hours", { n: r.reportedHours })}</p>
             <p>{t(`status.${r.status}`)}{r.status === "approved" && r.approvedHours !== r.reportedHours ? ` · ${t("approvedHours", { n: r.approvedHours })}` : ""}</p>
             {r.coordinatorNotes && (r.status === "rejected" || r.status === "needs_correction") && <p className="text-muted">{t("coordinatorNote", { note: r.coordinatorNotes })}</p>}
-            {(r.status === "needs_correction" || r.status === "pending") && <Link href={`/student/reports/${r.id}`} className="underline">{r.status === "needs_correction" ? t("fix") : t("edit")}</Link>}
+            {r.status !== "rejected" && <Link href={`/student/reports/${r.id}`} className="inline-flex min-h-11 items-center underline">{r.status === "needs_correction" ? t("fix") : t("edit")}</Link>}
+            {r.attachment && <a href={`/api/reports/${r.id}/attachment`} target="_blank" rel="noreferrer" className="ms-4 inline-flex min-h-11 items-center underline">{t("attachment")}</a>}
           </li>
         ))}
       </ul>

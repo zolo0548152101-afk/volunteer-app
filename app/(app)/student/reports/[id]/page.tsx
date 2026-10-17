@@ -12,7 +12,7 @@ export default async function EditReport({ params, searchParams }: { params: Pro
   const [{ id }, sp, t, actor] = await Promise.all([params, searchParams, getTranslations("reportForm"), requireRole("student")]);
   let report;
   try { report = await getMyReport(db(), actor, id); } catch (e) { if (e instanceof NotFoundError) notFound(); throw e; }
-  const editable = report.status === "pending" || report.status === "needs_correction";
+  const editable = report.status !== "rejected"; // אחרי אישור אפשר לערוך: הדיווח חוזר לאישור הרכז
   const pls = await reportablePlacements(db(), actor);
   return (
     <main className="mx-auto w-full max-w-xl p-4">

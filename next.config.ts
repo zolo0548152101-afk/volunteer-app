@@ -6,6 +6,8 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 // הערה: cacheComponents ו-partialPrefetching (ברירת המחדל של התבנית) כבויים בכוונה.
 // האפליקציה דינמית כולה ומאחורי התחברות; המצב הקפדני רק מסבך את העבודה בשלב הזה.
 const nextConfig: NextConfig = {
+  // מסמך מצורף לדיווח עד 5MB (ברירת המחדל של server actions היא 1MB)
+  experimental: { serverActions: { bodySizeLimit: "6mb" } },
   async headers() {
     return [
       {
