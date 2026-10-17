@@ -37,3 +37,10 @@ export async function resolveLogin(db: Db, email: string, password: string) {
   }
   return null;
 }
+
+/** פונה מהטופס הפתוח שטרם עבר ראיון: סטודנט בלבד, עוד לא נכנס אי פעם, בלי ראיון שנסגר */
+export async function isApplicantAwaitingInterview(db: Db, u: { id: string; status: string; roles: string[] }): Promise<boolean> {
+  if (u.status !== "invited" || u.roles.length !== 1 || u.roles[0] !== "student") return false;
+  const r = await db.execute<{ n: number }>(sql`SELECT count(*)::int AS n FROM interviews WHERE student_id = ${u.id} AND kind = 'interview' AND status = 'finalized'`);
+  return (r.rows[0]?.n ?? 0) === 0;
+}

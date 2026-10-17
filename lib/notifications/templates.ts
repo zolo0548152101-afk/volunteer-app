@@ -12,6 +12,10 @@ export const TEMPLATES = {
     he: { subject: "הוזמנת למערכת המלגאים", body: "הוזמנת להצטרף למערכת. כדי לקבוע סיסמה ולהיכנס: {link}" },
     en: { subject: "You're invited to the scholarship system", body: "You were invited to join. To set a password and sign in: {link}" },
   },
+  "auth.interview_done": {
+    he: { subject: "הראיון הסתיים, אפשר להיכנס למערכת", body: "תודה על הראיון! השיבוץ שלך נקבע. כדי להיכנס למערכת, לראות את הפרטים ולדווח שעות, קובעים סיסמה בקישור: {link}" },
+    en: { subject: "Interview done: you can sign in now", body: "Thanks for the interview! Your placement is set. To sign in, see the details and report hours, set a password here: {link}" },
+  },
   "auth.reset": {
     he: { subject: "איפוס סיסמה", body: "התקבלה בקשה לאיפוס סיסמה. הקישור תקף לזמן קצר: {link}. אם לא ביקשתם, אפשר להתעלם." },
     en: { subject: "Password reset", body: "A password reset was requested. The link is valid for a short time: {link}. If it wasn't you, ignore this." },

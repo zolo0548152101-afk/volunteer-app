@@ -10,7 +10,7 @@ async function check(page: Page, path: string) {
   expect(bad.map((v) => `${path} ${v.id} (${v.impact}): ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(" | ")}`)).toEqual([]);
 }
 
-const PUBLIC = ["/login", "/register", "/forgot", "/accessibility"];
+const PUBLIC = ["/login", "/register", "/register/thanks", "/forgot", "/accessibility"];
 const BY_ROLE: Record<string, string[]> = {
   "student1@demo.test": ["/student", "/student/report", "/student/report?absence=1", "/student/reports", "/student/profile", "/places", "/certificate/ME"],
   "coord1@demo.test": ["/coordinator", "/reports", "/students", "/analytics", "/analytics/students", "/places"],

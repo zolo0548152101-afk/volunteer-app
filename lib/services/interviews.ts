@@ -191,7 +191,7 @@ export async function cancelInterview(db: Db, actor: SessionUser, interviewId: s
 /* ───────────── סגירה ───────────── */
 
 export type FinalizeInput = { coordinatorId?: string | null; overrideReason?: string | null };
-export type FinalizeResult = { coordinatorId: string; deactivated: number; activated: number; evaluation: ContractEvaluation };
+export type FinalizeResult = { coordinatorId: string; deactivated: number; activated: number; evaluation: ContractEvaluation; invite: { id: string; organizationId: string; email: string; locale: string } | null };
 
 export async function finalizeInterview(db: Db, actor: SessionUser, interviewId: string, input: FinalizeInput = {}): Promise<FinalizeResult> {
   const ctx = { organizationId: actor.organizationId, actorId: actor.id };
@@ -244,9 +244,11 @@ export async function finalizeInterview(db: Db, actor: SessionUser, interviewId:
   // הודעות אחרי הצלחת הטרנזקציה בלבד; notify לא זורק
   const { student, ...result } = out;
   const [coord] = await db.select({ email: users.email, locale: users.locale }).from(users).where(eq(users.id, result.coordinatorId));
-  await notify({ channel: "email", to: student.email, template: "placement.student", data: { interviewId }, locale: student.locale });
+  // פונה שעוד לא נכנס למערכת (נרשם בטופס הפתוח) מקבל קישור כניסה במקום הודעת שיבוץ: הקורא שולח אותו (sendLink)
+  const invite = student.status === "invited" ? { id: student.id, organizationId: student.organizationId, email: student.email, locale: student.locale } : null;
+  if (!invite) await notify({ channel: "email", to: student.email, template: "placement.student", data: { interviewId }, locale: student.locale });
   if (coord) await notify({ channel: "email", to: coord.email, template: "placement.coordinator", data: { studentId: student.id }, locale: coord.locale });
-  return result;
+  return { ...result, invite };
 }
 
 /* ───────────── תצוגות עזר ───────────── */

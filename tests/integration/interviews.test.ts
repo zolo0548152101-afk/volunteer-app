@@ -1,12 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { closeDb, db } from "@/lib/db";
-import { auditLog, interviews, placements, users } from "@/lib/db/schema";
+import { auditLog, interviews, placements, studentProfiles, users } from "@/lib/db/schema";
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { windowUsageRows } from "@/lib/db/queries/capacity";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
 import { evaluateContract, weeksRemaining } from "@/lib/services/capacity";
 import { updatePlace } from "@/lib/services/places";
+import { submitApplication } from "@/lib/services/students";
 import { placeTimeWindows, volunteerPlaces } from "@/lib/db/schema";
 import {
   cancelInterview, ContractError, finalizeInterview, getDraft, InterviewError, listCandidateWindows, listCoordinatorsWithLoad, saveDraft, startInterview, studentHistory,
@@ -135,7 +136,7 @@ describe("סגירת ראיון", () => {
     expect(ev.bank?.status).toBe("ok");
     await expect(finalizeInterview(db(), interviewer, id)).rejects.toMatchObject({ code: "need_coordinator" });
     const res = await finalizeInterview(db(), interviewer, id, { coordinatorId: c2.id });
-    expect(res).toMatchObject({ coordinatorId: c2.id, deactivated: 0 });
+    expect(res).toMatchObject({ coordinatorId: c2.id, deactivated: 0, invite: null }); // סטודנט פעיל לא מקבל הזמנה
     expect((await activeOf(lian)).length).toBe(res.activated);
     const [u] = await db().select().from(users).where(eq(users.id, lian));
     expect(u.coordinatorId).toBe(c2.id);
@@ -147,6 +148,18 @@ describe("סגירת ראיון", () => {
     // התפוסה במסד משקפת את החוזה
     const usage = await windowUsageRows(db(), s.organizationId);
     expect(usage.find((x) => x.windowId === s.windows.youthTue.id)!.allocatedSlots).toBeGreaterThanOrEqual(3);
+  });
+
+  it("פונה מהטופס הפתוח: סגירת הראיון מחזירה פרטי הזמנה (הקורא שולח קישור כניסה); סטודנט פעיל לא", async () => {
+    const email = `applicant${Date.now()}@t.test`;
+    await submitApplication(db(), s.organizationId, { firstName: "פונה", lastName: "חדש", email, phone: "0501112222", profile: { nationalId: "123456782", institution: "x", degreeType: "bachelor" }, custom: {} });
+    const [u] = await db().select().from(users).where(eq(users.email, email));
+    const [ref] = await db().select({ t: studentProfiles.trackId }).from(studentProfiles).where(eq(studentProfiles.userId, s.students[4].id));
+    await db().update(studentProfiles).set({ trackId: ref.t }).where(eq(studentProfiles.userId, u.id)); // השיוך למסלול נעשה בדרך כלל בהגדרות
+    const id = await startInterview(db(), interviewer, u.id, "interview");
+    await saveDraft(db(), interviewer, id, { fields: { summary: "מתאים", generalImpression: "suitable" }, lines: fitLines().slice(0, 1).map((l) => ({ ...l, timeWindowId: s.windows.eldersMorning.id, slots: 1, assignedDays: ["sun"] as typeof l.assignedDays })) });
+    const res = await finalizeInterview(db(), interviewer, id, { coordinatorId: c1.id });
+    expect(res.invite).toMatchObject({ id: u.id, email });
   });
 
   it("שיבוץ מחדש על ידי הרכז: הישנים הופכים ללא פעילים וההיסטוריה נשמרת", async () => {

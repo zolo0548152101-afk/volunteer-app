@@ -12,7 +12,7 @@ import { devLoginEnabled } from "@/lib/dev-login";
 import { users } from "@/lib/db/schema";
 import { hashPassword } from "@/lib/password";
 import { safeNext, sendLink } from "@/lib/services/auth-links";
-import { setPasswordFromToken } from "@/lib/services/credentials";
+import { isApplicantAwaitingInterview, setPasswordFromToken } from "@/lib/services/credentials";
 import { clientIp, isLimited, limitKey, recordAttempt } from "@/lib/services/rate-limit";
 import type { TokenKind } from "@/lib/services/tokens";
 
@@ -69,7 +69,11 @@ export async function requestResetAction(_: FormState, formData: FormData): Prom
     .from(users)
     .where(and(sql`lower(${users.email}) = ${parsed.data.toLowerCase()}`, inArray(users.status, ["active", "invited"])))
     .limit(5);
-  for (const u of matches) await sendLink(u, "password_reset");
+  for (const u of matches) {
+    // פונה שעוד לא עבר ראיון לא מקבל קישור כניסה בעצמו: הכניסה נפתחת רק אחרי הראיון
+    if (await isApplicantAwaitingInterview(db(), u)) continue;
+    await sendLink(u, "password_reset");
+  }
   return { done: true };
 }
 

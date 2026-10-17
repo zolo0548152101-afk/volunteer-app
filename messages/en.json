@@ -22,7 +22,7 @@
     "groupSettings": "Settings",
     "groupMe": "Mine",
     "queue": "Awaiting interview",
-    "customFields": "Add fields",
+    "customFields": "Form fields",
     "certificate": "Hours certificate",
     "more": "More",
     "mainNav": "Main navigation",
@@ -200,7 +200,7 @@
   },
   "register": {
     "title": "Sign up",
-    "subtitle": "Two minutes and you're in",
+    "subtitle": "One form, a few minutes. After we talk to you in an interview, we'll email you a link to sign in",
     "firstName": "First name",
     "lastName": "Last name",
     "email": "Email",
@@ -225,8 +225,20 @@
       "bad_name": "Name is required",
       "no_org": "Registration is closed right now",
       "generic": "Something went wrong. Try again in a moment",
-      "rate_limited": "Too many sign-up attempts. Please try again in an hour"
-    }
+      "rate_limited": "Too many sign-up attempts. Please try again in an hour",
+      "bad_email": "The email address isn't valid",
+      "incomplete": "Missing details: national ID, institution, degree type, or a required field",
+      "bad_id": "The national ID isn't valid",
+      "bad_date": "The date of birth isn't valid",
+      "bad_bank": "Bank details are invalid (digits only)"
+    },
+    "apply": "Submit application",
+    "section": {
+      "contact": "Contact details",
+      "more": "A few more questions"
+    },
+    "thanksTitle": "Thank you, we got it",
+    "thanksBody": "Your details were received. An interviewer will contact you. After the interview you'll get an email with a link to sign in."
   },
   "profile": {
     "title": "My profile",
@@ -436,7 +448,8 @@
     },
     "saveDetails": "Save",
     "bank": "Bank account",
-    "branch": "branch"
+    "branch": "branch",
+    "inviteFailed": "The interview is closed, but the sign-in email failed. You can resend it from Users"
   },
   "queue": {
     "title": "Awaiting interview",
@@ -657,13 +670,17 @@
     },
     "labelHe": "Hebrew name",
     "labelEn": "English name",
-    "sortOrder": "Order"
+    "sortOrder": "Order",
+    "edit": "Edit",
+    "currentBadge": "Current",
+    "inactiveBadge": "Inactive",
+    "hoursUnit": "hours"
   },
   "nav3": {
     "settings": "Settings"
   },
   "customFieldsAdmin": {
-    "title": "Add fields",
+    "title": "Form fields",
     "intro": "Pick the page, see what is already on it, and add a field. It shows up right away, without touching other forms",
     "saved": "Saved",
     "labelHe": "Hebrew name",

@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
+import { login } from "./helpers";
 
 try { process.loadEnvFile(".env.local"); } catch {}
 
@@ -14,59 +15,41 @@ test.afterAll(async () => {
   await closeDb();
 });
 
-test("הרשמת סטודנט מקצה לקצה, ואז הפרופיל שלי", async ({ page }) => {
-  const email = `e2e-reg-${Date.now()}@demo.test`;
+async function fillApplication(page: import("@playwright/test").Page, email: string) {
   await page.goto("/register");
   await page.getByLabel("שם פרטי").fill("נועה");
   await page.getByLabel("שם משפחה").fill("בדיקה");
   await page.getByLabel("אימייל").fill(email);
   await page.getByLabel("טלפון נייד").fill("050-123-4567");
-  await page.getByLabel("סיסמה (לפחות 8 תווים)").fill("longenough1");
-  await page.getByLabel("אימות סיסמה").fill("longenough1");
-  await page.getByRole("button", { name: "המשך" }).click();
-
-  await expect(page).toHaveURL(/\/student\/setup\/1$/);
-  await expect(page.getByText("שלב 1 מתוך 3")).toBeVisible();
-  // ת"ז לא תקינה: הדפדפן חוסם לפני שליחה, ולא מאבדים את מה שהוקלד
-  await page.getByLabel("תעודת זהות").fill("123456789");
+  await page.getByLabel("תעודת זהות").fill("123456782");
   await page.getByLabel("מוסד לימודים").fill("אוניברסיטת חיפה");
   await page.getByLabel("סוג תואר").selectOption("bachelor");
-  await page.getByRole("button", { name: "המשך" }).click();
-  await expect(page).toHaveURL(/\/student\/setup\/1$/);
-  expect(await page.getByLabel("תעודת זהות").evaluate((el: HTMLInputElement) => el.validationMessage)).toContain("תעודת הזהות לא תקין");
-  await expect(page.getByLabel("מוסד לימודים")).toHaveValue("אוניברסיטת חיפה");
-  await page.getByLabel("תעודת זהות").fill("123456782");
-  await page.getByRole("button", { name: "המשך" }).click();
-
-  await expect(page).toHaveURL(/\/student\/setup\/2$/);
-  await page.getByLabel("שני", { exact: true }).check();
-  await page.getByRole("button", { name: "המשך" }).click();
-
-  await expect(page).toHaveURL(/\/student\/setup\/3$/);
   await page.getByLabel("מספר חשבון").fill("12345678");
-  await page.getByRole("button", { name: "סיום ההרשמה" }).click();
+}
 
-  await expect(page).toHaveURL(/\/student$/);
-  await expect(page.getByText("מחכים שמראיין ייצור איתך קשר")).toBeVisible();
+test("טופס פתוח: שליחה בלי חשבון, אחר כך מופיע בתור של המראיין, ואי אפשר להיכנס", async ({ page }) => {
+  const email = `e2e-reg-${Date.now()}@demo.test`;
+  await fillApplication(page, email);
+  await page.getByRole("button", { name: "שליחת הרשמה" }).click();
+  await expect(page).toHaveURL(/\/register\/thanks$/);
+  await expect(page.getByText("מראיין ייצור איתך קשר")).toBeVisible();
 
-  await page.goto("/student/profile");
-  await expect(page.getByLabel("תעודת זהות")).toHaveValue("123456782");
-  await expect(page.getByLabel("שני", { exact: true })).toBeChecked();
-  await page.getByLabel("עיר מגורים").first().fill("חיפה");
-  await page.getByRole("button", { name: "שמירה" }).first().click();
-  await expect(page.getByLabel("עיר מגורים")).toHaveValue("חיפה");
+  // אין סיסמה: הכניסה נכשלת, ו"שכחתי סיסמה" לא עוקף את הראיון
+  await page.goto("/login");
+  await page.getByLabel("אימייל").fill(email);
+  await page.getByLabel("סיסמה").fill("anything123");
+  await page.getByRole("button", { name: "כניסה" }).click();
+  await expect(page).toHaveURL(/\/login/);
+
+  await login(page, "interviewer@demo.test");
+  await page.goto("/interviewer");
+  await expect(page.getByText("נועה בדיקה")).toBeVisible();
 });
 
-test("הרשמה עם מייל קיים: הודעה ברורה", async ({ page }) => {
-  await page.goto("/register");
-  await page.getByLabel("שם פרטי").fill("א");
-  await page.getByLabel("שם משפחה").fill("ב");
-  await page.getByLabel("אימייל").fill("student1@demo.test");
-  await page.getByLabel("טלפון נייד").fill("0501234567");
-  await page.getByLabel("סיסמה (לפחות 8 תווים)").fill("longenough1");
-  await page.getByLabel("אימות סיסמה").fill("longenough1");
-  await page.getByRole("button", { name: "המשך" }).click();
-  await expect(page.locator("p[role=alert]")).toContainText("כבר רשום");
+test("הגשה עם מייל קיים: אותו עמוד תודה, בלי לחשוף שהמייל רשום", async ({ page }) => {
+  await fillApplication(page, "student1@demo.test");
+  await page.getByRole("button", { name: "שליחת הרשמה" }).click();
+  await expect(page).toHaveURL(/\/register\/thanks$/);
 });
 
 test("אין גלילה אופקית בהרשמה", async ({ page }) => {

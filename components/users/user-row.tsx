@@ -8,27 +8,23 @@ export async function UserRow({ user, coordinatorName, self }: { user: SafeUser;
   const t = await getTranslations("users");
   const tr = await getTranslations("roles");
   return (
-    <li className="rounded-xl border border-border p-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div>
-          <p className="font-medium">{user.firstName} {user.lastName}</p>
-          <p className="text-sm text-muted" dir="ltr">{user.email}</p>
-        </div>
-        <span className="rounded-full border border-border px-2 py-0.5 text-xs">{t(`status.${user.status}`)}</span>
+    <li className="grid items-center gap-x-4 gap-y-1 py-2.5 md:grid-cols-[minmax(0,1.3fr)_auto_minmax(0,2.2fr)_auto]">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium">{user.firstName} {user.lastName}</p>
+        <p className="truncate text-xs text-muted" dir="ltr">{user.email}</p>
+        {user.roles.includes("student") && <p className="truncate text-xs text-muted">{t("coordinator")}: {coordinatorName ?? t("unassigned")}</p>}
       </div>
-      {user.roles.includes("student") && (
-        <p className="mt-1 text-sm text-muted">{t("coordinator")}: {coordinatorName ?? t("unassigned")}</p>
-      )}
-      <form action={setRolesAction} className="mt-2 flex flex-wrap items-center gap-3">
+      <span className="w-fit rounded-full border border-border px-2 py-0.5 text-xs">{t(`status.${user.status}`)}</span>
+      <form action={setRolesAction} className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <input type="hidden" name="userId" value={user.id} />
         {roles.map((r) => (
-          <label key={r} className="flex items-center gap-1 text-sm">
+          <label key={r} className="flex items-center gap-1 text-xs">
             <input type="checkbox" name="roles" value={r} defaultChecked={user.roles.includes(r)} /> {tr(r)}
           </label>
         ))}
-        <SubmitButton className="text-sm underline">{t("saveRoles")}</SubmitButton>
+        <SubmitButton className="text-xs underline">{t("saveRoles")}</SubmitButton>
       </form>
-      <div className="mt-2 flex gap-4 text-sm">
+      <div className="flex gap-3 text-xs">
         {user.status !== "active" || !self ? (
           <form action={resendInviteAction}>
             <input type="hidden" name="userId" value={user.id} />

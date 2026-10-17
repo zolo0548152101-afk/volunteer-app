@@ -33,11 +33,11 @@ export async function navFor(actor: SessionUser, pending: number): Promise<NavGr
         { href: "/students", label: t("students"), icon: "students" },
         { href: "/places", label: t("places"), icon: "places" },
         { href: "/interviewer", label: t("queue"), icon: "queue" },
+        { href: "/manager/users", label: t("users"), icon: "users" },
+        { href: "/manager/custom-fields", label: t("customFields"), icon: "fields" },
       ] },
       { label: t("groupSettings"), items: [
         { href: "/manager/settings", label: t("settings"), icon: "settings" },
-        { href: "/manager/custom-fields", label: t("customFields"), icon: "fields" },
-        { href: "/manager/users", label: t("users"), icon: "users" },
       ] },
     ];
   }

@@ -18,7 +18,7 @@ import { CustomFields } from "@/components/custom-fields/custom-fields";
 import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
 
-export default async function StudentCard({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; done?: string }> }) {
+export default async function StudentCard({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; done?: string; invite?: string }> }) {
   const [{ id }, sp, actor, t, ti, td, tdt, format] = await Promise.all([params, searchParams, requireActor(), getTranslations("studentCard"), getTranslations("interviews"), getTranslations("days"), getTranslations("degreeTypes"), getFormatter()]);
   let s, history;
   try {
@@ -43,6 +43,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{s.firstName} {s.lastName}</h1>
       {sp.done && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-3 text-sm text-ok-fg">{sp.done === "saved" ? t("saved") : t("done")}</Flash>}
+      {sp.invite === "failed" && <Flash tone="error" className="mt-2 rounded-lg border border-warn/50 bg-warn-bg p-3 text-sm text-warn-fg">{t("inviteFailed")}</Flash>}
       {errorKey && <Flash tone="error" className="mt-2 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{ti(`errors.${errorKey}`)}</Flash>}
       <div className="mt-3 flex flex-wrap gap-3">
         <Link href={`/certificate/${id}`} className="rounded-lg border border-border px-4 py-2">{ti("certificateLink")}</Link>

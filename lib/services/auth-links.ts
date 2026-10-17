@@ -13,13 +13,13 @@ function baseUrl() {
 export { safeNext } from "@/lib/safe-next";
 
 /** שולח קישור הזמנה / איפוס. לא פעולת שרת: נקרא רק מקוד שרת שכבר בדק הרשאה. */
-export async function sendLink(u: { id: string; organizationId: string; email: string; locale: string }, kind: "invite" | "password_reset"): Promise<NotifyResult> {
+export async function sendLink(u: { id: string; organizationId: string; email: string; locale: string }, kind: "invite" | "password_reset", opts: { template?: "auth.interview_done" } = {}): Promise<NotifyResult> {
   const raw = await issueToken(db(), { organizationId: u.organizationId, userId: u.id, kind });
   const path = kind === "invite" ? "invite" : "reset";
   const result = await notify({
     channel: "email",
     to: u.email,
-    template: kind === "invite" ? "auth.invite" : "auth.reset",
+    template: opts.template ?? (kind === "invite" ? "auth.invite" : "auth.reset"),
     data: { link: `${baseUrl()}/${path}?token=${raw}` },
     locale: isLocale(u.locale) ? u.locale : "he",
   });

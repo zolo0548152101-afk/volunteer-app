@@ -12,8 +12,8 @@ export function BulkAssign({ coordinators, students }: {
   const [state, action, pending] = useActionState<UserActionState, FormData>(assignCoordinatorAction, {});
   return (
     <form action={action} className="mt-3 flex flex-col gap-3">
-      <fieldset className="max-h-60 overflow-auto rounded-lg border border-border p-3">
-        <legend className="px-1 text-sm">{t("pickStudents")}</legend>
+      <fieldset className="grid max-h-48 gap-x-4 overflow-auto rounded-lg border border-border p-3 sm:grid-cols-2">
+        <legend className="px-1 text-xs text-muted">{t("pickStudents")}</legend>
         {students.length === 0 && <p className="text-sm text-muted">{t("noStudents")}</p>}
         {students.map((s) => (
           <label key={s.id} className="flex items-center gap-2 py-1 text-sm">

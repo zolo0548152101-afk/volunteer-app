@@ -20,26 +20,28 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const nameOf = new Map(list.map((u) => [u.id, `${u.firstName} ${u.lastName}`]));
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-4">
+    <main className="mx-auto w-full max-w-5xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       {error && ERRORS.includes(error) && <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{t(`errors.${error}` as never)}</Flash>}
 
-      <section className="mt-6" aria-labelledby="invite-h">
-        <h2 id="invite-h" className="text-lg font-medium">{t("inviteTitle")}</h2>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <section className="rounded-xl border border-border p-4" aria-labelledby="invite-h">
+        <h2 id="invite-h" className="text-base font-semibold">{t("inviteTitle")}</h2>
         <InviteForm coordinators={coordinators.map((c) => ({ id: c.id, name: nameOf.get(c.id)! }))} />
       </section>
 
-      <section className="mt-8" aria-labelledby="bulk-h">
-        <h2 id="bulk-h" className="text-lg font-medium">{t("bulkTitle")}</h2>
+      <section className="rounded-xl border border-border p-4" aria-labelledby="bulk-h">
+        <h2 id="bulk-h" className="text-base font-semibold">{t("bulkTitle")}</h2>
         <BulkAssign
           coordinators={coordinators.map((c) => ({ id: c.id, name: nameOf.get(c.id)! }))}
           students={students.map((s) => ({ id: s.id, name: nameOf.get(s.id)!, coordinator: s.coordinatorId ? nameOf.get(s.coordinatorId) ?? null : null }))}
         />
       </section>
+      </div>
 
-      <section className="mt-8" aria-labelledby="list-h">
-        <h2 id="list-h" className="text-lg font-medium">{t("listTitle", { count: list.length })}</h2>
-        <ul className="mt-3 flex flex-col gap-3">
+      <section className="mt-6" aria-labelledby="list-h">
+        <h2 id="list-h" className="text-base font-semibold">{t("listTitle", { count: list.length })}</h2>
+        <ul className="mt-2 divide-y divide-border rounded-xl border border-border px-4">
           {list.map((u) => (
             <UserRow key={u.id} user={u} coordinatorName={u.coordinatorId ? nameOf.get(u.coordinatorId) ?? null : null} self={u.id === actor.id} />
           ))}

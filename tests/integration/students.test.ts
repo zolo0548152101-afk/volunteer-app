@@ -5,8 +5,9 @@ import { auditLog, customFields, studentProfiles, users } from "@/lib/db/schema"
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
 import { CustomFieldError, listFields, loadValues, saveValues } from "@/lib/services/custom-fields";
-import { completeProfile, getMyProfile, getStudentForStaff, listAwaitingInterview, registerStudent, saveSection, saveStudentByStaff, StudentError } from "@/lib/services/students";
+import { completeProfile, getMyProfile, getStudentForStaff, listAwaitingInterview, registerStudent, saveSection, saveStudentByStaff, StudentError, submitApplication } from "@/lib/services/students";
 import { verifyPassword } from "@/lib/password";
+import { isApplicantAwaitingInterview, resolveLogin } from "@/lib/services/credentials";
 
 type Seed = Awaited<ReturnType<typeof seedDemo>>;
 let s: Seed;
@@ -189,5 +190,43 @@ describe("עריכת פרטי סטודנט על ידי צוות", () => {
     const [p] = await db().select().from(studentProfiles).where(eq(studentProfiles.userId, target.id));
     expect(p).toMatchObject({ nationalId: "123456782", bankName: "דיסקונט", bankAccount: "1234567" });
     await expect(saveStudentByStaff(db(), owner, target.id, "academic", { ...data, nationalId: "123456789" })).rejects.toMatchObject({ code: "bad_id" });
+  });
+});
+
+describe("טופס הרשמה פתוח (בלי חשבון)", () => {
+  const profile = { nationalId: "123456782", institution: "הטכניון", degreeType: "bachelor", availableDays: ["sun"], bankName: "לאומי", bankAccount: "1234567" };
+  // שדות חובה מותאמים שנוצרו בבדיקות למעלה חלים גם על הטופס הפתוח
+  const apply = async (email: string, over: Record<string, unknown> = {}) => {
+    const fields = await listFields(db(), { id: "", organizationId: s.organizationId, roles: ["student"] }, "student", "registration");
+    const custom = Object.fromEntries(fields.filter((f) => f.required && f.canEdit).map((f) => [f.id, [f.type === "number" ? "1" : f.options[0]?.key ?? "x"]]));
+    return submitApplication(db(), s.organizationId, { firstName: "דנה", lastName: "פונה", email, phone: "050-111-2222", profile, custom, ...over } as never);
+  };
+
+  it("יוצר פונה במצב הוזמן בלי סיסמה, עם פרופיל מלא (כולל בנק), שנכנס לתור הראיונות; אי אפשר להיכנס", async () => {
+    const email = `apply${Date.now()}@t.test`;
+    expect(await apply(email)).toEqual({ created: true });
+    const [u] = await db().select().from(users).where(eq(users.email, email));
+    expect(u).toMatchObject({ status: "invited", passwordHash: null, roles: ["student"] });
+    const [p] = await db().select().from(studentProfiles).where(eq(studentProfiles.userId, u.id));
+    expect(p).toMatchObject({ nationalId: "123456782", bankAccount: "1234567", institution: "הטכניון" });
+    expect(p.profileCompletedAt).not.toBeNull();
+    expect((await listAwaitingInterview(db(), interviewer)).some((x) => x.id === u.id)).toBe(true);
+    expect(await resolveLogin(db(), email, "whatever123")).toBeNull();
+    expect(await isApplicantAwaitingInterview(db(), u)).toBe(true);
+    expect(await isApplicantAwaitingInterview(db(), { ...u, status: "active" })).toBe(false);
+  });
+
+  it("מייל שכבר קיים: לא יוצר ולא חושף; ת״ז/מוסד/תואר חובה; מייל ושם תקינים", async () => {
+    expect(await apply("student1@demo.test")).toEqual({ created: false });
+    await expect(apply(`x${Date.now()}@t.test`, { profile: { institution: "x" } })).rejects.toMatchObject({ code: "incomplete" });
+    await expect(apply("not-an-email")).rejects.toMatchObject({ code: "bad_email" });
+    await expect(apply(`y${Date.now()}@t.test`, { firstName: " " })).rejects.toMatchObject({ code: "bad_name" });
+    await expect(apply(`z${Date.now()}@t.test`, { profile: { ...profile, nationalId: "123456789" } })).rejects.toMatchObject({ code: "bad_id" });
+  });
+
+  it("הגשות מקבילות לאותו מייל: נוצר אחד בלבד", async () => {
+    const email = `race${Date.now()}@t.test`;
+    const r = await Promise.all([apply(email), apply(email), apply(email)]);
+    expect(r.filter((x) => x.created)).toHaveLength(1);
   });
 });

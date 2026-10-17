@@ -8,14 +8,14 @@ import { academicYears, programs, studentProfiles, users } from "@/lib/db/schema
 import { assertCan, can, type SessionUser } from "@/lib/permissions";
 import { hashPassword } from "@/lib/password";
 import { audited } from "@/lib/services/audit";
-import { listFields, loadValues } from "@/lib/services/custom-fields";
+import { assertRequired, listFields, loadValues, saveValues } from "@/lib/services/custom-fields";
 import { NotFoundError, subjectOf } from "@/lib/services/users";
 import { isValidIsraeliId, normalizeIsraeliPhone } from "@/lib/validation/israel";
 import { DAYS, type Day } from "@/lib/services/places";
 import { clean } from "./_util";
 
 export class StudentError extends Error {
-  constructor(public code: "email_taken" | "weak_password" | "bad_phone" | "bad_id" | "bad_name" | "bad_date" | "no_org" | "bad_bank" | "incomplete") {
+  constructor(public code: "email_taken" | "weak_password" | "bad_phone" | "bad_id" | "bad_name" | "bad_date" | "no_org" | "bad_bank" | "incomplete" | "bad_email") {
     super(code);
     this.name = "StudentError";
   }
@@ -100,6 +100,51 @@ export async function getMyProfile(db: Db, actor: SessionUser): Promise<ProfileD
     bankAccount: p.bankAccount, accountOwner: p.accountOwner, bankDocument: p.bankDocument, profileCompletedAt: p.profileCompletedAt,
     trackName: row.trackName, targetHours: p.targetHoursOverride ?? row.trackHours ?? null, academicYearName: row.yearName, coordinatorName,
   };
+}
+
+export type ApplicationInput = {
+  firstName: string; lastName: string; email: string; phone: string; locale?: "he" | "en";
+  /** שדות הפרופיל מהטופס (אקדמי, העדפות, בנק), כפי ש-saveSection מקבל */
+  profile: Record<string, string | string[]>;
+  /** ערכי שדות מותאמים: מפתח = fieldId */
+  custom: Record<string, string[]>;
+};
+
+/**
+ * טופס הרשמה פתוח לתוכנית: יוצר פונה (סטודנט במצב "הוזמן", בלי סיסמה ובלי יכולת כניסה) עם פרופיל מלא,
+ * והוא נכנס לתור הראיונות. קישור כניסה נשלח רק אחרי שהראיון נסגר. מייל שכבר קיים: לא יוצר כלום ולא חושף זאת (created=false).
+ */
+export async function submitApplication(db: Db, organizationId: string, input: ApplicationInput): Promise<{ created: boolean }> {
+  const firstName = input.firstName.trim(), lastName = input.lastName.trim();
+  if (!firstName || !lastName) throw new StudentError("bad_name");
+  const phone = normalizeIsraeliPhone(input.phone);
+  if (!phone) throw new StudentError("bad_phone");
+  const email = input.email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) throw new StudentError("bad_email");
+  const patch = { ...buildPatch("academic", input.profile, true), ...buildPatch("prefs", input.profile, true), ...buildPatch("bank", input.profile, true) };
+  if (!patch.nationalId || !patch.institution || !patch.degreeType) throw new StudentError("incomplete");
+  const applicant = { id: "", organizationId, roles: ["student" as const] };
+  await assertRequired(db, applicant, "student", input.custom, "registration");
+  try {
+    return await db.transaction(async (tx) => {
+      const [dup] = await tx.select({ id: users.id }).from(users)
+        .where(and(eq(users.organizationId, organizationId), sql`lower(${users.email}) = ${email}`)).limit(1);
+      if (dup) return { created: false };
+      const [u] = await tx.insert(users).values({ organizationId, email, firstName, lastName, phone, passwordHash: null, roles: ["student"], status: "invited", locale: input.locale ?? "he" })
+        .returning({ id: users.id });
+      const [year] = await tx.select({ id: academicYears.id }).from(academicYears).where(and(eq(academicYears.organizationId, organizationId), eq(academicYears.isCurrent, true))).limit(1);
+      const progs = await tx.select({ id: programs.id }).from(programs).where(eq(programs.organizationId, organizationId)).limit(2);
+      await tx.insert(studentProfiles).values({ ...patch, userId: u.id, organizationId, academicYearId: year?.id ?? null, trackId: progs.length === 1 ? progs[0].id : null, profileCompletedAt: new Date() });
+      await saveValues(tx, { ...applicant, id: u.id }, "student", u.id, input.custom, { enforceRequired: true });
+      await audited(tx, { organizationId, actorId: u.id }, { entity: "user", entityId: u.id, action: "apply" }, async () => null, async () => ({ email, roles: ["student"], status: "invited" }));
+      return { created: true };
+    });
+  } catch (e) {
+    // שתי הגשות במקביל לאותו מייל: האינדקס הייחודי עוצר את השנייה. מבחוץ אין הבדל
+    const code = (x: unknown) => (typeof x === "object" && x ? (x as { code?: string }).code : undefined);
+    if (code(e) === "23505" || code((e as { cause?: unknown }).cause) === "23505") return { created: false };
+    throw e;
+  }
 }
 
 /** תאריך YYYY-MM-DD תקין, בעבר, גיל סביר */
@@ -236,7 +281,7 @@ export async function listAwaitingInterview(db: Db, actor: SessionUser) {
   const res = await db.execute<{ id: string; first_name: string; last_name: string; city: string | null; registered_at: Date }>(sql`
     SELECT u.id, u.first_name, u.last_name, sp.city, u.created_at AS registered_at
     FROM users u JOIN student_profiles sp ON sp.user_id = u.id
-    WHERE u.organization_id = ${actor.organizationId} AND u.status = 'active' AND sp.profile_completed_at IS NOT NULL
+    WHERE u.organization_id = ${actor.organizationId} AND u.status IN ('active', 'invited') AND sp.profile_completed_at IS NOT NULL
       AND NOT EXISTS (SELECT 1 FROM interviews i WHERE i.student_id = u.id AND i.status = 'finalized' AND i.kind = 'interview')
     ORDER BY u.created_at ASC`);
   return res.rows.map((r) => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, city: r.city, registeredAt: new Date(r.registered_at) }));

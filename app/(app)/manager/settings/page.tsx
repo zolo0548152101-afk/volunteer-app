@@ -7,28 +7,45 @@ import type { RuleKind } from "@/lib/services/reminders";
 import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
 
-const input = "rounded-lg border border-border bg-background px-3 py-2";
-const btn = "self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground";
+const input = "w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm";
+const btn = "self-end justify-self-start rounded-md bg-primary px-4 py-1.5 text-sm text-primary-foreground";
+const row = "grid items-end gap-x-3 gap-y-2 border-b border-border py-3 last:border-0";
+/** שורה מקופלת: תקציר + "עריכה" שפותחת את הטופס במקום. הוספה: כפתור "+" שפותח טופס ריק */
+function Disclosure({ summary, editLabel, add, children }: { summary: React.ReactNode; editLabel: string; add?: boolean; children: React.ReactNode }) {
+  return (
+    <details className={`group border-b border-border last:border-0 ${add ? "pt-3" : ""}`}>
+      <summary className={add
+        ? "flex w-fit cursor-pointer list-none items-center gap-1 rounded-md border border-dashed border-border px-3 py-1.5 text-sm text-primary hover:bg-card"
+        : "flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm"}>
+        {add ? <><span aria-hidden>＋</span>{summary}</> : <><span className="min-w-0 flex-1">{summary}</span><span className="rounded-md px-2 py-1 text-primary underline group-open:hidden">{editLabel}</span></>}
+      </summary>
+      <div className="pb-3">{children}</div>
+    </details>
+  );
+}
 const KNOWN = ["invalid", "bad_dates", "name_required", "bad_milestones", "not_found", "forbidden", "generic"];
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const [sp, t, actor] = await Promise.all([searchParams, getTranslations("settings"), requireRole("manager")]);
   const s = await loadAdminSettings(db(), actor);
   const current = s.years.find((y) => y.isCurrent);
-  const field = (label: string, node: React.ReactNode) => <label className="flex flex-col gap-1 text-sm">{label}{node}</label>;
+  const field = (label: string, node: React.ReactNode) => <label className="flex min-w-0 flex-col gap-1 text-xs text-muted">{label}{node}</label>;
   const section = (id: string, title: string, body: React.ReactNode) => (
-    <section id={id} className="mt-8 scroll-mt-4"><h2 className="text-lg font-medium">{title}</h2>{sp.saved === id && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-2 text-sm text-ok-fg">{t("saved")}</Flash>}{body}</section>
+    <section id={id} className="scroll-mt-16 rounded-xl border border-border p-4"><h2 className="text-base font-semibold">{title}</h2>{sp.saved === id && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-2 text-sm text-ok-fg">{t("saved")}</Flash>}{body}</section>
   );
   return (
-    <main className="mx-auto w-full max-w-3xl p-4">
+    <main className="mx-auto w-full max-w-5xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
+      <nav aria-label={t("title")} className="sticky top-0 z-10 -mx-4 mt-2 flex gap-1 overflow-x-auto border-b border-border bg-background px-4 py-2 text-sm">
+        {(["general", "year", "programs", "rules", "lookups"] as const).map((id) => <a key={id} href={`#${id}`} className="whitespace-nowrap rounded-md px-3 py-1.5 hover:bg-card">{t(id)}</a>)}
+      </nav>
+      <div className="mt-4 flex flex-col gap-4">
       {sp.error && KNOWN.includes(sp.error) && <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{t(`errors.${sp.error}`)}</Flash>}
 
       {section("general", t("general"), (
-        <form action={saveGeneralAction} className="mt-3 flex flex-col gap-3">
-          {field(t("tolerance"), <input name="tolerance" type="number" step="0.25" min="0" max="24" defaultValue={s.tolerance} className={input} />)}
-          <p className="text-xs text-muted">{t("toleranceHint")}</p>
-          <fieldset className="flex gap-4"><legend className="text-sm">{t("languages")}</legend>
+        <form action={saveGeneralAction} className="mt-2 grid items-end gap-3 sm:grid-cols-[12rem_auto_auto]">
+          {field(t("tolerance"), <input name="tolerance" title={t("toleranceHint")} type="number" step="0.25" min="0" max="24" defaultValue={s.tolerance} className={input} />)}
+                    <fieldset className="flex gap-4"><legend className="mb-1 text-xs text-muted">{t("languages")}</legend>
             {(["he", "en"] as const).map((l) => <label key={l} className="flex items-center gap-1 text-sm"><input type="checkbox" name="languages" value={l} defaultChecked={s.languages.includes(l)} />{t(`lang.${l}`)}</label>)}
           </fieldset>
           <SubmitButton className={btn}>{t("save")}</SubmitButton>
@@ -36,63 +53,79 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       ))}
 
       {section("year", t("year"), (
-        <div className="mt-3 flex flex-col gap-4">
+        <div className="mt-1 flex flex-col">
           {[...(current ? [current] : []), ...s.years.filter((y) => !y.isCurrent)].map((y) => (
-            <form key={y.id} action={saveYearAction} className="grid grid-cols-2 gap-3 rounded-xl border border-border p-3">
-              <input type="hidden" name="id" value={y.id} />
-              {field(t("yearName"), <input name="name" required defaultValue={y.name} className={input} />)}
-              {field(t("reportDeadline"), <input name="reportDeadline" type="date" defaultValue={y.reportDeadline ?? ""} className={input} />)}
-              {field(t("startDate"), <input name="startDate" type="date" required defaultValue={String(y.startDate)} className={input} />)}
-              {field(t("endDate"), <input name="endDate" type="date" required defaultValue={String(y.endDate)} className={input} />)}
-              <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" name="makeCurrent" defaultChecked={y.isCurrent} />{t("isCurrent")}</label>
-              <SubmitButton className={btn}>{t("save")}</SubmitButton>
-            </form>
+            <Disclosure key={y.id} editLabel={t("edit")} summary={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><b>{y.name}</b><span className="text-muted">{String(y.startDate)} – {String(y.endDate)}</span>{y.isCurrent && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{t("currentBadge")}</span>}</span>}>
+              <form action={saveYearAction} className={`${row} grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr_auto_auto]`}>
+                <input type="hidden" name="id" value={y.id} />
+                {field(t("yearName"), <input name="name" required defaultValue={y.name} className={input} />)}
+                {field(t("reportDeadline"), <input name="reportDeadline" type="date" defaultValue={y.reportDeadline ?? ""} className={input} />)}
+                {field(t("startDate"), <input name="startDate" type="date" required defaultValue={String(y.startDate)} className={input} />)}
+                {field(t("endDate"), <input name="endDate" type="date" required defaultValue={String(y.endDate)} className={input} />)}
+                <label className="flex items-center gap-2 pb-1.5 text-sm"><input type="checkbox" name="makeCurrent" defaultChecked={y.isCurrent} />{t("isCurrent")}</label>
+                <SubmitButton className={btn}>{t("save")}</SubmitButton>
+              </form>
+            </Disclosure>
           ))}
-          <form action={saveYearAction} className="grid grid-cols-2 gap-3 rounded-xl border border-dashed border-border p-3">
-            <h3 className="col-span-2 font-medium">{t("newYear")}</h3>
-            {field(t("yearName"), <input name="name" required className={input} />)}
-            {field(t("reportDeadline"), <input name="reportDeadline" type="date" className={input} />)}
-            {field(t("startDate"), <input name="startDate" type="date" required className={input} />)}
-            {field(t("endDate"), <input name="endDate" type="date" required className={input} />)}
-            <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" name="makeCurrent" />{t("isCurrent")}</label>
-            <SubmitButton className={btn}>{t("add")}</SubmitButton>
-          </form>
+          <Disclosure add summary={t("newYear")} editLabel="">
+            <form action={saveYearAction} className={`${row} grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr_auto_auto]`}>
+              {field(t("yearName"), <input name="name" required className={input} />)}
+              {field(t("reportDeadline"), <input name="reportDeadline" type="date" className={input} />)}
+              {field(t("startDate"), <input name="startDate" type="date" required className={input} />)}
+              {field(t("endDate"), <input name="endDate" type="date" required className={input} />)}
+              <label className="flex items-center gap-2 pb-1.5 text-sm"><input type="checkbox" name="makeCurrent" />{t("isCurrent")}</label>
+              <SubmitButton className={btn}>{t("add")}</SubmitButton>
+            </form>
+          </Disclosure>
         </div>
       ))}
 
       {section("programs", t("programs"), (
-        <div className="mt-3 flex flex-col gap-4">
-          {[...s.programs, null].map((p) => (
-            <form key={p?.id ?? "new"} action={saveProgramAction} className={`grid grid-cols-2 gap-3 rounded-xl border p-3 ${p ? "border-border" : "border-dashed border-border"}`}>
-              {p ? <input type="hidden" name="id" value={p.id} /> : <h3 className="col-span-2 font-medium">{t("newProgram")}</h3>}
-              {field(t("programName"), <input name="name" required defaultValue={p?.name} className={input} />)}
-              {field(t("requiredHours"), <input name="requiredHours" type="number" step="0.5" min="0" required defaultValue={p ? Number(p.requiredHours) : ""} className={input} />)}
-              {field(t("maxHoursPerDay"), <input name="maxHoursPerDay" type="number" step="0.5" min="0" max="24" defaultValue={p?.maxHoursPerDay != null ? Number(p.maxHoursPerDay) : ""} className={input} />)}
-              <label className="flex items-center gap-2 self-end text-sm"><input type="checkbox" name="isActive" defaultChecked={p?.isActive ?? true} />{t("active")}</label>
-              <label className="col-span-2 flex flex-col gap-1 text-sm">{t("milestones")}<textarea name="milestones" rows={3} defaultValue={(p?.milestones ?? []).map((m) => `${m.hours}: ${m.label}`).join("\n")} className={input} /><span className="text-xs text-muted">{t("milestonesHint")}</span></label>
-              <SubmitButton className={btn}>{p ? t("save") : t("add")}</SubmitButton>
-            </form>
+        <div className="mt-1 flex flex-col">
+          {s.programs.map((p) => (
+            <Disclosure key={p.id} editLabel={t("edit")} summary={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><b>{p.name}</b><span className="text-muted">{Number(p.requiredHours)} {t("hoursUnit")}{p.maxHoursPerDay != null ? ` · ${t("maxHoursPerDay")}: ${Number(p.maxHoursPerDay)}` : ""}</span>{!p.isActive && <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted">{t("inactiveBadge")}</span>}</span>}>
+              <form action={saveProgramAction} className={`${row} grid-cols-2 lg:grid-cols-[1.5fr_.8fr_.8fr_auto_1.6fr_auto]`}>
+                <input type="hidden" name="id" value={p.id} />
+                {field(t("programName"), <input name="name" required defaultValue={p.name} className={input} />)}
+                {field(t("requiredHours"), <input name="requiredHours" type="number" step="0.5" min="0" required defaultValue={Number(p.requiredHours)} className={input} />)}
+                {field(t("maxHoursPerDay"), <input name="maxHoursPerDay" type="number" step="0.5" min="0" max="24" defaultValue={p.maxHoursPerDay != null ? Number(p.maxHoursPerDay) : ""} className={input} />)}
+                <label className="flex items-center gap-2 pb-1.5 text-sm"><input type="checkbox" name="isActive" defaultChecked={p.isActive} />{t("active")}</label>
+                <label className="col-span-2 flex flex-col gap-1 text-xs text-muted lg:col-span-1">{t("milestones")}<textarea name="milestones" rows={2} placeholder="45: פעימה 1" title={t("milestonesHint")} defaultValue={p.milestones.map((m) => `${m.hours}: ${m.label}`).join("\n")} className={input} /></label>
+                <SubmitButton className={btn}>{t("save")}</SubmitButton>
+              </form>
+            </Disclosure>
           ))}
+          <Disclosure add summary={t("newProgram")} editLabel="">
+              <form action={saveProgramAction} className={`${row} grid-cols-2 lg:grid-cols-[1.5fr_.8fr_.8fr_auto_1.6fr_auto]`}>
+                
+                {field(t("programName"), <input name="name" required defaultValue={undefined} className={input} />)}
+                {field(t("requiredHours"), <input name="requiredHours" type="number" step="0.5" min="0" required defaultValue={""} className={input} />)}
+                {field(t("maxHoursPerDay"), <input name="maxHoursPerDay" type="number" step="0.5" min="0" max="24" defaultValue={""} className={input} />)}
+                <label className="flex items-center gap-2 pb-1.5 text-sm"><input type="checkbox" name="isActive" defaultChecked={true} />{t("active")}</label>
+                <label className="col-span-2 flex flex-col gap-1 text-xs text-muted lg:col-span-1">{t("milestones")}<textarea name="milestones" rows={2} placeholder="45: פעימה 1" title={t("milestonesHint")} defaultValue={""} className={input} /></label>
+                <SubmitButton className={btn}>{t("add")}</SubmitButton>
+              </form>
+          </Disclosure>
         </div>
       ))}
 
       {section("rules", t("rules"), (
-        <div className="mt-3 flex flex-col gap-4">
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
           {(Object.keys(s.rules) as RuleKind[]).map((k) => {
             const r = s.rules[k];
             return (
-              <form key={k} action={saveRuleAction} className="grid grid-cols-2 gap-3 rounded-xl border border-border p-3">
+              <form key={k} action={saveRuleAction} className="grid grid-cols-3 content-start gap-x-3 gap-y-2 rounded-lg border border-border p-3">
                 <input type="hidden" name="kind" value={k} />
-                <h3 className="col-span-2 font-medium">{t(`ruleKind.${k}`)}</h3>
-                <p className="col-span-2 text-xs text-muted">{t(`ruleHint.${k}`)}</p>
-                <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked={r.enabled} />{t("ruleEnabled")}</label>
+                <h3 className="col-span-3 text-sm font-medium">{t(`ruleKind.${k}`)}</h3>
+                <p className="col-span-3 text-xs text-muted">{t(`ruleHint.${k}`)}</p>
+                <label className="col-span-3 flex items-center gap-2 text-sm"><input type="checkbox" name="enabled" defaultChecked={r.enabled} />{t("ruleEnabled")}</label>
                 {k !== "coordinator_digest" && <>
                   {field(t("firstAfterDays"), <input name="firstAfterDays" type="number" min="0" max="365" defaultValue={r.firstAfterDays} className={input} />)}
                   {field(t("maxSends"), <input name="maxSends" type="number" min="1" max="20" defaultValue={r.maxSends} className={input} />)}
                   {field(t("repeatEveryDays"), <input name="repeatEveryDays" type="number" min="1" max="365" defaultValue={r.repeatEveryDays} className={input} />)}
                 </>}
                 {k === "coordinator_digest" && <><input type="hidden" name="firstAfterDays" value={r.firstAfterDays} /><input type="hidden" name="maxSends" value={r.maxSends} /><input type="hidden" name="repeatEveryDays" value={r.repeatEveryDays} /></>}
-                <fieldset className="col-span-2 flex flex-wrap gap-4"><legend className="text-sm">{t("channels")}</legend>
+                <fieldset className="col-span-3 flex flex-wrap gap-4"><legend className="mb-1 text-xs text-muted">{t("channels")}</legend>
                   {(["email", "sms", "whatsapp"] as const).map((c) => <label key={c} className="flex items-center gap-1 text-sm"><input type="checkbox" name="channels" value={c} defaultChecked={r.channels.includes(c)} />{t(`channel.${c}`)}</label>)}
                 </fieldset>
                 {k !== "coordinator_digest" && <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" name="copyManager" defaultChecked={r.copyManager} />{t("copyManager")}</label>}
@@ -104,34 +137,35 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       ))}
 
       {section("lookups", t("lookups"), (
-        <div className="mt-3 flex flex-col gap-6">
+        <div className="mt-3 grid gap-4 lg:grid-cols-2">
           {LOOKUP_KINDS.map((kind) => (
-            <div key={kind}>
-              <h3 className="font-medium">{t(`lookupKind.${kind}`)}</h3>
-              <ul className="mt-2 flex flex-col gap-2">
+            <div key={kind} className="rounded-lg border border-border p-3">
+              <h3 className="text-sm font-medium">{t(`lookupKind.${kind}`)}</h3>
+              <ul className="mt-2 flex flex-col gap-1.5">
                 {s.lookups[kind].map((l) => (
                   <li key={l.id}>
-                    <form action={saveLookupAction} className="grid grid-cols-2 items-end gap-2 text-sm sm:grid-cols-[1fr_1fr_5rem_auto_auto]">
+                    <form action={saveLookupAction} className="grid grid-cols-[1fr_1fr_3.5rem_auto_auto] items-center gap-1.5 text-sm">
                       <input type="hidden" name="id" value={l.id} /><input type="hidden" name="kind" value={kind} />
                       <input name="labelHe" aria-label={t("labelHe")} required defaultValue={l.labelHe} className={input} />
                       <input name="labelEn" aria-label={t("labelEn")} defaultValue={l.labelEn ?? ""} className={input} dir="ltr" />
                       <input name="sortOrder" type="number" aria-label={t("sortOrder")} defaultValue={l.sortOrder} className={input} />
                       <label className="flex items-center gap-1"><input type="checkbox" name="isActive" defaultChecked={l.isActive} />{t("active")}</label>
-                      <SubmitButton className="rounded-lg border border-border px-3 py-2">{t("save")}</SubmitButton>
+                      <SubmitButton className="rounded-md border border-border px-3 py-1.5 text-sm">{t("save")}</SubmitButton>
                     </form>
                   </li>
                 ))}
               </ul>
-              <form action={saveLookupAction} className="mt-2 grid grid-cols-2 items-end gap-2 text-sm sm:grid-cols-[1fr_1fr_auto]">
+              <form action={saveLookupAction} className="mt-2 grid grid-cols-[1fr_1fr_auto] items-center gap-1.5 border-t border-border pt-2 text-sm">
                 <input type="hidden" name="kind" value={kind} />
                 <input name="labelHe" aria-label={t("labelHe")} placeholder={t("labelHe")} required className={input} />
                 <input name="labelEn" aria-label={t("labelEn")} placeholder={t("labelEn")} className={input} dir="ltr" />
-                <SubmitButton className="rounded-lg border border-border px-3 py-2">{t("add")}</SubmitButton>
+                <SubmitButton className="rounded-md border border-border px-3 py-1.5 text-sm">{t("add")}</SubmitButton>
               </form>
             </div>
           ))}
         </div>
       ))}
+      </div>
     </main>
   );
 }

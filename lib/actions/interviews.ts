@@ -9,6 +9,7 @@ import { defaultWeeklyHours, round2 } from "@/lib/services/capacity";
 import { DAYS, type Day } from "@/lib/services/places";
 import { NotFoundError } from "@/lib/services/users";
 import { loadWindows } from "@/lib/db/queries/capacity";
+import { sendLink } from "@/lib/services/auth-links";
 import { numOrNull, str } from "./_form";
 
 function code(e: unknown): string {
@@ -93,8 +94,10 @@ export async function finalizeAction(fd: FormData) {
     // שומר את מה שמוצג בטופס לפני הסגירה, כדי שהסגירה תבוצע על מה שהמשתמש רואה
     await saveDraft(db(), actor, id, { fields: fieldsOf(fd), lines: linesOf(fd) });
     const d = await getDraft(db(), actor, id);
-    await finalizeInterview(db(), actor, id, { coordinatorId: str(fd, "coordinatorId") || null, overrideReason: str(fd, "overrideReason") });
-    return `/students/${d.interview.studentId}?done=1`;
+    const res = await finalizeInterview(db(), actor, id, { coordinatorId: str(fd, "coordinatorId") || null, overrideReason: str(fd, "overrideReason") });
+    // פונה מהטופס הפתוח מקבל עכשיו קישור כניסה. כשל במייל לא מבטל את הסגירה (הראיון כבר נסגר): מוצג למראיין, ואפשר לשלוח שוב ממסך המשתמשים
+    const sent = res.invite ? await sendLink(res.invite, "invite", { template: "auth.interview_done" }) : null;
+    return `/students/${d.interview.studentId}?done=1${sent && !sent.ok ? "&invite=failed" : ""}`;
   });
 }
 
