@@ -9,11 +9,14 @@ import { requireActor } from "@/lib/session";
 import { sendLink } from "@/lib/services/auth-links";
 import { assignCoordinator, getUser, inviteUser, NotFoundError, setRoles, subjectOf, setStatus, ValidationError } from "@/lib/services/users";
 
+class EmailFailedError extends Error {}
+
 export type UserActionState = { ok?: true; error?: string };
 
 function toError(e: unknown): UserActionState {
   if (e instanceof ForbiddenError) return { error: "forbidden" };
   if (e instanceof NotFoundError) return { error: "not_found" };
+  if (e instanceof EmailFailedError) return { error: "email_failed" };
   if (e instanceof ValidationError) return { error: e.code };
   if (e instanceof z.ZodError) return { error: "required" };
   console.error(e);
@@ -36,9 +39,10 @@ export async function inviteUserAction(_: UserActionState, fd: FormData): Promis
     const user = await inviteUser(db(), actor, {
       ...v, phone: v.phone || null, roles: rolesOf(fd), coordinatorId: String(fd.get("coordinatorId") || "") || null,
     });
-    await sendLink(user, "invite");
+    const sent = await sendLink(user, "invite");
     revalidatePath("/manager/users");
-    return { ok: true };
+    // המשתמש נוצר, אבל המייל לא יצא: לא מציגים הצלחה ("שליחה מחדש" מהרשימה)
+    return sent.ok ? { ok: true } : { error: "email_failed" };
   } catch (e) {
     return toError(e);
   }
@@ -61,7 +65,8 @@ export async function resendInviteAction(fd: FormData) {
     const u = await getUser(db(), actor, String(fd.get("userId")));
     assertCan(actor, "manage", "user", subjectOf(u));
     if (u.status === "inactive") throw new ForbiddenError();
-    await sendLink(u, u.status === "invited" ? "invite" : "password_reset");
+    const sent = await sendLink(u, u.status === "invited" ? "invite" : "password_reset");
+    if (!sent.ok) throw new EmailFailedError();
   });
 }
 

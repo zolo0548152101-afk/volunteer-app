@@ -9,7 +9,7 @@ import { BulkAssign } from "@/components/users/bulk-assign";
 import { UserRow } from "@/components/users/user-row";
 import { Flash } from "@/components/flash";
 
-const ERRORS = ["forbidden", "not_found", "email_taken", "bad_roles", "bad_coordinator", "not_student", "last_manager", "self_lockout", "required", "generic"];
+const ERRORS = ["forbidden", "not_found", "email_taken", "bad_roles", "bad_coordinator", "not_student", "last_manager", "self_lockout", "required", "email_failed", "generic"];
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const actor = await requireRole("manager");

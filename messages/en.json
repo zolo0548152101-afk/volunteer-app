@@ -129,6 +129,7 @@
       "last_manager": "At least one active manager must remain",
       "self_lockout": "You can't deactivate yourself",
       "required": "Required fields are missing",
+      "email_failed": "The email wasn't sent (the user is saved). Try 'Resend' from the list",
       "generic": "Something went wrong. Try again in a moment"
     }
   },
