@@ -538,7 +538,7 @@
     "clearFilters": "Clear filters",
     "pick": "Select for bulk approval: {student}",
     "bulkApprove": "Approve selected as reported",
-    "bulkHint": "Tick reports and approve them in one go. To change hours, approve each report on its own",
+    "bulkHint": "Tick reports and approve them in one go. To change hours, or for absences, approve each report on its own",
     "bulkDone": "{n} reports approved",
     "bulkPartial": "{n} reports approved, {failed} were not (already handled or not yours)",
     "bulkNone": "No reports selected"

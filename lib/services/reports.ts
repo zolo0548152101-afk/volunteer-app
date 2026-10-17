@@ -221,10 +221,17 @@ export async function inboxFilterOptions(db: Db, actor: SessionUser, status: Rep
  * אישור מרובה של דיווחים ממתינים, בשעות שדווחו. כל דיווח באותה טרנזקציה משלו: דיווח שנכשל
  * (טופל כבר, לא בהיקף הרכז) לא מפיל את האחרים.
  */
-export async function approveMany(db: Db, actor: SessionUser, ids: string[]): Promise<{ approved: number; failed: number }> {
-  let approved = 0, failed = 0;
+export async function approveMany(db: Db, actor: SessionUser, ids: string[]): Promise<{ approved: number; failed: number; skipped: number }> {
+  let approved = 0, failed = 0, skipped = 0;
   const perStudent = new Map<string, number>();
-  for (const id of [...new Set(ids)].slice(0, 200)) {
+  const unique = [...new Set(ids)].slice(0, 200);
+  // היעדרות דורשת החלטת רכז אם נספרת ליעד: לא מאשרים אותה במרוכז
+  const absences = new Set(
+    unique.length === 0 ? [] : (await db.select({ id: hourReports.id }).from(hourReports)
+      .where(and(inArray(hourReports.id, unique), eq(hourReports.organizationId, actor.organizationId), eq(hourReports.reportType, "absence")))).map((r) => r.id),
+  );
+  for (const id of unique) {
+    if (absences.has(id)) { skipped++; continue; }
     try {
       const out = await applyDecision(db, actor, id, { kind: "approve" });
       approved++;
@@ -237,7 +244,7 @@ export async function approveMany(db: Db, actor: SessionUser, ids: string[]): Pr
   for (const [studentId, count] of perStudent) {
     await notifyUser(db, studentId, count === 1 ? "report.approved" : "report.approved_many", { count });
   }
-  return { approved, failed };
+  return { approved, failed, skipped };
 }
 
 /* ───────────── החלטת הרכז ───────────── */

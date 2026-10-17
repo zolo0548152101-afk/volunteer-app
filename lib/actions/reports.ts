@@ -67,9 +67,9 @@ export async function decideAction(fd: FormData) {
 export async function bulkApproveAction(fd: FormData) {
   const back = safeBack(str(fd, "back"), "/reports");
   const ids = fd.getAll("ids").map(String).filter(Boolean);
-  let result = { approved: 0, failed: 0 };
+  let result = { approved: 0, failed: 0, skipped: 0 };
   let error: string | undefined;
   try { if (ids.length > 0) result = await approveMany(db(), await requireActor(), ids); } catch (e) { error = code(e); }
   const sep = back.includes("?") ? "&" : "?";
-  redirect(error ? `${back}${sep}error=${error}` : `${back}${sep}bulk=${result.approved}-${result.failed}`);
+  redirect(error ? `${back}${sep}error=${error}` : `${back}${sep}bulk=${result.approved}-${result.failed + result.skipped}`);
 }

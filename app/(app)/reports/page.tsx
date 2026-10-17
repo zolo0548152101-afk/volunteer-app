@@ -70,7 +70,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
         {list.map((r) => (
           <li key={r.id} id={r.id} className="rounded-xl border border-border p-3 text-sm">
             <p className="flex flex-wrap items-center gap-x-2 font-medium">
-              {status === "pending" && <input type="checkbox" name="ids" value={r.id} form="bulk" aria-label={t("pick", { student: r.studentName })} className="size-5" />}
+              {status === "pending" && r.reportType !== "absence" && <input type="checkbox" name="ids" value={r.id} form="bulk" aria-label={t("pick", { student: r.studentName })} className="size-5" />}
               <Link href={`/students/${r.studentId}`} className="underline">{r.studentName}</Link> · {date(r.volunteerDate)}</p>
             <p>{r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} · ${r.windowLabel ?? ""}`}</p>
             <p>{t("reported", { n: r.reportedHours })}{r.startTime && r.endTime ? <> · <span dir="ltr">{r.startTime.slice(0, 5)}–{r.endTime.slice(0, 5)}</span></> : ""}{r.status === "approved" ? ` · ${t("approved", { n: r.approvedHours })}` : ""}</p>

@@ -222,12 +222,12 @@ describe("תיבת הרכז: היקף ב-SQL, מסננים ואישור מרוב
   it("אישור מרובה: מאשר בשעות שדווחו; דיווח שכבר טופל או של רכז אחר נספר ככישלון ולא מפיל את השאר", async () => {
     await decide(db(), c1, b, { kind: "approve" }); // b כבר טופל
     const r = await approveMany(db(), c1, [a, b, "00000000-0000-0000-0000-000000000000"]);
-    expect(r).toEqual({ approved: 1, failed: 2 });
+    expect(r).toEqual({ approved: 1, failed: 2, skipped: 0 });
     const [ra] = await db().select().from(hourReports).where(eq(hourReports.id, a));
     expect(ra).toMatchObject({ status: "approved", approvedHours: ra.reportedHours });
     // רכז אחר לא מאשר דיווח של סטודנט שאינו שלו
     const c = await submitReport(db(), st, vol({ volunteerDate: daysAgo(15) }));
-    expect(await approveMany(db(), c2, [c])).toEqual({ approved: 0, failed: 1 });
+    expect(await approveMany(db(), c2, [c])).toEqual({ approved: 0, failed: 1, skipped: 0 });
   });
 
   it("אישור מרובה שולח הודעה אחת לסטודנט (מאוחדת), לא אחת לכל דיווח", async () => {
@@ -236,9 +236,17 @@ describe("תיבת הרכז: היקף ב-SQL, מסננים ואישור מרוב
     const sent: NotifyInput[] = [];
     registerProvider("email", { async send(i) { sent.push(i); } });
     try {
-      expect(await approveMany(db(), c1, [x, y])).toEqual({ approved: 2, failed: 0 });
+      expect(await approveMany(db(), c1, [x, y])).toEqual({ approved: 2, failed: 0, skipped: 0 });
     } finally { resetProviders(); }
     expect(sent).toHaveLength(1);
     expect(sent[0]).toMatchObject({ template: "report.approved_many", data: { count: 2 } });
+  });
+
+  it("אישור מרובה מדלג על היעדרות (הרכז מחליט אם נספרת ליעד)", async () => {
+    const abs = await submitReport(db(), st, { type: "absence", volunteerDate: daysAgo(6), reportedHours: 4, absenceReason: "reserve_duty" });
+    const v = await submitReport(db(), st, vol({ volunteerDate: daysAgo(7) }));
+    expect(await approveMany(db(), c1, [abs, v])).toEqual({ approved: 1, failed: 0, skipped: 1 });
+    const [ra] = await db().select().from(hourReports).where(eq(hourReports.id, abs));
+    expect(ra.status).toBe("pending");
   });
 });
