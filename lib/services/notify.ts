@@ -28,11 +28,17 @@ export interface Provider {
   send(input: NotifyInput): Promise<void>;
 }
 
+/** קישורי הזמנה/איפוס מכילים טוקן: לא נכתבים ללוגים (בפרוייקט ב-Vercel הלוגים נגישים לכל חבר צוות) */
+const SENSITIVE_KEYS = new Set(["link", "token", "url"]);
+export function redactData(data: Record<string, unknown> | undefined) {
+  return Object.fromEntries(Object.entries(data ?? {}).map(([k, v]) => [k, SENSITIVE_KEYS.has(k) ? "[redacted]" : v]));
+}
+
 const consoleProvider: Provider = {
   async send(input) {
     console.info(
       `[notify:${input.channel}] → ${input.to} · ${input.template} (${input.locale}) · ${input.subject ?? ""}`,
-      input.data ?? {},
+      redactData(input.data),
     );
   },
 };
@@ -41,7 +47,11 @@ const consoleProvider: Provider = {
 const defaultEmail: Provider = {
   async send(input) {
     const key = process.env.RESEND_API_KEY;
-    if (!key) return consoleProvider.send(input);
+    if (!key) {
+      // בייצור בלי ספק אמיתי: לא מעמידים פנים ששלחנו
+      if (process.env.VERCEL_ENV === "production") throw new Error("no_provider");
+      return consoleProvider.send(input);
+    }
     return resendProvider(key, process.env.EMAIL_FROM || DEFAULT_FROM).send(input);
   },
 };
