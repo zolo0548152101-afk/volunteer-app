@@ -8,7 +8,7 @@ export const limitKey = (kind: string, value: string) => `${kind}:${createHash("
 
 /** האם כבר היו {max} ניסיונות או יותר בחלון האחרון */
 export async function isLimited(db: Db, key: string, max: number, windowSec: number, now = new Date()): Promise<boolean> {
-  if (process.env.DISABLE_RATE_LIMIT === "1") return false; // רק לסביבת בדיקות e2e: כל הכניסות מאותה כתובת
+  if (process.env.DISABLE_RATE_LIMIT === "1" && process.env.VERCEL_ENV !== "production") return false; // רק לסביבת בדיקות e2e: כל הכניסות מאותה כתובת
   const since = new Date(now.getTime() - windowSec * 1000);
   const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(authAttempts).where(and(eq(authAttempts.key, key), gt(authAttempts.createdAt, since)));
   return n >= max;

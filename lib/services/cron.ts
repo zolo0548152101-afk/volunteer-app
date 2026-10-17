@@ -49,7 +49,12 @@ async function logSend(tx: Db | Tx, orgId: string, kind: string, entityId: strin
   // הקריאה מעבירה את ה-db (לא את הטרנזקציה): הרישום נקלט מיד, כך שכשל מאוחר בהרצה (אחרי שליחה שכבר יצאה) לא מוחק אותו והשליחה לא תחזור בהרצה הבאה.
   // הנעילה (advisory, ברמת הטרנזקציה) ממשיכה לחסום הרצה מקבילה
   // sentAt = זמן ההרצה (לא שעון המסד), כדי שהרצה מדומה בבדיקות ושעון אמיתי יתנהגו אותו דבר
-  await tx.insert(notificationLog).values({ organizationId: orgId, kind, entity, entityId, recipientId, channel: r.channel, ok: r.ok, error: r.error ?? null, sentAt: now });
+  try {
+    await tx.insert(notificationLog).values({ organizationId: orgId, kind, entity, entityId, recipientId, channel: r.channel, ok: r.ok, error: r.error ?? null, sentAt: now });
+  } catch (e) {
+    // כשל ברישום לא מפיל את שאר ההרצה; במקרה הגרוע ההודעה הזו תישלח שוב בהרצה הבאה
+    console.error("[cron] logSend failed", e instanceof Error ? e.message : e);
+  }
 }
 
 /** כמה שליחות מוצלחות כבר היו לכל רשומה מאז האירוע המפעיל, ומתי האחרונה */

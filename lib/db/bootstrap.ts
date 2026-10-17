@@ -12,7 +12,7 @@ import { issueToken } from "@/lib/services/tokens";
 export type BootstrapInput = { orgName: string; managerEmail: string; managerFirstName: string; managerLastName: string };
 
 export async function bootstrapOrganization(db: Db, input: BootstrapInput) {
-  const email = input.managerEmail.trim();
+  const email = input.managerEmail.trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error("bad_email");
   if (!input.orgName.trim() || !input.managerFirstName.trim() || !input.managerLastName.trim()) throw new Error("missing_fields");
 

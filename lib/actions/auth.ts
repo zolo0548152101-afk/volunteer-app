@@ -21,6 +21,7 @@ const RESET_EMAIL = { max: 5, windowSec: 3600 };
 const RESET_IP = { max: 20, windowSec: 3600 };
 
 const MIN_PASSWORD = 8;
+const MAX_PASSWORD = 128; // scrypt על קלט ענק = DoS זול
 
 export async function loginAction(_: FormState, formData: FormData): Promise<FormState> {
   const email = String(formData.get("email") ?? "").trim();
@@ -69,7 +70,7 @@ export async function setPasswordAction(_: FormState, formData: FormData): Promi
   const kind = String(formData.get("kind")) as TokenKind;
   if (kind !== "invite" && kind !== "password_reset") return { error: "generic" };
   const password = String(formData.get("password") ?? "");
-  if (password.length < MIN_PASSWORD || password !== String(formData.get("confirm") ?? "")) return { error: "weak" };
+  if (password.length < MIN_PASSWORD || password.length > MAX_PASSWORD || password !== String(formData.get("confirm") ?? "")) return { error: "weak" };
   const passwordHash = await hashPassword(password);
   let ok = false;
   try {

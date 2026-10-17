@@ -41,7 +41,7 @@ export async function registerStudent(db: Db, organizationId: string, input: Reg
   const firstName = input.firstName.trim();
   const lastName = input.lastName.trim();
   if (!firstName || !lastName) throw new StudentError("bad_name");
-  if (input.password.length < 8) throw new StudentError("weak_password");
+  if (input.password.length < 8 || input.password.length > 128) throw new StudentError("weak_password");
   const phone = normalizeIsraeliPhone(input.phone);
   if (!phone) throw new StudentError("bad_phone");
   const email = input.email.trim().toLowerCase();

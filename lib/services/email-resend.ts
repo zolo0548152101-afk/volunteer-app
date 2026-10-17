@@ -7,11 +7,11 @@ import type { NotifyInput, Provider } from "@/lib/services/notify";
 
 export const DEFAULT_FROM = "Volunteers <onboarding@resend.dev>";
 
-const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 /** טקסט פשוט ל-HTML מינימלי, עם כיוון לפי השפה. קישורים נשארים לחיצים */
 export function toHtml(body: string, locale: string): string {
-  const linked = esc(body).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>').replace(/\n/g, "<br>");
+  const linked = esc(body).replace(/(https?:\/\/[^\s<"']+)/g, '<a href="$1">$1</a>').replace(/\n/g, "<br>");
   const dir = locale === "he" ? "rtl" : "ltr";
   return `<div dir="${dir}" style="font-family:system-ui,Arial,sans-serif;font-size:16px;line-height:1.6">${linked}</div>`;
 }

@@ -32,3 +32,12 @@ describe("toHtml", () => {
     expect(h).toContain('dir="ltr"');
   });
 });
+
+describe("toHtml: הזרקה", () => {
+  it("מרכאה בקישור לא בורחת מה-href", async () => {
+    
+    const html = toHtml('לחצו https://x.test/"onmouseover="alert(1) כאן', "he");
+    expect(html).not.toMatch(/href="[^"]*"onmouseover/);
+    expect(html).not.toContain('"onmouseover=');
+  });
+});
