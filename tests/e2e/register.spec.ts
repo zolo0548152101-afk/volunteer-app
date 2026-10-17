@@ -9,6 +9,7 @@ test.afterAll(async () => {
   await db().execute(sql`DELETE FROM audit_log WHERE actor_id IN (SELECT id FROM users WHERE email LIKE 'e2e-reg-%') OR entity_id IN (SELECT id FROM users WHERE email LIKE 'e2e-reg-%')`);
   await db().execute(sql`DELETE FROM custom_field_values WHERE entity_id IN (SELECT id FROM users WHERE email LIKE 'e2e-reg-%')`);
   await db().execute(sql`DELETE FROM student_profiles WHERE user_id IN (SELECT id FROM users WHERE email LIKE 'e2e-reg-%')`);
+  await db().execute(sql`DELETE FROM notification_log WHERE recipient_id IN (SELECT id FROM users WHERE email LIKE 'e2e-reg-%')`);
   await db().execute(sql`DELETE FROM users WHERE email LIKE 'e2e-reg-%'`);
   await closeDb();
 });

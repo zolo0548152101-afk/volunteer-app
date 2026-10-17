@@ -107,6 +107,7 @@ test.describe("ניהול משתמשים", () => {
 test.afterAll(async () => {
   if (!process.env.DATABASE_URL) return;
   const { db, closeDb } = await import("../../lib/db");
+  await db().execute(sql`DELETE FROM notification_log WHERE recipient_id IN (SELECT id FROM users WHERE email LIKE 'e2e-%@demo.test')`);
   await db().execute(sql`DELETE FROM users WHERE email LIKE 'e2e-%@demo.test'`);
   await closeDb();
 });

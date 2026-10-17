@@ -15,6 +15,7 @@ async function cleanup() {
   const { db, closeDb } = await import("../../lib/db");
   await db().execute(sql`DELETE FROM audit_log WHERE entity = 'hour_report' AND entity_id IN (SELECT id FROM hour_reports WHERE student_notes = ${MARK})`);
   await db().execute(sql`DELETE FROM hour_reports WHERE student_notes = ${MARK}`);
+  await db().execute(sql`DELETE FROM notification_log WHERE recipient_id IN (SELECT id FROM users WHERE email LIKE 'e2e-wf-%@demo.test')`);
   await db().execute(sql`DELETE FROM users WHERE email LIKE 'e2e-wf-%@demo.test'`);
   // ריצת ה-cron של הבדיקה רושמת שליחות בארגון הדמו; מסירים את מה שנרשם בשעה האחרונה
   await db().execute(sql`DELETE FROM notification_log WHERE sent_at > now() - interval '1 hour'`);
