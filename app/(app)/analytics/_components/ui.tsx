@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 /** אבני הבניין של לוח הבקרה: כרטיס, תג, כותרת. בלי לוגיקה. */
-export const card = "rounded-2xl border border-hairline bg-card p-5 shadow-[0_1px_2px_rgba(10,10,10,.04),0_1px_1px_rgba(10,10,10,.02)] min-w-0";
+export const card = "rounded-xl border border-hairline bg-card p-4 min-w-0";
 
 export type Tone = "ok" | "warn" | "bad" | "info" | "neutral";
 const tones: Record<Tone, { pill: string; dot: string }> = {
@@ -29,11 +29,8 @@ export const ageTone = (days: number | null, escalationDays: number): Tone =>
 
 export function CardTitle({ id, children, action }: { id: string; children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-      <h2 id={id} className="flex items-center gap-2 text-base font-bold">
-        <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-ink-3"><circle cx="12" cy="12" r="9" strokeDasharray="2 3" /></svg>
-        {children}
-      </h2>
+    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+      <h2 id={id} className="text-sm font-semibold text-ink">{children}</h2>
       {action}
     </div>
   );

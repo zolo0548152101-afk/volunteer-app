@@ -10,7 +10,6 @@ test("מנהל: לוח הבקרה – ברכה, משפט מצב, 5 מדדים מ
   // המדדים הם קישורים עם הטקסט המלא
   await expect(page.getByRole("link", { name: /סטודנטים פעילים/ })).toHaveAttribute("href", "/students");
   await expect(page.getByRole("link", { name: /דיווחים ממתינים/ })).toHaveAttribute("href", "/reports?status=pending");
-  await expect(page.getByRole("link", { name: /תפוסת תקנים/ })).toHaveAttribute("href", "/places");
   // "ממתינים לראיון" פתוח גם למנהל
   await page.getByRole("link", { name: /ממתינים לראיון/ }).first().click();
   await expect(page).toHaveURL(/\/interviewer$/);

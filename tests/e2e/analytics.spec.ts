@@ -6,7 +6,7 @@ test("מנהל: לוח בקרה, דוח וייצוא Excel", async ({ page }) =>
   await page.goto("/analytics");
   await expect(page.getByRole("heading", { level: 1, name: /מירב/ })).toBeVisible(); // לוח הבקרה פותח בברכה
   await expect(page.getByRole("link", { name: /סטודנטים פעילים/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: /תפוסת תקנים/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "תפוסה לפי מקום" })).toBeVisible();
   await page.getByRole("main").getByRole("link", { name: "לפי סטודנט" }).click();
   await expect(page.getByRole("columnheader", { name: "התקדמות" })).toBeVisible();
   await expect(page.getByRole("row", { name: /שירה אביב/ })).toBeVisible();

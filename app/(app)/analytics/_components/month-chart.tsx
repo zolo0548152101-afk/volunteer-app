@@ -11,11 +11,11 @@ export async function MonthChart({ data }: { data: { label: string; value: numbe
   const avg = data.length ? Math.round(data.reduce((a, d) => a + d.value, 0) / data.length) : 0;
   const month = (ym: string, style: "short" | "long") => format.dateTime(new Date(`${ym}-01T00:00:00Z`), { month: style, timeZone: "UTC" });
   return (
-    <section className={`${card} flex flex-col gap-4`} aria-labelledby="h-month">
+    <section className={`${card} flex flex-col gap-2`} aria-labelledby="h-month">
       <CardTitle id="h-month" action={data.length > 0 ? <Pill tone="ok">{t("avg", { n: avg })}</Pill> : undefined}>{t("title")}</CardTitle>
       {data.length === 0 ? <p className="text-sm text-ink-3">{t("empty")}</p> : (
         <>
-          <div dir="ltr" aria-hidden="true" className="flex h-52 items-end justify-center gap-2.5 pt-2">
+          <div dir="ltr" aria-hidden="true" className="flex h-36 items-end justify-center gap-2.5 pt-2">
             {data.map((d) => (
               <div key={d.label} className="flex min-w-0 max-w-24 flex-1 flex-col items-center justify-end gap-1.5 self-stretch">
                 <span className="text-[11px] tabular-nums text-ink-2">{d.value}</span>

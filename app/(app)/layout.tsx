@@ -33,17 +33,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="flex flex-1 flex-col bg-paper lg:flex-row lg:gap-3 lg:p-3">
+    <div className="flex flex-1 flex-col bg-paper lg:flex-row">
       <a href="#content" className="sr-only focus:not-sr-only focus:absolute focus:start-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-card focus:p-2 focus:underline">{t("skipToContent")}</a>
 
       <Sidebar groups={groups} appName={tApp("name")} userName={actor.name} roleName={tR(primaryRole)} label={t("mainNav")}>{tools}</Sidebar>
 
-      <div className="flex min-h-dvh min-w-0 flex-1 flex-col bg-card lg:min-h-0 lg:rounded-2xl lg:border lg:border-hairline">
+      <div className="flex min-h-dvh min-w-0 flex-1 flex-col bg-paper lg:min-h-0">
         <header className="flex items-center justify-between border-b border-hairline bg-card px-4 py-2 lg:hidden">
           <Link href="/" className="inline-flex min-h-11 items-center font-semibold">{tApp("name")}</Link>
           <form action={logoutAction}><button type="submit" className="min-h-11 text-sm underline">{t("logout")}</button></form>
         </header>
-        <div id="content" tabIndex={-1} className="flex flex-1 flex-col outline-none lg:rounded-2xl">{children}</div>
+        <div id="content" tabIndex={-1} className="flex flex-1 flex-col outline-none">{children}</div>
         <footer className="flex items-center justify-between gap-4 border-t border-hairline bg-card px-4 py-1 text-sm lg:hidden">
           <Link href="/accessibility" className="inline-flex min-h-11 items-center underline">{tA("title")}</Link>
           <form action={setLocale}>

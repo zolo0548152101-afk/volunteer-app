@@ -44,9 +44,9 @@ body {
 
 /* ── לוח הבקרה: "Soft Paper" (קנבס אפרפר, כרטיסים לבנים, קווי שיער) ── */
 :root {
-  --paper: #f2f2f0;
+  --paper: #f4f5f7;
   --card: #ffffff;
-  --hairline: #ececea;
+  --hairline: #e3e5ea;
   --ink: #0a0a0a;
   --ink-2: #3a3a38;
   --ink-3: #6b6b68;

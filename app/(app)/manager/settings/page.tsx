@@ -55,7 +55,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {section("year", t("year"), (
         <div className="mt-1 flex flex-col">
           {[...(current ? [current] : []), ...s.years.filter((y) => !y.isCurrent)].map((y) => (
-            <Disclosure key={y.id} editLabel={t("edit")} summary={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><b>{y.name}</b><span className="text-muted">{String(y.startDate)} – {String(y.endDate)}</span>{y.isCurrent && <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{t("currentBadge")}</span>}</span>}>
+            <Disclosure key={y.id} editLabel={t("edit")} summary={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><b>{y.name}</b><span className="text-muted">{String(y.startDate)} – {String(y.endDate)}</span>{y.isCurrent && <span className="rounded-full bg-info-bg px-2 py-0.5 text-xs font-semibold text-info-fg">{t("currentBadge")}</span>}</span>}>
               <form action={saveYearAction} className={`${row} grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr_auto_auto]`}>
                 <input type="hidden" name="id" value={y.id} />
                 {field(t("yearName"), <input name="name" required defaultValue={y.name} className={input} />)}

@@ -72,7 +72,7 @@ export function Icon({ name, size = 18 }: { name: keyof typeof ICONS; size?: num
 /** סרגל צד למחשב (מוסתר בטלפון) */
 export function Sidebar({ groups, appName, userName, roleName, label, children }: { groups: NavGroup[]; appName: string; userName: string; roleName: string; label: string; children: ReactNode }) {
   return (
-    <aside className="hidden w-64 flex-none flex-col gap-6 overflow-y-auto rounded-2xl border border-hairline bg-card p-4 lg:sticky lg:top-3 lg:flex lg:max-h-[calc(100dvh-1.5rem)]">
+    <aside className="hidden w-56 flex-none flex-col gap-5 overflow-y-auto border-e border-hairline bg-card p-3 lg:sticky lg:top-0 lg:flex lg:h-dvh">
       <Link href="/" className="flex items-center gap-2.5 px-1.5">
         <span aria-hidden="true" className="grid size-8 place-items-center rounded-lg bg-info text-xs font-bold text-white">{appName.slice(0, 2)}</span>
         <span className="text-[15px] font-bold">{appName}</span>
@@ -82,7 +82,7 @@ export function Sidebar({ groups, appName, userName, roleName, label, children }
           <div key={g.label} className="flex flex-col gap-0.5">
             <p className="mb-1.5 px-3 text-[11px] tracking-wider text-ink-3">{g.label}</p>
             {g.items.map((it) => (
-              <NavLink key={it.href} href={it.href} exact={it.exact} className="flex min-h-11 items-center justify-between rounded-lg px-3 text-sm text-ink-2 transition-colors duration-150 hover:bg-paper hover:text-ink" activeClassName="bg-paper font-semibold text-ink">
+              <NavLink key={it.href} href={it.href} exact={it.exact} className="flex min-h-10 items-center justify-between rounded-lg px-3 text-sm text-ink-2 transition-colors duration-150 hover:bg-paper hover:text-ink" activeClassName="bg-info-bg font-semibold text-info-fg">
                 <span className="flex items-center gap-2.5"><Icon name={it.icon} size={16} />{it.label}</span>
                 {it.count ? <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-semibold tabular-nums text-warn-fg">{it.count}</span> : null}
               </NavLink>
