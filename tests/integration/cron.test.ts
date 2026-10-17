@@ -102,6 +102,19 @@ describe("הסלמת דיווחים", () => {
     expect(sent).toHaveLength(0); // ההסלמה לא חוזרת
   });
 
+  it("כשל בשליחת עותק למנהל נרשם ok=false ולא פוגע בשליחה לנמען הראשי", async () => {
+    await setRule("report_escalation", { firstAfterDays: 7, maxSends: 1, repeatEveryDays: 7, copyManager: true });
+    registerProvider("email", { async send(i: NotifyInput) { if (i.to === s.manager.email) throw new Error("manager_mailbox_down"); sent.push(i); } });
+    try {
+      const n = await pendingCount();
+      const r = await runEscalation(db(), { organizationId: s.organizationId, now: later(9) });
+      expect(r.sent).toBe(n); // הנמען הראשי קיבל
+      const copies = await logs("report_escalation_copy");
+      expect(copies.length).toBeGreaterThan(0);
+      expect(copies.every((l) => !l.ok && (l.error ?? "").includes("manager_mailbox_down"))).toBe(true);
+    } finally { registerProvider("email", spy); }
+  });
+
   it("דיווח שהוגש מחדש מתחיל ספירה חדשה", async () => {
     await runEscalation(db(), { organizationId: s.organizationId, now: later(9) });
     const [r] = await db().select().from(hourReports).where(and(eq(hourReports.organizationId, s.organizationId), eq(hourReports.status, "pending")));

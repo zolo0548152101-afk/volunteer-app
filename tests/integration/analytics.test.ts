@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq, sql } from "drizzle-orm";
 import ExcelJS from "exceljs";
 import { closeDb, db } from "@/lib/db";
-import { customFields, customFieldValues, hourReports, placements } from "@/lib/db/schema";
+import { customFields, customFieldValues, hourReports, placements, users } from "@/lib/db/schema";
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
 import { buildReport, dashboard, hoursCertificate } from "@/lib/services/analytics";
@@ -157,6 +157,55 @@ describe("דוחות: המספרים מול המסד", () => {
     const mine = new Set(s.students.filter((_, i) => i < 2).map((x) => x.id));
     expect(dc1.oldestPending.every((r) => mine.has(r.studentId))).toBe(true);
     expect(dc1.hoursYear).toBeLessThanOrEqual(d.hoursYear);
+  });
+});
+
+describe("לוח בקרה: ערכים מדויקים (מחושבים ישירות מהמסד)", () => {
+  const dayMs = 86_400_000;
+  const counted = (r: typeof hourReports.$inferSelect) => r.status === "approved" && (r.reportType === "volunteering" || r.countsTowardTarget);
+  const allReports = () => db().select().from(hourReports).where(eq(hourReports.organizationId, s.organizationId));
+
+  it("דיווחים תקועים, שעות 30 יום וממתינים: ערך מדויק, למנהל ולרכז", async () => {
+    const rows = await allReports();
+    const pending = rows.filter((r) => r.status === "pending");
+    const stale = pending.filter((r) => r.submittedAt.getTime() <= Date.now() - 7 * dayMs); // כלל ההסלמה ברירת מחדל: 7 ימים
+    const cutoff = new Date(Date.now() - 30 * dayMs).toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" });
+    const last30 = rows.filter((r) => counted(r) && String(r.volunteerDate) >= cutoff).reduce((a, r) => a + Number(r.approvedHours), 0);
+    const d = await dashboard(db(), manager);
+    expect(d.escalationDays).toBe(7);
+    expect(d.staleReports).toBe(stale.length);
+    expect(d.pendingReports).toBe(pending.length);
+    expect(d.hoursLast30Days).toBeCloseTo(last30, 2);
+    // רכז: רק הסטודנטים שלו (מזהים מהמסד, לא מההנחה "שניים ראשונים")
+    const mine = new Set((await db().select({ id: users.id }).from(users).where(eq(users.coordinatorId, c1.id))).map((u) => u.id));
+    const dc = await dashboard(db(), c1);
+    expect(dc.pendingReports).toBe(pending.filter((r) => mine.has(r.studentId)).length);
+    expect(dc.staleReports).toBe(stale.filter((r) => mine.has(r.studentId)).length);
+    expect(dc.hoursYear).toBeCloseTo(rows.filter((r) => counted(r) && mine.has(r.studentId)).reduce((a, r) => a + Number(r.approvedHours), 0), 2);
+  });
+
+  it("סטודנטים חדשים החודש: סטודנט שנוצר לפני חודשיים לא נספר", async () => {
+    const before = await dashboard(db(), manager);
+    expect(before.newStudentsThisMonth).toBe(before.activeStudents); // כולם נוצרו עכשיו
+    await db().update(users).set({ createdAt: new Date(Date.now() - 62 * dayMs) }).where(eq(users.id, s.students[5].id));
+    const after = await dashboard(db(), manager);
+    expect(after.newStudentsThisMonth).toBe(before.newStudentsThisMonth - 1);
+    expect(after.activeStudents).toBe(before.activeStudents);
+  });
+
+  it("תפוסה לפי מקום: תקנים ומשובץ תואמים לחלונות הפעילים במסד", async () => {
+    const d = await dashboard(db(), manager);
+    const raw = (await db().execute<{ place_id: string; slots: string; allocated: string }>(sql`
+      SELECT w.place_id, SUM(w.slots) AS slots,
+             COALESCE(SUM((SELECT SUM(p.slots) FROM placements p WHERE p.time_window_id = w.id AND p.is_active)), 0) AS allocated
+      FROM place_time_windows w WHERE w.organization_id = ${s.organizationId} AND w.is_active GROUP BY w.place_id`)).rows;
+    for (const p of d.placeOccupancy) {
+      const r = raw.find((x) => x.place_id === p.placeId)!;
+      expect(p.slots).toBeCloseTo(Number(r.slots), 2);
+      expect(p.allocated).toBeCloseTo(Number(r.allocated), 2);
+    }
+    expect(d.slots.total).toBeCloseTo(raw.reduce((a, r) => a + Number(r.slots), 0), 2);
+    expect(d.slots.used).toBeCloseTo(raw.reduce((a, r) => a + Number(r.allocated), 0), 2);
   });
 });
 
