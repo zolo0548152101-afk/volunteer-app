@@ -20,6 +20,7 @@ pnpm dev
 | `pnpm build && pnpm test:e2e` | בדיקות דפדפן (Playwright), דסקטופ + מובייל |
 | `pnpm db:generate` / `pnpm db:migrate` | מיגרציות Drizzle. `db:migrate` דורש `DATABASE_URL` בסביבה (`set -a; . ./.env.local; set +a`) |
 | `pnpm db:seed` | נתוני הדגמה על ה-DB שב-`.env.local` (סיסמה `demo1234`, אסור בפרודקשן) |
+| `pnpm db:bootstrap` | הקמת ארגון אמיתי בסביבה חדשה (בלי נתוני דמו): `ORG_NAME=… MANAGER_EMAIL=… MANAGER_FIRST=… MANAGER_LAST=… APP_URL=… pnpm db:bootstrap`, עם `DATABASE_URL` של הסביבה. מדפיס `REGISTRATION_ORG_ID` וקישור הזמנה למנהל |
 | `pnpm test:db` | בדיקות אינטגרציה מול Neon: יוצרות ארגון משלהן ומוחקות אותו |
 
 אם Playwright לא מוצא דפדפן: `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome pnpm test:e2e`.

@@ -54,6 +54,7 @@
 ### לבדיקת Fable (מוצ"ש)
 - ~~**W24 פתוח:** ניסיון להוסיף פעולה `reassign` ל-`lib/permissions.ts` נחסם על ידי ה-classifier של הסביבה (שינוי הרשאות). לא עקפתי. התכנון: `Action` חדש `reassign`; מנהל מקבל אוטומטית (`allActions`); רכז `reassign placement assigned`; ב-`interviews.ts` `authorize` להחליף את `roles.includes` ב-`assertCan(actor, "reassign", "placement", subject)`; ב-`students/[id]/page.tsx` `canReassign = can(actor, "reassign", "placement", {...})`; לעדכן את `permissions-matrix.test.ts`. אחרי שמאשרים, 20 דקות עבודה.~~ בוצע, ראו E5. לבדיקתך: שינוי המטריצה (`lib/permissions.ts`, 4 שורות) והבדיקות ב-`permissions-matrix.test.ts`.
 - בעת בדיקת E7: ב-`reports` פעולת `unapprove` חוזרת ל-`/reports` (ממתינים) ולא ל-`status=approved` שממנה נלחצה. כנראה כמתוכנן (הדיווח עבר לממתינים), אבל כדאי לאשר כהתנהגות רצויה.
+| E10 | **הקמת ייצור:** נוצר Blob פרטי `volunteer-app-files` (fra1) ו-`BLOB_READ_WRITE_TOKEN` חובר ל-Vercel (production/preview/development). `DATABASE_URL` של production הוגדר (Neon `main`, בסיס `volunteer`). `lib/db/bootstrap.ts` + `scripts/bootstrap.ts` (`pnpm db:bootstrap`) מקימים ארגון אמיתי בלי נתוני דמו: הגדרות, כללי התראה, רשימות בחירה, מנהל במצב "מוזמן" וקישור הזמנה חד-פעמי; מסרב לרוץ על מסד שיש בו ארגון. בדיקת אינטגרציה. **מיגרציות על `main` לא הורצו:** ה-classifier של הסביבה חסם הרצה על הייצור, ולא עקפתי | הקומיט הנוכחי |
 
 ## ביקורת Fable על התיקונים (16.10.2026)
 

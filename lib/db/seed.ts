@@ -33,7 +33,7 @@ export const DEMO_EMAILS = {
   students: [1, 2, 3, 4, 5, 6].map((n) => `student${n}@demo.test`),
 } as const;
 
-const volunteerTypes: [string, string, string][] = [
+export const volunteerTypes: [string, string, string][] = [
   ["education", "חינוך", "Education"],
   ["elderly", "קשישים", "Elderly"],
   ["health", "בריאות", "Health"],
@@ -44,7 +44,7 @@ const volunteerTypes: [string, string, string][] = [
   ["other", "אחר", "Other"],
 ];
 
-const absenceReasons: [string, string, string][] = [
+export const absenceReasons: [string, string, string][] = [
   ["reserve_duty", "מילואים", "Reserve duty"],
   ["illness", "מחלה", "Illness"],
   ["security_situation", "מצב ביטחוני", "Security situation"],
