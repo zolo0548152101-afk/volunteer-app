@@ -114,3 +114,6 @@
 ### נשאר מה-🟡 (לא נעשה בסבב הזה)
 סטיית אזור זמן בגבולות "החודש/30 יום" ב-SQL; כפילות לפי `placementId`; audit לניתוק סטודנטים ב-`setRoles`; `editable` במראיין בטיוטת שיבוץ-מחדש; `aria` של מונה התיבה; `aria-current` ב-analytics; מפתחות i18n מתים ו-plural ל-0; גודל 16px בשדות נוספים; `color-scheme`/`prefers-reduced-motion`; `bootstrap.test.ts`, `workflows.spec.ts` cleanup, 2 `test.skip` בלי הערה.
 
+### כניסת הדגמה (17.10, ערב)
+`/dev-login`: בחירת משתמש הדגמה בלי סיסמה, לבקשת המשתמש, כדי לראות את המערכת בעיני כל תפקיד. הגנות: דורש `ENABLE_DEV_LOGIN=1` (מוגדר ב-Vercel ל-Preview בלבד), נחסם כש-`VERCEL_ENV=production`, ומקבל רק משתמשי `@demo.test` פעילים. בדיקות: `dev-login.test.ts` (3), e2e "כבויה כברירת מחדל: 404". אומת על preview: כניסה כמנהל → `/manager`. **לבדיקת Fable:** ספק Auth.js חדש (`id: "dev"`) ב-`lib/auth.ts`; לוודא שאין דרך להפעיל אותו בייצור.
+

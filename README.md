@@ -53,3 +53,8 @@ pnpm dev
 - **משתני סביבה (Production):** `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET`, `APP_URL` (הכתובת הציבורית, משמשת בקישורי מייל), `REGISTRATION_ORG_ID` (הדפסה של bootstrap), `RESEND_API_KEY`, `EMAIL_FROM` (דורש דומיין מאומת ב-Resend; עם `onboarding@resend.dev` המייל מגיע רק לבעל החשבון), `BLOB_READ_WRITE_TOKEN`.
 - **מייל:** בלי `RESEND_API_KEY` בייצור השליחה נכשלת (`no_provider`) ונרשמת ב-`notification_log`; בפיתוח המייל מודפס לקונסול בלי הקישורים.
 - **אימות אחרי פריסה:** `/login` מחזיר 200; כניסה בפועל ב-HTTPS מובילה ל-`/manager` (לא חוזרת ל-`/login`); `/api/cron/escalation` בלי סוד מחזיר 401.
+
+## כניסת הדגמה בלי סיסמה (Preview בלבד)
+
+`/dev-login` מציג את משתמשי ההדגמה (`@demo.test` בארגון "ארגון הדגמה") וכניסה בלחיצה, בלי סיסמה. פועל רק כש-`ENABLE_DEV_LOGIN=1`, ואף פעם לא כש-`VERCEL_ENV=production` (`lib/dev-login.ts`; בייצור הדף 404 והספק מחזיר null). ב-Vercel המשתנה מוגדר רק ל-Preview, שם מחובר ענף `dev` של Neon עם נתוני דמו. **לא מגדירים אותו בייצור.** מקומית: `ENABLE_DEV_LOGIN=1` ב-`.env.local`.
+
