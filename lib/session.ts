@@ -3,7 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { getToken } from "next-auth/jwt";
+import { readSessionToken } from "@/lib/session-token";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import type { Role, SessionUser } from "@/lib/permissions";
@@ -15,7 +15,7 @@ import type { Role, SessionUser } from "@/lib/permissions";
  */
 export const getActor = cache(async (): Promise<(SessionUser & { name: string }) | null> => {
   // קריאה בלבד של ה-JWT. auth() מחדש את העוגייה בכל תשובה, ובקשת RSC שחוזרת אחרי יציאה הייתה מחייה את ההתחברות
-  const token = await getToken({ req: { headers: await headers() }, secret: process.env.AUTH_SECRET });
+  const token = await readSessionToken(await headers());
   const s = token?.uid ? { user: { id: token.uid as string, organizationId: token.organizationId as string }, loginAt: Number(token.loginAt ?? 0) } : null;
   if (!s) return null;
   const [u] = await db()
