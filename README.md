@@ -42,3 +42,14 @@ pnpm dev
 - מאפייני CSS לוגיים בלבד (`ms-`, `pe-`, `start`, `end`), לא `ml-`/`left`.
 - הרשאות נאכפות בשרת.
 - ב-Next 16 ה-middleware נקרא `proxy.ts`. קראו את `node_modules/next/dist/docs/` לפני שימוש ב-API לא מוכר.
+
+## ייצור (Vercel + Neon)
+
+- **ריפו:** `zolo0548152101-afk/volunteer-app` (פרטי). פרויקט Vercel `volunteer-app` **אינו מחובר ל-git**: דחיפה ל-`main` לא מפרסמת. פריסה נעשית ב-`create_deployment` (מקור github, `ref: main`, `target: production`), או מ-CLI.
+- **אזור פונקציות:** `fra1` (`vercel.json`), ליד ה-DB ב-Neon `eu-central-1`.
+- **מיגרציות ידניות, לפני הפריסה:** מריצים `pnpm db:migrate` מול מסד הייצור (ענף `main` ב-Neon) ורק אחר כך פורסים. ההפך (פריסה ואז מיגרציה) משאיר קוד שמצפה לעמודות שעוד לא קיימות. לא הוגדר `drizzle-kit migrate` בשלב הבנייה בכוונה: מיגרציה הרסנית לא צריכה לרוץ בלי שמישהו אישר אותה.
+  - `set -a; . <קובץ env עם DATABASE_URL של הייצור>; set +a; pnpm db:migrate` (ערכים עם `&` בגרשיים).
+- **הקמה ראשונה:** `pnpm db:bootstrap` (ראו למעלה). לא מריצים `db:seed` מול ייצור.
+- **משתני סביבה (Production):** `DATABASE_URL`, `AUTH_SECRET`, `CRON_SECRET`, `APP_URL` (הכתובת הציבורית, משמשת בקישורי מייל), `REGISTRATION_ORG_ID` (הדפסה של bootstrap), `RESEND_API_KEY`, `EMAIL_FROM` (דורש דומיין מאומת ב-Resend; עם `onboarding@resend.dev` המייל מגיע רק לבעל החשבון), `BLOB_READ_WRITE_TOKEN`.
+- **מייל:** בלי `RESEND_API_KEY` בייצור השליחה נכשלת (`no_provider`) ונרשמת ב-`notification_log`; בפיתוח המייל מודפס לקונסול בלי הקישורים.
+- **אימות אחרי פריסה:** `/login` מחזיר 200; כניסה בפועל ב-HTTPS מובילה ל-`/manager` (לא חוזרת ל-`/login`); `/api/cron/escalation` בלי סוד מחזיר 401.
