@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import type { SessionUser } from "@/lib/permissions";
+import { MoreMenu } from "./more-menu";
 import { NavLink } from "./nav-link";
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS; count?: number; exact?: boolean };
@@ -100,17 +101,24 @@ export function Sidebar({ groups, appName, userName, roleName, label, children }
   );
 }
 
-/** ניווט תחתון לטלפון (עד 5 פריטים מהקבוצה הראשונה) */
-export function BottomNav({ items, label }: { items: NavItem[]; label: string }) {
+/** ניווט תחתון לטלפון: עד 5 פריטים. כשיש יותר, 4 הראשונים + "עוד" עם כל השאר (גם הקבוצות האחרות) */
+export function BottomNav({ groups, label, moreLabel }: { groups: NavGroup[]; label: string; moreLabel: string }) {
+  const all = groups.flatMap((g) => g.items);
+  const needsMore = all.length > 5;
+  const shown = needsMore ? groups[0].items.slice(0, 4) : all;
+  const rest: NavGroup[] = needsMore
+    ? [{ label: groups[0].label, items: groups[0].items.slice(4) }, ...groups.slice(1)].filter((g) => g.items.length > 0)
+    : [];
   return (
     <nav aria-label={label} className="sticky bottom-0 z-40 flex border-t border-hairline bg-card px-2 pb-2.5 pt-1.5 lg:hidden">
-      {items.slice(0, 5).map((it) => (
+      {shown.map((it) => (
         <NavLink key={it.href} href={it.href} exact={it.exact} className="relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] text-ink-3" activeClassName="font-semibold text-ink">
           <Icon name={it.icon} size={20} />
           {it.label}
-          {it.count ? <span className="absolute top-0 inline-flex min-w-4 justify-center rounded-full bg-warn px-1 text-[10px] font-bold text-white" style={{ insetInlineEnd: "18%" }}>{it.count}</span> : null}
+          {it.count ? <span className="absolute top-0 inline-flex min-w-4 justify-center rounded-full bg-warn-bg px-1 text-[10px] font-bold text-warn-fg" style={{ insetInlineEnd: "18%" }}>{it.count}</span> : null}
         </NavLink>
       ))}
+      {needsMore && <MoreMenu groups={rest} label={moreLabel} />}
     </nav>
   );
 }

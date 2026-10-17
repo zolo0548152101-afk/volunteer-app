@@ -51,7 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <button type="submit" className="min-h-11 underline" lang={other}>{other === "en" ? "English" : "עברית"}</button>
           </form>
         </footer>
-        <BottomNav items={groups[0].items} label={t("bottomNav")} />
+        <BottomNav groups={groups} label={t("bottomNav")} moreLabel={t("more")} />
       </div>
     </div>
   );

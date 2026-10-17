@@ -42,3 +42,14 @@ test("מראיין וסטודנט לא רואים את לוח הבקרה", async
   await page.goto("/analytics");
   await expect(page).not.toHaveURL(/\/analytics/);
 });
+
+test("מנהל בטלפון מגיע להגדרות ולמשתמשים דרך 'עוד'", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "תפריט 'עוד' קיים רק בטלפון");
+  await login(page, "manager@demo.test");
+  const nav = page.getByRole("navigation", { name: "ניווט תחתון" });
+  await nav.getByRole("button", { name: "עוד" }).click();
+  await expect(nav.getByRole("link", { name: "משתמשים" })).toBeVisible();
+  await nav.getByRole("link", { name: "הגדרות" }).click();
+  await expect(page).toHaveURL(/\/manager\/settings/);
+  await expect(nav.getByRole("link", { name: "משתמשים" })).toHaveCount(0); // נסגר אחרי מעבר עמוד
+});
