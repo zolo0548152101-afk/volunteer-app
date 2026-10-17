@@ -3,6 +3,8 @@ import Link from "next/link";
 import { bulkApproveAction, decideAction, editReportAction } from "@/lib/actions/reports";
 import { db } from "@/lib/db";
 import { requireActor } from "@/lib/session";
+import { CustomFields } from "@/components/custom-fields/custom-fields";
+import { listFields, loadValuesMany } from "@/lib/services/custom-fields";
 import { inboxFilterOptions, listInbox, type ReportStatus } from "@/lib/services/reports";
 import { ForbiddenError } from "@/lib/permissions";
 import { redirect } from "next/navigation";
@@ -26,6 +28,8 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
   try {
     [list, options] = await Promise.all([listInbox(db(), actor, { status, studentId, placeId, month, coordinatorId }), inboxFilterOptions(db(), actor, status)]);
   } catch (e) { if (e instanceof ForbiddenError) redirect("/"); throw e; }
+  const reportFields = (await listFields(db(), actor, "report", "report_form")).map((f) => ({ ...f, canEdit: false }));
+  const reportValues = reportFields.length ? await loadValuesMany(db(), actor.organizationId, list.map((r) => r.id), reportFields) : new Map();
   const qs = new URLSearchParams({ status, ...(studentId ? { student: studentId } : {}), ...(placeId ? { place: placeId } : {}), ...(month ? { month } : {}), ...(coordinatorId ? { coordinator: coordinatorId } : {}) }).toString();
   const back = `/reports?${qs}`;
   const filtered = !!(studentId || placeId || month || coordinatorId);
@@ -97,6 +101,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
             <p>{t("reported", { n: r.reportedHours })}{r.startTime && r.endTime ? <> · <span dir="ltr">{r.startTime.slice(0, 5)}–{r.endTime.slice(0, 5)}</span></> : ""}{r.status === "approved" ? ` · ${t("approved", { n: r.approvedHours })}` : ""}</p>
             {r.studentNotes && <p className="text-muted">{t("studentNote", { note: r.studentNotes })}</p>}
             {r.coordinatorNotes && r.status !== "pending" && <p className="text-muted">{t("coordinatorNote", { note: r.coordinatorNotes })}</p>}
+            {reportFields.length > 0 && <div className="mt-1"><CustomFields fields={reportFields} values={reportValues.get(r.id) ?? {}} /></div>}
             {r.attachment && <p><a href={`/api/reports/${r.id}/attachment`} target="_blank" rel="noopener" className="underline">{t("attachment")}</a></p>}
             {status === "pending" && (
               <form action={decideAction} className="mt-2 flex flex-col gap-2">

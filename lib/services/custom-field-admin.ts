@@ -9,7 +9,7 @@ import { customFields } from "@/lib/db/schema";
 import { assertCan, type Role, type SessionUser } from "@/lib/permissions";
 import { writeAudit } from "@/lib/services/audit";
 import { SettingsError } from "@/lib/services/settings";
-import type { CustomEntity } from "@/lib/services/custom-fields";
+import { effectivePage, pagesOf, type CustomEntity } from "@/lib/services/custom-fields";
 import { slug } from "./_util";
 
 export const ENTITIES: CustomEntity[] = ["student", "place", "placement", "report"];
@@ -38,7 +38,7 @@ export function parseOptions(text: string, existing: Option[] = []): Option[] {
 }
 
 export async function saveField(db: Db, actor: SessionUser, input: {
-  id?: string; entity: string; labelHe: string; labelEn?: string | null; type: string; options?: string;
+  id?: string; entity: string; page?: string | null; labelHe: string; labelEn?: string | null; type: string; options?: string;
   required: boolean; visibleToRoles: string[]; editableByRoles: string[]; sortOrder?: number; isActive: boolean;
 }) {
   guard(actor);
@@ -54,12 +54,15 @@ export async function saveField(db: Db, actor: SessionUser, input: {
       [old] = await tx.select().from(customFields).where(and(eq(customFields.id, input.id), eq(customFields.organizationId, org))).for("update");
       if (!old) throw new SettingsError("not_found");
     } else if (!(ENTITIES as string[]).includes(input.entity) || !(FIELD_TYPES as readonly string[]).includes(input.type)) throw new SettingsError("invalid");
+    const entity = (old?.entity ?? input.entity) as CustomEntity;
+    // הדף חייב להתאים לישות; אחרת חוזרים לברירת המחדל
+    const page = input.page && (pagesOf(entity) as string[]).includes(input.page) ? input.page : old ? effectivePage(entity, old.page) : effectivePage(entity, null);
     const type = old?.type ?? (input.type as (typeof FIELD_TYPES)[number]);
     const options = type === "select" || type === "multi_select" ? parseOptions(input.options ?? "", old?.options ?? []) : [];
     if ((type === "select" || type === "multi_select") && options.length === 0) throw new SettingsError("invalid");
     const vals = {
       labelHe, labelEn: input.labelEn?.trim() || null, options, required: input.required, visibleToRoles: visible, editableByRoles: editable,
-      sortOrder: Number.isInteger(input.sortOrder) ? input.sortOrder! : 0, isActive: input.isActive,
+      sortOrder: Number.isInteger(input.sortOrder) ? input.sortOrder! : 0, isActive: input.isActive, page,
     };
     let row;
     if (old) [row] = await tx.update(customFields).set(vals).where(eq(customFields.id, old.id)).returning();

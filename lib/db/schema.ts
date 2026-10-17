@@ -501,6 +501,8 @@ export const customFields = pgTable(
     required: boolean("required").notNull().default(false),
     visibleToRoles: roleEnum("visible_to_roles").array().notNull().default(sql`ARRAY['manager']::role[]`),
     editableByRoles: roleEnum("editable_by_roles").array().notNull().default(sql`ARRAY['manager']::role[]`),
+    /** באיזה דף/טופס השדה מופיע (registration | profile | report_form). null = ברירת המחדל של הישות */
+    page: text("page"),
     sortOrder: integer("sort_order").notNull().default(0),
     isActive: boolean("is_active").notNull().default(true),
   },

@@ -55,7 +55,7 @@ export async function saveFieldAction(fd: FormData) {
   let error: string | undefined;
   try {
     await saveField(db(), await requireActor(), {
-      id: str(fd, "id") || undefined, entity: str(fd, "entity"), labelHe: str(fd, "labelHe"), labelEn: str(fd, "labelEn"), type: str(fd, "type"), options: String(fd.get("options") ?? ""),
+      id: str(fd, "id") || undefined, entity: str(fd, "entity"), page: str(fd, "page") || null, labelHe: str(fd, "labelHe"), labelEn: str(fd, "labelEn"), type: str(fd, "type"), options: String(fd.get("options") ?? ""),
       required: fd.has("required"), visibleToRoles: fd.getAll("visibleToRoles").map(String), editableByRoles: fd.getAll("editableByRoles").map(String),
       sortOrder: Number(str(fd, "sortOrder") || 0), isActive: !fd.has("id") || fd.has("isActive"),
     });
@@ -64,5 +64,7 @@ export async function saveFieldAction(fd: FormData) {
     else if (e instanceof ForbiddenError) error = "forbidden";
     else { console.error(e); error = "generic"; }
   }
-  redirect(error ? `/manager/custom-fields?error=${error}` : "/manager/custom-fields?saved=1");
+  const pg = str(fd, "page");
+  const q = /^[a-z_]+$/.test(pg) ? `&page=${pg}` : "";
+  redirect(error ? `/manager/custom-fields?error=${error}${q}` : `/manager/custom-fields?saved=1${q}`);
 }

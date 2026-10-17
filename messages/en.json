@@ -22,7 +22,7 @@
     "groupSettings": "Settings",
     "groupMe": "Mine",
     "queue": "Awaiting interview",
-    "customFields": "Custom fields",
+    "customFields": "Add fields",
     "certificate": "Hours certificate",
     "more": "More",
     "mainNav": "Main navigation",
@@ -500,7 +500,8 @@
     "generic": "Something went wrong. Try again in a moment",
     "bad_file": "Unsupported file. Attach a PDF or an image (JPG, PNG, WebP)",
     "file_too_large": "The file is larger than 5MB",
-    "storage_unavailable": "File storage isn't available right now. You can send without a file and attach it later"
+    "storage_unavailable": "File storage isn't available right now. You can send without a file and attach it later",
+    "custom_required": "A required field is missing"
   },
   "myReports": {
     "title": "My reports",
@@ -658,8 +659,8 @@
     "settings": "Settings"
   },
   "customFieldsAdmin": {
-    "title": "Custom fields",
-    "intro": "Extra fields shown in forms and cards. Students only see a field if you tick them",
+    "title": "Add fields",
+    "intro": "Pick the page, see what is already on it, and add a field. It shows up right away, without touching other forms",
     "saved": "Saved",
     "labelHe": "Hebrew name",
     "labelEn": "English name",
@@ -694,6 +695,55 @@
       "not_found": "Not found",
       "forbidden": "You don't have permission to do that",
       "generic": "Something went wrong. Try again in a moment"
+    },
+    "chooseTitle": "Which page?",
+    "fieldCount": "{n} custom fields",
+    "alreadyThere": "Already on this page",
+    "custom": "custom",
+    "addToPage": "Add a field to: {page}",
+    "manageExisting": "Fields you added to this page",
+    "inactive": "off",
+    "movePage": "Page",
+    "orphansTitle": "Old fields not shown on any page",
+    "orphansHint": "Place and placement fields are not shown on any form yet. They are kept, not deleted",
+    "pages": {
+      "registration": {
+        "title": "Registration form (first fill-in)",
+        "where": "Students see these on the last registration step; a required field blocks finishing. They can edit them later in the profile",
+        "builtin": [
+          "First and last name",
+          "Email and phone",
+          "Password",
+          "National ID",
+          "Date of birth",
+          "City",
+          "Institution",
+          "Degree type and year",
+          "Field of study",
+          "Volunteering preferences and availability",
+          "Bank details"
+        ]
+      },
+      "profile": {
+        "title": "Student profile",
+        "where": "Shown on the student's profile page and on the staff student card. Does not block registration",
+        "builtin": [
+          "Academic details",
+          "Volunteering preferences and availability",
+          "Bank details (student and manager only)"
+        ]
+      },
+      "report_form": {
+        "title": "Hours report form",
+        "where": "Students fill these in on every report and staff see the answer in the reports inbox",
+        "builtin": [
+          "Date",
+          "Hours / start and end time",
+          "Placement",
+          "Notes",
+          "Absence reason and file (for absences)"
+        ]
+      }
     }
   },
   "analytics": {

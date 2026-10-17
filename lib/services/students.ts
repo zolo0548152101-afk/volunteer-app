@@ -191,7 +191,7 @@ export async function completeProfile(db: Db, actor: SessionUser): Promise<void>
   const p = await getMyProfile(db, actor);
   if (!p.nationalId || !p.institution || !p.degreeType) throw new StudentError("incomplete");
   // שדות מותאמים שסומנו חובה: אי אפשר לעקוף אותם בהשמטה מהטופס
-  const required = (await listFields(db, actor, "student")).filter((f) => f.required && f.canEdit && f.type !== "boolean");
+  const required = (await listFields(db, actor, "student", "registration")).filter((f) => f.required && f.canEdit && f.type !== "boolean");
   if (required.length > 0) {
     const values = await loadValues(db, actor.organizationId, actor.id, required);
     const missing = required.some((f) => { const v = values[f.id]; return v === null || v === "" || (Array.isArray(v) && v.length === 0); });

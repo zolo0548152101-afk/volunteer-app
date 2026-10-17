@@ -43,12 +43,14 @@ test("מנהל עורך הגדרות ושדה מותאם; רכז חסום; cron 
   await expect(page).toHaveURL(/saved=rules/);
   await expect(page.locator("form", { hasText: "הסלמת דיווח שממתין" }).getByLabel("אחרי כמה ימים לשלוח")).toHaveValue("2");
 
-  await page.goto("/manager/custom-fields");
-  const sect = page.locator("section", { hasText: "סטודנטים" }).first();
-  const add = sect.locator("form").last();
+  await page.goto("/manager/custom-fields?page=profile");
+  await expect(page.getByRole("heading", { name: "הוספת שדות" })).toBeVisible();
+  await page.getByText("הוספת שדה ל:").click();
+  const add = page.locator("form", { hasText: "שם בעברית" }).last();
   await add.getByLabel("שם בעברית").fill("e2e-מידת נעל");
   await add.getByLabel("סוג").selectOption("number");
   await add.getByRole("button", { name: "הוספת שדה" }).click();
+  await expect(page).toHaveURL(/page=profile/);
   await expect(page.getByText("נשמר")).toBeVisible();
-  await expect(page.locator("input[name=labelHe][value='e2e-מידת נעל']")).toBeVisible();
+  await expect(page.getByText("e2e-מידת נעל").first()).toBeVisible();
 });

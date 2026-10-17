@@ -117,3 +117,11 @@
 ### כניסת הדגמה (17.10, ערב)
 `/dev-login`: בחירת משתמש הדגמה בלי סיסמה, לבקשת המשתמש, כדי לראות את המערכת בעיני כל תפקיד. הגנות: דורש `ENABLE_DEV_LOGIN=1` (מוגדר ב-Vercel ל-Preview בלבד), נחסם כש-`VERCEL_ENV=production`, ומקבל רק משתמשי `@demo.test` פעילים. בדיקות: `dev-login.test.ts` (3), e2e "כבויה כברירת מחדל: 404". אומת על preview: כניסה כמנהל → `/manager`. **לבדיקת Fable:** ספק Auth.js חדש (`id: "dev"`) ב-`lib/auth.ts`; לוודא שאין דרך להפעיל אותו בייצור.
 
+
+### בקשות משתמש 18.10: דיווחים, עריכת סטודנט, הוספת שדות
+שינויי הרשאה והתנהגות גלויה. **לבדיקת Fable:**
+- **דיווחים:** סטודנט עורך דיווח `approved` (לא `rejected`) והוא חוזר ל-`pending` (`approvedAt/approvedBy` מתאפסים, `countsTowardTarget=true`). רכז/מנהל עורכים דרך `editReportByStaff` בלי שינוי סטטוס, `approvedHours ≤ reportedHours`, audit `staff_edit`.
+- **קובץ להיעדרות (רשות):** PDF/JPG/PNG/WebP עד 5MB, זיהוי לפי תוכן (`lib/storage.ts`), Blob פרטי; הורדה רק דרך `/api/reports/[id]/attachment` עם `can(read, hour_report)`. `serverActions.bodySizeLimit = 6mb`.
+- **תיבת דיווחים:** מנהל רואה קבוצות לפי רכז + סינון לפי רכז.
+- **הרשאות חדשות:** `update student_profile` לרכז (assigned) ולמראיין (any). ת"ז ובנק נשארים למנהל/סטודנט בלבד: `saveStudentByStaff` נוגע בת"ז רק אם `can(update, bank_details)`; בנק לא נערך בצוות. נרשם ב-audit `staff_update_*`. snapshot ההרשאות עודכן.
+- **הוספת שדות:** עמודה חדשה `custom_fields.page` (nullable, מיגרציה `0007`, **להריץ ידנית בייצור לפני פריסה**). דפים: `registration` (שלב אחרון בהרשמה, חוסם סיום אם חובה), `profile`, `report_form` (בטופס הדיווח של הסטודנט, וגם מוצג בתיבת הדיווחים). שדות של מקומות ושיבוצים לא מוצגים באף טופס עדיין.

@@ -20,7 +20,7 @@ export default async function SetupStep({ params, searchParams }: { params: Prom
   const section = STEPS[n - 1];
   const [p, types, inst, fields] = await Promise.all([
     getMyProfile(db(), actor), loadLookup(db(), actor.organizationId, "volunteer_type"), loadLookup(db(), actor.organizationId, "institution"),
-    listFields(db(), actor, "student"),
+    listFields(db(), actor, "student", "registration"),
   ]);
   const last = n === STEPS.length;
   const values = last ? await loadValues(db(), actor.organizationId, actor.id, fields) : {};

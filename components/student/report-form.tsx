@@ -14,8 +14,8 @@ const REASONS = ["reserve_duty", "illness", "security_situation", "other"] as co
  */
 const MAX_FILE = 5 * 1024 * 1024;
 
-export function ReportForm({ placements, absence: absenceInitial, report, action, max, today }: {
-  placements: Pl[]; absence: boolean; report?: ReportRow; action: (fd: FormData) => Promise<void>; max: string; today: string;
+export function ReportForm({ placements, absence: absenceInitial, report, action, max, today, extra }: {
+  placements: Pl[]; absence: boolean; report?: ReportRow; action: (fd: FormData) => Promise<void>; max: string; today: string; extra?: React.ReactNode;
 }) {
   const t = useTranslations("reportForm");
   const editing = !!report;
@@ -109,6 +109,8 @@ export function ReportForm({ placements, absence: absenceInitial, report, action
           </label>
         </div>
       </details>
+
+      {extra}
 
       <SubmitButton disabled={fileError} className="min-h-12 rounded-lg bg-primary px-4 py-2.5 text-base font-medium text-primary-foreground">{report ? t("resubmit") : t("submit")}</SubmitButton>
     </form>

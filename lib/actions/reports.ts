@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { ForbiddenError } from "@/lib/permissions";
 import { requireActor } from "@/lib/session";
+import { assertRequired, CustomFieldError, customInputFromForm, saveValues } from "@/lib/services/custom-fields";
 import { approveMany, decide, editReportByStaff, ReportError, resubmitReport, submitReport, type AbsenceReason, type SubmitInput } from "@/lib/services/reports";
 import { NotFoundError } from "@/lib/services/users";
 import { deleteAttachment, FileError, saveAttachment } from "@/lib/storage";
@@ -11,6 +12,7 @@ import { trimmed as str } from "./_form";
 
 function code(e: unknown): string {
   if (e instanceof ReportError || e instanceof FileError) return e.code;
+  if (e instanceof CustomFieldError) return "custom_required";
   if (e instanceof ForbiddenError) return "forbidden";
   if (e instanceof NotFoundError) return "not_found";
   console.error(e);
@@ -55,7 +57,10 @@ export async function submitReportAction(fd: FormData) {
   const back = `/student/report${input.type === "absence" ? "?absence=1" : ""}`;
   await run(back, "/student/reports?sent=1", async () => {
     const actor = await requireActor();
-    await withAttachment(fd, actor.organizationId, input, (i) => submitReport(db(), actor, i));
+    const cf = customInputFromForm(fd);
+    await assertRequired(db(), actor, "report", cf, "report_form");
+    const id = await withAttachment(fd, actor.organizationId, input, (i) => submitReport(db(), actor, i));
+    await saveValues(db(), actor, "report", id, cf);
   });
 }
 
@@ -63,7 +68,10 @@ export async function resubmitReportAction(fd: FormData) {
   const id = str(fd, "reportId");
   await run(`/student/reports/${id}`, "/student/reports?sent=1", async () => {
     const actor = await requireActor();
+    const cf = customInputFromForm(fd);
+    await assertRequired(db(), actor, "report", cf, "report_form");
     const { replacedAttachment } = await withAttachment(fd, actor.organizationId, inputOf(fd), (i) => resubmitReport(db(), actor, id, i));
+    await saveValues(db(), actor, "report", id, cf);
     await deleteAttachment(replacedAttachment);
   });
 }

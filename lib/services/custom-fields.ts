@@ -7,22 +7,35 @@ import { customFields, customFieldValues } from "@/lib/db/schema";
 import type { Role, SessionUser } from "@/lib/permissions";
 
 export type CustomEntity = "student" | "place" | "placement" | "report";
+/** הדפים שבהם שדות מותאמים מוצגים בפועל. registration = מילוי ראשוני של סטודנט; profile = הפרופיל וכרטיס הסטודנט */
+export const PAGES = [
+  { key: "registration", entity: "student" },
+  { key: "profile", entity: "student" },
+  { key: "report_form", entity: "report" },
+] as const;
+export type PageKey = (typeof PAGES)[number]["key"];
+export const defaultPage = (entity: CustomEntity): PageKey | null => PAGES.find((p) => p.entity === entity)?.key ?? null;
+export const pagesOf = (entity: string) => PAGES.filter((p) => p.entity === entity).map((p) => p.key);
+/** הדף בפועל של שדה: הערך השמור, או ברירת המחדל של הישות */
+export const effectivePage = (entity: CustomEntity, page: string | null): PageKey | null =>
+  (page && (pagesOf(entity) as string[]).includes(page) ? (page as PageKey) : defaultPage(entity));
+
 export type FieldDef = {
   id: string; key: string; labelHe: string; labelEn: string | null; type: "text" | "number" | "date" | "select" | "multi_select" | "file" | "boolean";
-  options: { key: string; label_he: string; label_en?: string }[]; required: boolean; canEdit: boolean;
+  options: { key: string; label_he: string; label_en?: string }[]; required: boolean; canEdit: boolean; page: PageKey | null;
 };
 export type FieldValue = string | number | boolean | string[] | null;
 
 const intersects = (a: Role[], b: Role[]) => a.some((r) => b.includes(r));
 
 /** השדות שהמשתמש רשאי לראות (canEdit מציין אם גם לערוך) */
-export async function listFields(db: DbOrTx, actor: SessionUser, entity: CustomEntity): Promise<FieldDef[]> {
+export async function listFields(db: DbOrTx, actor: SessionUser, entity: CustomEntity, page?: PageKey): Promise<FieldDef[]> {
   const rows = await db.select().from(customFields)
     .where(and(eq(customFields.organizationId, actor.organizationId), eq(customFields.entity, entity), eq(customFields.isActive, true)))
     .orderBy(asc(customFields.sortOrder), asc(customFields.labelHe));
-  return rows.filter((f) => intersects(f.visibleToRoles, actor.roles)).map((f) => ({
+  return rows.filter((f) => intersects(f.visibleToRoles, actor.roles) && (!page || effectivePage(entity, f.page) === page)).map((f) => ({
     id: f.id, key: f.key, labelHe: f.labelHe, labelEn: f.labelEn, type: f.type, options: f.options, required: f.required,
-    canEdit: intersects(f.editableByRoles, actor.roles),
+    canEdit: intersects(f.editableByRoles, actor.roles), page: effectivePage(entity, f.page),
   }));
 }
 
@@ -105,4 +118,13 @@ export function customInputFromForm(fd: FormData): Record<string, string[]> {
     if (key.startsWith("cf_")) out[key.slice(3)] = fd.getAll(key).map(String);
   }
   return out;
+}
+
+/** שדות חובה שהמשתמש עורך: חייבים להיות מלאים בקלט. נבדק *לפני* הפעולה, כדי לא להשאיר רשומה חצי-מלאה */
+export async function assertRequired(db: DbOrTx, actor: SessionUser, entity: CustomEntity, input: Record<string, string[]>, page?: PageKey) {
+  const fields = (await listFields(db, actor, entity, page)).filter((f) => f.canEdit && f.required && f.type !== "boolean");
+  for (const f of fields) {
+    const v = coerce(f, input[f.id] ?? []);
+    if (v === null || v === "" || (Array.isArray(v) && v.length === 0)) throw new CustomFieldError(f.key, "required");
+  }
 }

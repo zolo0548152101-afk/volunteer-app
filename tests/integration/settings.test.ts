@@ -90,7 +90,7 @@ describe("הגדרות: שמירה ולוג", () => {
   });
 });
 
-import { listFields } from "@/lib/services/custom-fields";
+import { assertRequired, CustomFieldError, listFields } from "@/lib/services/custom-fields";
 import { listAllFields, parseOptions, saveField } from "@/lib/services/custom-field-admin";
 
 describe("שדות מותאמים: ניהול", () => {
@@ -123,5 +123,20 @@ describe("שדות מותאמים: ניהול", () => {
     await expect(saveField(db(), manager, { entity: "student", labelHe: "ריק", type: "select", options: "", required: false, visibleToRoles: [], editableByRoles: [], isActive: true })).rejects.toMatchObject({ code: "invalid" });
     const keys = parseOptions("א | same\nב | same").map((o) => o.key);
     expect(new Set(keys).size).toBe(2);
+  });
+
+  it("דף: ברירת מחדל לפי ישות, סינון לפי דף, ושדה לא עובר לדף של ישות אחרת", async () => {
+    const reg = await saveField(db(), manager, { entity: "student", labelHe: "ברירת מחדל", type: "text", required: false, visibleToRoles: ["student"], editableByRoles: ["student"], isActive: true });
+    const prof = await saveField(db(), manager, { entity: "student", page: "profile", labelHe: "רק בפרופיל", type: "text", required: true, visibleToRoles: ["student"], editableByRoles: ["student"], isActive: true });
+    const rep = await saveField(db(), manager, { entity: "report", page: "profile", labelHe: "בדיווח", type: "text", required: true, visibleToRoles: ["student"], editableByRoles: ["student"], isActive: true });
+    const ids = async (page?: "registration" | "profile") => (await listFields(db(), student, "student", page)).map((x) => x.id);
+    expect(await ids("registration")).toContain(reg);
+    expect(await ids("registration")).not.toContain(prof);
+    expect(await ids("profile")).toEqual(expect.arrayContaining([prof]));
+    expect(await ids("profile")).not.toContain(reg);
+    // "profile" אינו דף של דיווח: חוזר לברירת המחדל של הישות
+    expect((await listFields(db(), student, "report", "report_form")).map((x) => x.id)).toContain(rep);
+    await expect(assertRequired(db(), student, "report", {}, "report_form")).rejects.toBeInstanceOf(CustomFieldError);
+    await expect(assertRequired(db(), student, "report", { [rep]: ["כן"] }, "report_form")).resolves.toBeUndefined();
   });
 });

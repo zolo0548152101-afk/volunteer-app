@@ -2,7 +2,9 @@ import { getTranslations } from "next-intl/server";
 import { saveFieldAction } from "@/lib/actions/settings";
 import { db } from "@/lib/db";
 import { requireRole } from "@/lib/session";
-import { ENTITIES, FIELD_TYPES, listAllFields } from "@/lib/services/custom-field-admin";
+import { FIELD_TYPES, listAllFields } from "@/lib/services/custom-field-admin";
+import { effectivePage, PAGES, type PageKey } from "@/lib/services/custom-fields";
+import Link from "next/link";
 import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
 
@@ -10,13 +12,22 @@ const input = "rounded-lg border border-border bg-background px-3 py-2";
 const ROLES = ["student", "coordinator", "interviewer", "manager"] as const;
 const KNOWN = ["invalid", "name_required", "not_found", "forbidden", "generic"];
 
-export default async function CustomFieldsPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
+export default async function CustomFieldsPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string; page?: string }> }) {
   const [sp, t, tr, actor] = await Promise.all([searchParams, getTranslations("customFieldsAdmin"), getTranslations("roles"), requireRole("manager")]);
   const fields = await listAllFields(db(), actor);
-  const form = (f: (typeof fields)[number] | null, entity: string) => (
+  const current: PageKey = PAGES.some((p) => p.key === sp.page) ? (sp.page as PageKey) : "registration";
+  const meta = PAGES.find((p) => p.key === current)!;
+  const onPage = (k: PageKey) => fields.filter((f) => effectivePage(f.entity, f.page) === k);
+  const orphans = fields.filter((f) => effectivePage(f.entity, f.page) === null);
+  const form = (f: (typeof fields)[number] | null, entity: string, page: PageKey | null) => (
     <form key={f?.id ?? `new-${entity}`} action={saveFieldAction} className={`grid grid-cols-2 gap-3 rounded-xl border p-3 text-sm ${f ? "border-border" : "border-dashed border-border"}`}>
       {f && <input type="hidden" name="id" value={f.id} />}
       <input type="hidden" name="entity" value={entity} />
+      {f && page && PAGES.filter((x) => x.entity === entity).length > 1 ? (
+        <label className="col-span-2 flex flex-col gap-1">{t("movePage")}
+          <select name="page" defaultValue={page} className={`${input} min-h-11`}>{PAGES.filter((x) => x.entity === entity).map((x) => <option key={x.key} value={x.key}>{t(`pages.${x.key}.title`)}</option>)}</select>
+        </label>
+      ) : page && <input type="hidden" name="page" value={page} />}
       <label className="flex flex-col gap-1">{t("labelHe")}<input name="labelHe" required defaultValue={f?.labelHe} className={input} /></label>
       <label className="flex flex-col gap-1">{t("labelEn")}<input name="labelEn" defaultValue={f?.labelEn ?? ""} className={input} dir="ltr" /></label>
       <label className="flex flex-col gap-1">{t("type")}
@@ -35,24 +46,65 @@ export default async function CustomFieldsPage({ searchParams }: { searchParams:
       </fieldset>
       <label className="flex items-center gap-2"><input type="checkbox" name="required" defaultChecked={f?.required} />{t("required")}</label>
       {f && <label className="flex items-center gap-2"><input type="checkbox" name="isActive" defaultChecked={f.isActive} />{t("active")}</label>}
-      <SubmitButton className="col-span-2 self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{f ? t("save") : t("add")}</SubmitButton>
+      <SubmitButton className="col-span-2 min-h-11 self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{f ? t("save") : t("add")}</SubmitButton>
     </form>
   );
+  const builtin = t.raw(`pages.${current}.builtin`) as string[];
   return (
     <main className="mx-auto w-full max-w-3xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <p className="mt-1 text-sm text-muted">{t("intro")}</p>
       {sp.saved && <Flash tone="status" className="mt-3 rounded-lg border border-ok/50 p-2 text-sm text-ok-fg">{t("saved")}</Flash>}
       {sp.error && KNOWN.includes(sp.error) && <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{t(`errors.${sp.error}`)}</Flash>}
-      {ENTITIES.map((e) => (
-        <section key={e} className="mt-8">
-          <h2 className="text-lg font-medium">{t(`entities.${e}`)}</h2>
-          <div className="mt-3 flex flex-col gap-3">
-            {fields.filter((f) => f.entity === e).map((f) => form(f, e))}
-            {form(null, e)}
-          </div>
+
+      <nav aria-label={t("chooseTitle")} className="mt-4">
+        <p className="text-sm font-medium">{t("chooseTitle")}</p>
+        <ul className="mt-2 grid gap-2 sm:grid-cols-3">
+          {PAGES.map((p) => (
+            <li key={p.key}>
+              <Link href={`/manager/custom-fields?page=${p.key}`} aria-current={p.key === current ? "page" : undefined}
+                className={`flex min-h-14 flex-col justify-center rounded-xl border px-3 py-2 text-sm ${p.key === current ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>
+                <span className="font-medium">{t(`pages.${p.key}.title`)}</span>
+                <span className="text-xs opacity-80">{t("fieldCount", { n: onPage(p.key).filter((f) => f.isActive).length })}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <section className="mt-6" aria-labelledby="page-h">
+        <h2 id="page-h" className="text-lg font-medium">{t(`pages.${current}.title`)}</h2>
+        <p className="mt-1 text-sm text-muted">{t(`pages.${current}.where`)}</p>
+
+        <h3 className="mt-4 text-sm font-medium">{t("alreadyThere")}</h3>
+        <ul className="mt-2 flex flex-wrap gap-2 text-sm">
+          {builtin.map((b) => <li key={b} className="rounded-full border border-border px-3 py-1">{b}</li>)}
+          {onPage(current).filter((f) => f.isActive).map((f) => <li key={f.id} className="rounded-full border border-primary/60 px-3 py-1">{f.labelHe} <span className="text-xs text-muted">({t("custom")})</span></li>)}
+        </ul>
+
+        <details className="mt-5 rounded-xl border border-dashed border-border p-3" open={!!sp.error || undefined}>
+          <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t("addToPage", { page: t(`pages.${current}.title`) })}</summary>
+          <div className="mt-3">{form(null, meta.entity, current)}</div>
+        </details>
+
+        {onPage(current).length > 0 && <h3 className="mt-6 text-sm font-medium">{t("manageExisting")}</h3>}
+        <div className="mt-2 flex flex-col gap-3">
+          {onPage(current).map((f) => (
+            <details key={f.id} className="rounded-xl border border-border p-3">
+              <summary className="flex min-h-11 cursor-pointer items-center gap-2 font-medium">{f.labelHe}{!f.isActive && <span className="text-xs font-normal text-muted">({t("inactive")})</span>}</summary>
+              <div className="mt-3">{form(f, f.entity, current)}</div>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {orphans.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-lg font-medium">{t("orphansTitle")}</h2>
+          <p className="mt-1 text-sm text-muted">{t("orphansHint")}</p>
+          <ul className="mt-2 list-disc ps-5 text-sm">{orphans.map((f) => <li key={f.id}>{f.labelHe} · {t(`entities.${f.entity}`)}</li>)}</ul>
         </section>
-      ))}
+      )}
     </main>
   );
 }
