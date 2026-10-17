@@ -37,7 +37,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
   const bulkMsg = sp.bulk && Number.isFinite(bOk) ? (bFail ? t("bulkPartial", { n: bOk, failed: bFail }) : bOk ? t("bulkDone", { n: bOk }) : t("bulkNone")) : null;
   const groups: { key: string; name: string; rows: typeof list }[] = [];
   for (const r of list) {
-    const key = isManager ? (r.coordinatorName ?? "") : "all";
+    const key = isManager ? (r.coordinatorId ?? "") : "all"; // לפי מזהה, לא לפי שם: שני רכזים עם אותו שם לא מתמזגים
     let g = groups.find((x) => x.key === key);
     if (!g) { g = { key, name: r.coordinatorName ?? t("noCoordinator"), rows: [] }; groups.push(g); }
     g.rows.push(r);
@@ -133,7 +133,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
                 <label className="flex flex-col gap-1">{t("editReported")}<input name="reportedHours" type="number" step="0.25" min="0" required defaultValue={r.reportedHours} className={`${input} min-h-11`} /></label>
                 <label className="flex flex-col gap-1">{t("editStart")}<input name="startTime" type="time" defaultValue={r.startTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
                 <label className="flex flex-col gap-1">{t("editEnd")}<input name="endTime" type="time" defaultValue={r.endTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
-                <label className="flex flex-col gap-1">{t("approvedHoursLabel")}<input name="approvedHours" type="number" step="0.25" min="0" required defaultValue={r.approvedHours ?? r.reportedHours} className={`${input} min-h-11`} /></label>
+                <label className="flex flex-col gap-1">{t("editApproved")}<input name="approvedHours" type="number" step="0.25" min="0" required defaultValue={r.approvedHours ?? r.reportedHours} className={`${input} min-h-11`} /></label>
                 <label className="col-span-2 flex flex-col gap-1">{t("notesLabelEdit")}<input name="notes" defaultValue={r.coordinatorNotes ?? ""} className={`${input} min-h-11`} /></label>
                 <SubmitButton className="col-span-2 min-h-11 rounded-lg border border-border px-4">{t("editSave")}</SubmitButton>
               </form>

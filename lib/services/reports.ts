@@ -7,7 +7,7 @@
  *    approved → pending (ביטול אישור, סיבה חובה ונרשמת).
  *  - כל מעבר נעשה תחת נעילת שורה ורשום בלוג בתוך אותה טרנזקציה.
  */
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql, ne } from "drizzle-orm";
 import type { Db, Tx } from "@/lib/db";
 import { academicYears, hourReports, placeTimeWindows, placements, programs, studentProfiles, users, volunteerPlaces } from "@/lib/db/schema";
 import { assertCan, can, ForbiddenError, type SessionUser } from "@/lib/permissions";
@@ -165,6 +165,16 @@ export async function editReportByStaff(db: Db, actor: SessionUser, reportId: st
     if (!timeOk(e.startTime) || !timeOk(e.endTime) || (e.startTime && e.endTime && e.endTime <= e.startTime)) throw new ReportError("bad_time");
     const rep = round2(e.reportedHours), app = round2(e.approvedHours);
     if (!Number.isFinite(rep) || rep <= 0 || rep > 24 || !Number.isFinite(app) || app < 0 || app > rep) throw new ReportError("bad_hours");
+    // התאריך נשאר בתוך השנה האקדמית שהדיווח שייך לה (הדוחות נספרים לפי academic_year_id)
+    const [year] = await tx.select({ s: academicYears.startDate, e: academicYears.endDate }).from(academicYears).where(eq(academicYears.id, old.academicYearId)).limit(1);
+    if (year && (e.volunteerDate < String(year.s) || e.volunteerDate > String(year.e))) throw new ReportError("outside_year");
+    // לא יוצרים כפילות: דיווח התנדבות אחר של אותו סטודנט, אותו יום, אותו שיבוץ
+    if (old.reportType === "volunteering" && old.placementId) {
+      const dup = await tx.select({ id: hourReports.id }).from(hourReports).where(and(
+        eq(hourReports.studentId, old.studentId), eq(hourReports.volunteerDate, e.volunteerDate), eq(hourReports.placementId, old.placementId),
+        eq(hourReports.reportType, "volunteering"), inArray(hourReports.status, ["pending", "approved", "needs_correction"]), ne(hourReports.id, old.id))).limit(1);
+      if (dup.length) throw new ReportError("duplicate");
+    }
     const [row] = await tx.update(hourReports).set({
       volunteerDate: e.volunteerDate, startTime: e.startTime || null, endTime: e.endTime || null, reportedHours: rep, approvedHours: app, coordinatorNotes: clean(e.coordinatorNotes),
     }).where(eq(hourReports.id, old.id)).returning();

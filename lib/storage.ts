@@ -45,7 +45,7 @@ export async function saveAttachment(file: File, orgId: string): Promise<string>
   const key = `attachments/${orgId}/${randomUUID()}.${ext}`;
   if (blobEnabled()) {
     await put(key, Buffer.from(bytes), { access: "private", contentType: TYPES[ext].mime, addRandomSuffix: false });
-  } else if (process.env.VERCEL_ENV === "production") {
+  } else if (process.env.VERCEL) { // בכל סביבת Vercel מערכת הקבצים לקריאה בלבד: בלי Blob אין איפה לשמור
     throw new FileError("storage_unavailable");
   } else {
     await mkdir(path.dirname(localPath(key)), { recursive: true });

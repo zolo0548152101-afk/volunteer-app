@@ -51,7 +51,7 @@ export function ReportForm({ placements, absence: absenceInitial, report, action
           <div className="grid grid-cols-2 gap-1 rounded-xl border border-border bg-paper p-1">
             {([false, true] as const).map((isAbsence) => (
               <label key={String(isAbsence)} className="relative">
-                <input type="radio" name="kind" value={isAbsence ? "absence" : "volunteering"} checked={absence === isAbsence} onChange={() => setAbsence(isAbsence)} className="peer sr-only" />
+                <input type="radio" name="kind" value={isAbsence ? "absence" : "volunteering"} checked={absence === isAbsence} onChange={() => setAbsence(isAbsence)} className="peer absolute inset-0 z-10 size-full cursor-pointer opacity-0" />
                 <span className="flex min-h-11 cursor-pointer items-center justify-center rounded-lg px-3 text-sm font-medium text-ink-2 transition-colors duration-150 peer-checked:bg-card peer-checked:text-ink peer-checked:shadow-sm peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary">
                   {t(isAbsence ? "kindAbsence" : "kindVolunteering")}
                 </span>

@@ -578,7 +578,8 @@
     "editEnd": "End time",
     "notesLabelEdit": "Coordinator note",
     "editSave": "Save changes",
-    "editHint": "Editing does not change the report status"
+    "editHint": "Editing does not change the report status",
+    "editApproved": "Approved hours"
   },
   "nav2": {
     "reports": "Hour reports",

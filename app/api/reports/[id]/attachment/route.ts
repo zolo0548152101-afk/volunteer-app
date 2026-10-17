@@ -28,8 +28,8 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
       "content-disposition": `inline; filename="absence-document.${ext}"`,
       "cache-control": "private, no-store",
       "x-content-type-options": "nosniff",
-      // מסמך מצורף לא מריץ סקריפטים גם אם הוטמע בדף
-      "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+      // הסוג נקבע לפי magic bytes + nosniff, כך שהדפדפן לא יפרש קובץ כ-HTML. בלי `sandbox`: הוא חוסם את מציג ה-PDF של Chrome
+      "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'",
     },
   });
 }

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { and, eq } from "drizzle-orm";
 import { closeDb, db } from "@/lib/db";
-import { auditLog, hourReports, placements } from "@/lib/db/schema";
+import { auditLog, hourReports, placements, users } from "@/lib/db/schema";
 import { deleteOrganization, seedDemo } from "@/lib/db/seed";
 import { ForbiddenError, type Role, type SessionUser } from "@/lib/permissions";
 import { approveMany, decide, editReportByStaff, getMyReport, listInbox, listMyReports, myProgress, reportablePlacements, resubmitReport, submitReport, type SubmitInput } from "@/lib/services/reports";
@@ -274,6 +274,21 @@ describe("עריכת דיווחים שאושרו", () => {
     await expect(editReportByStaff(db(), c1, id, { volunteerDate: daysAgo(17), startTime: null, endTime: null, reportedHours: 2, approvedHours: 3, coordinatorNotes: "" })).rejects.toMatchObject({ code: "bad_hours" });
     await expect(editReportByStaff(db(), st, id, { volunteerDate: daysAgo(17), startTime: null, endTime: null, reportedHours: 2, approvedHours: 2, coordinatorNotes: "" })).rejects.toThrow();
     await expect(editReportByStaff(db(), c2, id, { volunteerDate: daysAgo(17), startTime: null, endTime: null, reportedHours: 2, approvedHours: 2, coordinatorNotes: "" })).rejects.toThrow();
+  });
+
+  it("עריכת צוות: לא יוצאת מהשנה האקדמית ולא יוצרת כפילות באותו יום", async () => {
+    // סטודנט אחר, כדי לא להתנגש בדיווחים שנוצרו למעלה
+    const s2 = act(s.students[1], s.organizationId, ["student"]);
+    const [u] = await db().select({ coordinatorId: users.coordinatorId }).from(users).where(eq(users.id, s2.id));
+    const coord = [c1, c2].find((c) => c.id === u.coordinatorId)!;
+    const [pl] = await db().select().from(placements).where(and(eq(placements.studentId, s2.id), eq(placements.isActive, true)));
+    const v = (day: number) => ({ type: "volunteering" as const, placementId: pl.id, volunteerDate: daysAgo(day), reportedHours: 2 });
+    const a = await submitReport(db(), s2, v(3));
+    const b = await submitReport(db(), s2, v(4));
+    const base = { startTime: null, endTime: null, reportedHours: 2, approvedHours: 2, coordinatorNotes: "" };
+    await expect(editReportByStaff(db(), coord, a, { ...base, volunteerDate: "2000-01-01" })).rejects.toMatchObject({ code: "outside_year" });
+    await expect(editReportByStaff(db(), coord, a, { ...base, volunteerDate: daysAgo(4) })).rejects.toMatchObject({ code: "duplicate" });
+    await expect(editReportByStaff(db(), coord, b, { ...base, volunteerDate: daysAgo(4) })).resolves.toBeUndefined();
   });
 
   it("צירוף קובץ להיעדרות נשמר, ומנהל רואה קבוצות לפי רכז", async () => {

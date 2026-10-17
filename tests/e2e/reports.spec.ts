@@ -84,7 +84,7 @@ test("טופס הדיווח: מתג היעדרות מחליף את השיבוץ 
   await login(page, "student1@demo.test");
   await page.goto("/student/report");
   await expect(page.getByLabel("שיבוץ")).toBeVisible();
-  await page.getByRole("radio", { name: "היעדרות" }).check({ force: true });
+  await page.getByRole("radio", { name: "היעדרות" }).check();
   await expect(page.getByLabel("סיבת ההיעדרות")).toBeVisible();
   await expect(page.getByLabel("שיבוץ")).toBeHidden();
 });
