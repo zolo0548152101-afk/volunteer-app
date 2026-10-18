@@ -76,6 +76,18 @@ export async function setRolesAction(fd: FormData) {
   });
 }
 
+/** חלון עריכת משתמש: תפקידים ושיוך לרכז (לסטודנט) בשמירה אחת */
+export async function saveUserAction(fd: FormData) {
+  await run(async () => {
+    const actor = await requireActor();
+    const userId = String(fd.get("userId"));
+    const updated = await setRoles(db(), actor, userId, rolesOf(fd));
+    if (fd.has("coordinatorId") && updated.roles.includes("student")) {
+      await assignCoordinator(db(), actor, [userId], String(fd.get("coordinatorId") || "") || null);
+    }
+  });
+}
+
 export async function setStatusAction(fd: FormData) {
   await run(async () => {
     await setStatus(db(), await requireActor(), String(fd.get("userId")), fd.get("status") === "inactive" ? "inactive" : "active");

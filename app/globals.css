@@ -111,3 +111,9 @@ body {
 
 /* ── מעטפת כחולה כהה: גרדיאנט, כפתורי גלולה, ופאנל בהיר מעליו ── */
 .app-navy { background: linear-gradient(180deg, #17346b 0, #0d1d3e 420px, #0a1329 100%); background-color: #0a1329; }
+
+/* כותרות טבלה ממוינות (ListView): חץ לפי aria-sort */
+th[data-sort] { cursor: pointer; user-select: none; }
+th[data-sort]::after { content: " ↕"; opacity: .35; }
+th[data-sort][aria-sort="ascending"]::after { content: " ↑"; opacity: 1; }
+th[data-sort][aria-sort="descending"]::after { content: " ↓"; opacity: 1; }

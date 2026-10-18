@@ -1,3 +1,4 @@
+import { logout } from "./helpers";
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
@@ -46,7 +47,7 @@ for (const [email, path, heading] of [
     await login(page, email);
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
-    await page.getByRole("button", { name: "יציאה" }).click();
+    await logout(page);
     await expect(page).toHaveURL(/\/login/);
     await page.goto(path);
     await expect(page).toHaveURL(/\/login/);
@@ -81,7 +82,7 @@ test.describe("ניהול משתמשים", () => {
     await expect(page).toHaveURL(/\/coordinator$/);
     await page.goto("/manager/users");
     await expect(page).toHaveURL(/\/coordinator$/);
-    await page.getByRole("button", { name: "יציאה" }).click();
+    await logout(page);
     await expect(page).toHaveURL(/\/login/);
 
     await login(page, "manager@demo.test");
@@ -145,7 +146,7 @@ test("אחרי יציאה, עוגייה ישנה שחוזרת לדפדפן כב�
   await login(page, "coord2@demo.test");
   await expect(page).toHaveURL(/\/coordinator$/);
   const old = (await context.cookies()).find((c) => c.name.endsWith("session-token"))!;
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
   await expect(page).toHaveURL(/\/login/);
   await context.addCookies([old]); // כמו תשובה מאוחרת שמחזירה את העוגייה
   await page.goto("/coordinator");

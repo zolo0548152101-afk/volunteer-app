@@ -13,6 +13,8 @@ import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
 import { ListView } from "@/components/list-view";
 import { EditDialog } from "@/components/edit-dialog";
+import { FilterBar } from "@/components/filter-bar";
+import { dt, Th } from "@/components/data-table";
 
 const STATUSES: ReportStatus[] = ["pending", "needs_correction", "approved", "rejected"];
 const input = "rounded-lg border border-border bg-background px-3 py-2";
@@ -35,7 +37,18 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
   const qs = new URLSearchParams({ status, ...(studentId ? { student: studentId } : {}), ...(placeId ? { place: placeId } : {}), ...(month ? { month } : {}), ...(coordinatorId ? { coordinator: coordinatorId } : {}) }).toString();
   const back = `/reports?${qs}`;
   const search = (r: (typeof list)[number]) => [r.studentName, r.volunteerDate, date(r.volunteerDate), r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} ${r.windowLabel ?? ""}`, r.coordinatorName, t(`status.${r.status}`), r.reportedHours, r.studentNotes, r.coordinatorNotes].filter(Boolean).join(" ");
-  const filtered = !!(studentId || placeId || month || coordinatorId);
+  const monthOptions = (() => {
+    const now = new Date(); const out: { value: string; label: string }[] = [];
+    for (let i = 0; i < 18; i++) { const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1)); out.push({ value: d.toISOString().slice(0, 7), label: format.dateTime(d, { month: "long", year: "numeric", timeZone: "UTC" }) }); }
+    if (month && !out.some((o) => o.value === month)) out.push({ value: month, label: month });
+    return out;
+  })();
+  const filterFields = [
+    { name: "student", label: t("filterStudent"), value: studentId, options: options.students.map((o) => ({ value: o.id, label: o.name })) },
+    { name: "place", label: t("filterPlace"), value: placeId, options: options.places.map((o) => ({ value: o.id, label: o.name })) },
+    ...(isManager && options.coordinators.length > 0 ? [{ name: "coordinator", label: t("filterCoordinator"), value: coordinatorId, options: options.coordinators.map((o) => ({ value: o.id, label: o.name })) }] : []),
+    { name: "month", label: t("filterMonth"), value: month, options: monthOptions },
+  ];
   const [bOk, bFail] = (sp.bulk ?? "").split("-").map(Number);
   const bulkMsg = sp.bulk && Number.isFinite(bOk) ? (bFail ? t("bulkPartial", { n: bOk, failed: bFail }) : bOk ? t("bulkDone", { n: bOk }) : t("bulkNone")) : null;
   const groups: { key: string; name: string; rows: typeof list }[] = [];
@@ -91,34 +104,6 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
       <nav className="mt-3 flex flex-wrap gap-2" aria-label={t("filter")}>
         {STATUSES.map((s) => <Link key={s} href={`/reports?status=${s}`} aria-current={s === status ? "page" : undefined} className={`rounded-full border px-3 py-1 text-sm ${s === status ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{t(`status.${s}`)}</Link>)}
       </nav>
-      <form method="get" action="/reports" className="mt-3 flex flex-wrap items-end gap-2 text-sm" aria-label={t("filters")}>
-        <input type="hidden" name="status" value={status} />
-        <label className="flex flex-col gap-1">{t("filterStudent")}
-          <select name="student" aria-label={t("filterStudent")} defaultValue={studentId ?? ""} className={`${input} min-h-11`}>
-            <option value="">{t("filterAll")}</option>
-            {options.students.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-          </select>
-        </label>
-        <label className="flex flex-col gap-1">{t("filterPlace")}
-          <select name="place" aria-label={t("filterPlace")} defaultValue={placeId ?? ""} className={`${input} min-h-11`}>
-            <option value="">{t("filterAll")}</option>
-            {options.places.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-          </select>
-        </label>
-        {isManager && options.coordinators.length > 0 && (
-          <label className="flex flex-col gap-1">{t("filterCoordinator")}
-            <select name="coordinator" aria-label={t("filterCoordinator")} defaultValue={coordinatorId ?? ""} className={`${input} min-h-11`}>
-              <option value="">{t("filterAll")}</option>
-              {options.coordinators.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-            </select>
-          </label>
-        )}
-        <label className="flex flex-col gap-1">{t("filterMonth")}
-          <input name="month" aria-label={t("filterMonth")} type="month" defaultValue={month ?? ""} className={`${input} min-h-11`} />
-        </label>
-        <SubmitButton className="min-h-11 rounded-lg border border-border px-4">{t("applyFilters")}</SubmitButton>
-        {filtered && <Link href={`/reports?status=${status}`} className="inline-flex min-h-11 items-center underline">{t("clearFilters")}</Link>}
-      </form>
       <ReportErrorBanner code={sp.error} />
       {sp.saved && <Flash tone="status" className="mt-3 rounded-lg border border-border p-3 text-sm">{t("saved")}</Flash>}
       {bulkMsg && <Flash tone="status" className="mt-3 rounded-lg border border-border p-3 text-sm">{bulkMsg}</Flash>}
@@ -130,7 +115,9 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
         </form>
       )}
       {list.length === 0 && <p className="mt-4 text-muted">{t(`empty.${status}`)}</p>}
-      <ListView storageKey="inbox" cards={(
+      <ListView storageKey="inbox" placeholder={t("searchPlaceholder")}
+        toolbar={<FilterBar action="/reports" keep={{ status }} fields={filterFields} labels={{ filter: t("filters"), title: t("filtersTitle"), all: t("filterAll"), apply: t("applyFilters"), clear: t("clearFilters"), remove: t("removeFilter") }} />}
+        cards={(
         <>
         {groups.map((g) => (
           <section key={g.key} data-group className="mt-4" aria-label={isManager ? g.name : undefined}>
@@ -190,25 +177,32 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
         ))}
         </>
       )} table={(
-        <table className="w-full text-sm">
-          <thead className="bg-paper text-xs text-ink-3">
+        <table className={dt.table}>
+          <thead className={dt.head}>
             <tr>
               {status === "pending" && <th scope="col" className="w-0 px-3 py-2"><span className="sr-only">{t("pickColumn")}</span></th>}
-              {(isManager ? ["student", "date", "place", "coordinator", "reported", "approved", "status", "actions"] : ["student", "date", "place", "reported", "approved", "status", "actions"] as const).map((k) => <th key={k} scope="col" className="px-3 py-2 text-start font-medium">{t(`col.${k}`)}</th>)}
+              <Th sort="text">{t("col.student")}</Th>
+              <Th sort="text">{t("col.date")}</Th>
+              <Th sort="text">{t("col.place")}</Th>
+              {isManager && <Th sort="text">{t("col.coordinator")}</Th>}
+              <Th sort="num" num>{t("col.reported")}</Th>
+              <Th sort="num" num>{t("col.approved")}</Th>
+              <Th sort="text">{t("col.status")}</Th>
+              <Th>{t("col.actions")}</Th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-hairline">
+          <tbody className={dt.body}>
             {list.map((r) => (
               <tr key={r.id} data-search={search(r)}>
-                {status === "pending" && <td className="px-3 py-2">{r.reportType !== "absence" && <input type="checkbox" name="ids" value={r.id} form="bulk" aria-label={t("pick", { student: r.studentName })} className="size-5" />}</td>}
-                <td className="px-3 py-2 font-medium"><Link href={`/students/${r.studentId}`} className="underline">{r.studentName}</Link></td>
-                <td className="whitespace-nowrap px-3 py-2">{date(r.volunteerDate)}</td>
-                <td className="px-3 py-2">{r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} · ${r.windowLabel ?? ""}`}</td>
-                {isManager && <td className="px-3 py-2">{r.coordinatorName ?? t("noCoordinator")}</td>}
-                <td className="px-3 py-2 tabular-nums">{r.reportedHours}</td>
-                <td className="px-3 py-2 tabular-nums">{r.status === "approved" ? r.approvedHours : "—"}</td>
-                <td className="px-3 py-2">{t(`status.${r.status}`)}</td>
-                <td className="whitespace-nowrap px-3 py-2">
+                {status === "pending" && <td className={dt.td}>{r.reportType !== "absence" && <input type="checkbox" name="ids" value={r.id} form="bulk" aria-label={t("pick", { student: r.studentName })} className="size-5" />}</td>}
+                <td className={`${dt.td} font-medium`}><Link href={`/students/${r.studentId}`} className="underline">{r.studentName}</Link></td>
+                <td className={`${dt.td} whitespace-nowrap`} data-v={r.volunteerDate}>{date(r.volunteerDate)}</td>
+                <td className={dt.td}>{r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} · ${r.windowLabel ?? ""}`}</td>
+                {isManager && <td className={dt.td}>{r.coordinatorName ?? t("noCoordinator")}</td>}
+                <td className={dt.num}>{r.reportedHours}</td>
+                <td className={dt.num}>{r.status === "approved" ? r.approvedHours : "—"}</td>
+                <td className={dt.td}>{t(`status.${r.status}`)}</td>
+                <td className={dt.actions}>
                   <span className="flex items-center gap-3">
                     {status === "pending" && r.reportType !== "absence" && (
                       <form action={decideAction}>

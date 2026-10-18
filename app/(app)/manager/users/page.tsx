@@ -9,6 +9,7 @@ import { BulkAssign } from "@/components/users/bulk-assign";
 import { UserRow } from "@/components/users/user-row";
 import { EditDialog } from "@/components/edit-dialog";
 import { ListView } from "@/components/list-view";
+import { dt, Th } from "@/components/data-table";
 import { Flash } from "@/components/flash";
 
 const ERRORS = ["forbidden", "not_found", "email_taken", "bad_roles", "bad_coordinator", "not_student", "last_manager", "self_lockout", "required", "email_failed", "generic"];
@@ -24,7 +25,6 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const people = coordinators.map((c) => ({ id: c.id, name: nameOf.get(c.id)! }));
   const primary = "inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground";
   const secondary = "inline-flex min-h-10 items-center rounded-lg border border-border bg-card px-4 text-sm hover:bg-paper";
-  const th = "px-3 py-2 text-start font-medium";
   return (
     <main className="mx-auto w-full max-w-5xl p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -40,13 +40,13 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
       </div>
       {error && ERRORS.includes(error) && <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{t(`errors.${error}` as never)}</Flash>}
 
-      <ListView storageKey="users" table={(
-        <table className="w-full text-sm">
-          <thead className="bg-paper text-xs text-ink-3"><tr>
-            <th scope="col" className={th}>{t("user")}</th><th scope="col" className={th}>{t("roles")}</th><th scope="col" className={`${th} hidden sm:table-cell`}>{t("statusCol")}</th><th scope="col" className={`${th} hidden sm:table-cell`}>{t("coordinator")}</th>
+      <ListView storageKey="users" placeholder={t("searchPlaceholder")} table={(
+        <table className={dt.table}>
+          <thead className={dt.head}><tr>
+            <Th sort="text">{t("user")}</Th><Th>{t("roles")}</Th><Th sort="text" className="hidden sm:table-cell">{t("statusCol")}</Th><Th sort="text" className="hidden sm:table-cell">{t("coordinator")}</Th>
             <th scope="col" className="px-3 py-2"><span className="sr-only">{t("editRow")}</span></th>
           </tr></thead>
-          <tbody className="divide-y divide-hairline">
+          <tbody className={dt.body}>
             {list.map((u) => <UserRow key={u.id} user={u} coordinatorName={u.coordinatorId ? nameOf.get(u.coordinatorId) ?? null : null} self={u.id === actor.id} coordinators={people} />)}
           </tbody>
         </table>

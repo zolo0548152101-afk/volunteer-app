@@ -17,7 +17,7 @@
     "settings": "Settings",
     "logout": "Log out",
     "skipToContent": "Skip to content",
-    "groupMain": "Manage",
+    "groupMain": "Daily work",
     "groupReports": "Reports",
     "groupSettings": "Settings",
     "groupMe": "Mine",
@@ -27,7 +27,10 @@
     "more": "More",
     "mainNav": "Main navigation",
     "bottomNav": "Bottom navigation",
-    "pendingCount": "{n} pending reports"
+    "pendingCount": "{n} pending reports",
+    "groupAdmin": "Administration",
+    "admin": "Administration",
+    "userMenu": "User menu"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -75,7 +78,15 @@
     "hours": "hours",
     "comingSoon": "Coming soon",
     "sending": "Sending…",
-    "close": "Close"
+    "close": "Close",
+    "saved": "Saved",
+    "saveFailed": "Saving failed. Try again",
+    "discardTitle": "Leave without saving?",
+    "keepEditing": "Keep editing",
+    "discard": "Leave without saving",
+    "confirm": "Confirm",
+    "breadcrumb": "Breadcrumb",
+    "backTo": "Back to {name}"
   },
   "statuses": {
     "pending": "Pending approval",
@@ -135,7 +146,10 @@
     },
     "editRow": "Edit",
     "user": "User",
-    "statusCol": "Status"
+    "statusCol": "Status",
+    "confirmDeactivate": "Deactivate {name}? They will not be able to sign in",
+    "save": "Save",
+    "searchPlaceholder": "Search by name, email or role"
   },
   "places": {
     "title": "Volunteer places",
@@ -195,7 +209,11 @@
     },
     "statusCol": "Status",
     "editRow": "Edit",
-    "activeBadge": "Active"
+    "activeBadge": "Active",
+    "confirmDeactivateWindow": "Deactivate window {name}? No new placements into it",
+    "searchPlaceholder": "Search by place, city or type",
+    "overTarget": "Over target",
+    "occupancy": "Occupancy"
   },
   "days": {
     "sun": "Sunday",
@@ -472,7 +490,9 @@
     "backToList": "Back to students",
     "continueInterview": "Continue interview (draft)",
     "continueReassign": "Continue reassignment (draft)",
-    "draftHint": "There is an unsaved draft open. Continue it or cancel it from inside."
+    "draftHint": "There is an unsaved draft open. Continue it or cancel it from inside.",
+    "searchPlaceholder": "Search by name, email or coordinator",
+    "open": "Open"
   },
   "queue": {
     "title": "Awaiting interview",
@@ -570,7 +590,8 @@
       "approved": "Approved",
       "status": "Status",
       "actions": "Actions"
-    }
+    },
+    "searchPlaceholder": "Search by date, place or status"
   },
   "inbox": {
     "title": "Hour reports",
@@ -600,7 +621,7 @@
     "reject": "Reject",
     "unapproveReason": "Reason for un-approving",
     "unapprove": "Un-approve",
-    "filters": "Filters",
+    "filters": "Filter",
     "filterStudent": "Student",
     "filterPlace": "Place",
     "filterMonth": "Month",
@@ -640,7 +661,10 @@
     "approveQuick": "Approve report by {student}",
     "details": "Details",
     "pickColumn": "Select",
-    "editShort": "Edit"
+    "editShort": "Edit",
+    "searchPlaceholder": "Search by student, place, date or status",
+    "filtersTitle": "Filter reports",
+    "removeFilter": "Remove filter"
   },
   "nav2": {
     "reports": "Hour reports",
@@ -719,7 +743,14 @@
     "edit": "Edit",
     "currentBadge": "Current",
     "inactiveBadge": "Inactive",
-    "hoursUnit": "hours"
+    "hoursUnit": "hours",
+    "statusCol": "Status",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "ruleOff": "Off",
+    "ruleSummary": "After {first} days, up to {max} times, {channels}",
+    "ruleDigestSummary": "Coordinator digest: {channels}",
+    "comingSoon": "Soon"
   },
   "nav3": {
     "settings": "Settings"
@@ -885,7 +916,13 @@
       "approved": "Approved",
       "rejected": "Rejected",
       "needs_correction": "Needs fix"
-    }
+    },
+    "searchPlaceholder": "Search report rows",
+    "filterTitle": "Filter report",
+    "allValues": "All",
+    "apply": "Show",
+    "clearFilters": "Clear filters",
+    "removeFilter": "Remove filter"
   },
   "certificate": {
     "title": "Volunteer hours certificate",

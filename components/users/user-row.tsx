@@ -1,11 +1,11 @@
 import { getTranslations } from "next-intl/server";
-import { resendInviteAction, setRolesAction, setStatusAction } from "@/lib/actions/users";
+import { resendInviteAction, saveUserAction, setStatusAction } from "@/lib/actions/users";
 import { roles } from "@/lib/permissions";
 import type { SafeUser } from "@/lib/services/users";
 import { SubmitButton } from "@/components/submit-button";
+import { ConfirmSubmit } from "@/components/confirm-submit";
 import { EditDialog } from "@/components/edit-dialog";
 import { MultiSelect } from "@/components/multi-select";
-import { BulkAssign } from "@/components/users/bulk-assign";
 
 type Person = { id: string; name: string };
 const chip = { active: "bg-ok-bg text-ok-fg", invited: "bg-warn-bg text-warn-fg", inactive: "bg-paper text-ink-3" } as const;
@@ -28,17 +28,20 @@ export async function UserRow({ user, coordinatorName, self, coordinators }: { u
       <td className="px-3 py-2.5 text-end">
         <EditDialog label={t("editRow")} title={name}>
           <div className="flex flex-col gap-5">
-            <form action={setRolesAction} className="flex flex-col gap-3">
+            <form action={saveUserAction} className="flex flex-col gap-4">
               <input type="hidden" name="userId" value={user.id} />
               <MultiSelect name="roles" label={t("roles")} options={roles.map((r) => ({ value: r, label: tr(r) }))} defaultValue={user.roles} />
-              <SubmitButton className="min-h-10 self-start rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground">{t("saveRoles")}</SubmitButton>
+              {isStudent && (
+                <label className="flex flex-col gap-1 text-sm">
+                  {t("coordinator")}
+                  <select name="coordinatorId" defaultValue={user.coordinatorId ?? ""} className="min-h-11 rounded-lg border border-border bg-transparent px-3 text-base">
+                    <option value="">{t("noCoordinator")}</option>
+                    {coordinators.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </label>
+              )}
+              <SubmitButton className="min-h-11 self-start rounded-lg bg-primary px-6 text-sm font-medium text-primary-foreground">{t("save")}</SubmitButton>
             </form>
-            {isStudent && (
-              <section className="border-t border-hairline pt-4" aria-label={t("bulkTitle")}>
-                <h3 className="mb-2 text-sm font-semibold">{t("coordinator")}</h3>
-                <BulkAssign coordinators={coordinators} students={[{ id: user.id, name, coordinator: coordinatorName }]} defaultStudentIds={[user.id]} defaultCoordinatorId={user.coordinatorId ?? ""} />
-              </section>
-            )}
             <div className="flex flex-wrap gap-2 border-t border-hairline pt-4">
               {(user.status !== "active" || !self) && (
                 <form action={resendInviteAction}>
@@ -50,7 +53,9 @@ export async function UserRow({ user, coordinatorName, self, coordinators }: { u
                 <form action={setStatusAction}>
                   <input type="hidden" name="userId" value={user.id} />
                   <input type="hidden" name="status" value={user.status === "inactive" ? "active" : "inactive"} />
-                  <SubmitButton className={`min-h-10 rounded-lg border px-4 text-sm ${user.status === "inactive" ? "border-border hover:bg-paper" : "border-bad/50 text-bad-fg hover:bg-bad-bg"}`}>{user.status === "inactive" ? t("activate") : t("deactivate")}</SubmitButton>
+                  {user.status === "inactive"
+                    ? <SubmitButton className="min-h-10 rounded-lg border border-border px-4 text-sm hover:bg-paper">{t("activate")}</SubmitButton>
+                    : <ConfirmSubmit label={t("deactivate")} message={t("confirmDeactivate", { name })} confirmLabel={t("deactivate")} className="min-h-10 rounded-lg border border-bad/50 px-4 text-sm text-bad-fg hover:bg-bad-bg" />}
                 </form>
               )}
             </div>

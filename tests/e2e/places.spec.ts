@@ -25,8 +25,8 @@ test("מנהל יוצר מקום וחלון זמן ורואה תפוסה מחו�
   await page.getByRole("button", { name: /חלון זמן חדש/ }).click();
   const form = page.getByRole("dialog", { name: "חלון זמן חדש" });
   await form.getByLabel("שם החלון").fill("ראשון בוקר");
-  await form.getByRole("combobox", { name: "ימים" }).click();
-  await form.getByRole("option", { name: "ראשון" }).getByRole("checkbox").check();
+  await form.getByRole("button", { name: "ימים" }).click();
+  await form.getByRole("checkbox", { name: "ראשון" }).check();
   await form.getByLabel("מספר תקנים").fill("1.5");
   await form.getByLabel("שעות שבועיות לתקן").fill("4");
   await form.getByRole("button", { name: "הוספת חלון" }).click();

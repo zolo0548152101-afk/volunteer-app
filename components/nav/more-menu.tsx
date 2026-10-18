@@ -27,8 +27,8 @@ export function MoreMenu({ groups, label }: { groups: NavGroup[]; label: string 
   return (
     <div className="relative flex flex-1">
       <button ref={btn} type="button" aria-expanded={open} aria-controls={panel} onClick={() => setOpenAt(open ? null : path)}
-        className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] ${active || open ? "font-semibold text-ink" : "text-ink-3"}`}>
-        <svg aria-hidden="true" width={20} height={20} viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+        className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] ${active || open ? "font-semibold text-primary" : "text-ink-3"}`}>
+        <span className={`grid h-7 w-12 place-items-center rounded-full ${active ? "bg-info-bg" : ""}`}><svg aria-hidden="true" width={20} height={20} viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg></span>
         {label}
       </button>
       {open && (

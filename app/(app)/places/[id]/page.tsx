@@ -12,6 +12,7 @@ import { ForbiddenError } from "@/lib/permissions";
 import { PlaceFields } from "@/components/places/place-fields";
 import { WindowFields } from "@/components/places/window-form";
 import { PlaceError } from "@/components/places/place-error";
+import { ConfirmSubmit } from "@/components/confirm-submit";
 import { EditDialog } from "@/components/edit-dialog";
 import { SubmitButton } from "@/components/submit-button";
 
@@ -111,7 +112,9 @@ export default async function PlaceCard({ params, searchParams }: { params: Prom
                               <input type="hidden" name="placeId" value={id} />
                               <input type="hidden" name="windowId" value={w.id} />
                               <input type="hidden" name="active" value={w.isActive ? "0" : "1"} />
-                              <SubmitButton className="min-h-10 rounded-lg border border-border px-4 text-sm hover:bg-paper">{w.isActive ? t("deactivate") : t("activate")}</SubmitButton>
+                              {w.isActive
+                                ? <ConfirmSubmit label={t("deactivate")} message={t("confirmDeactivateWindow", { name: w.label })} confirmLabel={t("deactivate")} className="min-h-10 rounded-lg border border-bad/50 px-4 text-sm text-bad-fg hover:bg-bad-bg" />
+                                : <SubmitButton className="min-h-10 rounded-lg border border-border px-4 text-sm hover:bg-paper">{t("activate")}</SubmitButton>}
                             </form>
                           </EditDialog>
                         )}

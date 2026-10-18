@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
-import { login } from "./helpers";
+import { login, openUserMenu } from "./helpers";
 
 test("מתג תצוגה: כהה וניגודיות גבוהה נשמרים אחרי רענון", async ({ page, isMobile }) => {
   await login(page, "manager@demo.test");
   await page.goto("/reports");
-  const group = page.getByRole("group", { name: "מצב תצוגה" }).filter({ visible: true });
-  await group.getByRole("button", { name: "כהה" }).click();
+  await openUserMenu(page);
+  await page.getByRole("group", { name: "מצב תצוגה" }).filter({ visible: true }).getByRole("button", { name: "כהה" }).click();
   await page.getByRole("button", { name: "ניגודיות גבוהה" }).filter({ visible: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator("html")).toHaveAttribute("data-contrast", "high");
@@ -28,8 +28,8 @@ test("כרטיס סטודנט: צפייה, ועריכה במקום עם שמיר
   await card.getByRole("button", { name: "ביטול" }).click();
   await expect(card.getByRole("textbox")).toHaveCount(0);
   await page.getByRole("link", { name: "תעודת שעות" }).click();
-  await page.getByRole("link", { name: "חזרה" }).click();
+  await page.getByRole("link", { name: /חזרה: .*איתי גולן/ }).click();
   await expect(page).toHaveURL(/\/students\/[0-9a-f-]{36}$/);
-  await page.getByRole("link", { name: "חזרה לרשימת הסטודנטים" }).click();
+  await page.getByRole("link", { name: "חזרה: סטודנטים" }).click();
   await expect(page).toHaveURL(/\/students$/);
 });

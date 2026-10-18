@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { createHash, randomBytes } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { login } from "./helpers";
+import { login, logout } from "./helpers";
 
 try { process.loadEnvFile(".env.local"); } catch {}
 
@@ -50,7 +50,7 @@ test("הזמנה: מנהל מזמין, המוזמן קובע סיסמה ונכנ
   await dlg.getByRole("button", { name: "שליחת הזמנה", exact: true }).click();
   await expect(dlg).toBeHidden();
   await expect(page.getByText(email)).toBeVisible();
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
   await expect(page).toHaveURL(/\/login/);
 
   // המוזמן קובע סיסמה מהקישור, והקישור חד-פעמי
@@ -93,7 +93,7 @@ test("דיווח: החזרה לתיקון, הסטודנט מתקן ושולח מ
   await page.getByLabel("הערות").fill(MARK);
   await page.getByRole("button", { name: "שליחה לאישור" }).click();
   await expect(page).toHaveURL(/\/student\/reports\?sent=1/);
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
 
   // הרכז מחזיר לתיקון; בלי הערה נחסם
   await login(page, "coord1@demo.test");
@@ -104,7 +104,7 @@ test("דיווח: החזרה לתיקון, הסטודנט מתקן ושולח מ
   await item().getByLabel(/הערה/).first().fill("השעות לא תואמות לחוזה");
   await item().getByRole("button", { name: "החזרה לתיקון" }).click();
   await expect(item()).toHaveCount(0);
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
 
   // הסטודנט רואה את ההערה, מתקן שעות ושולח מחדש
   await login(page, "student2@demo.test");
@@ -117,7 +117,7 @@ test("דיווח: החזרה לתיקון, הסטודנט מתקן ושולח מ
   await page.getByLabel("הערות").fill(MARK);
   await page.getByRole("button", { name: "שליחה מחדש" }).click();
   await expect(page).toHaveURL(/\/student\/reports(\?|$)/); // לא דף התיקון עצמו (/reports/<id>)
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
 
   // הרכז מאשר, ואז המנהל מבטל (רכז לא רואה את הכפתור)
   await login(page, "coord1@demo.test");
@@ -127,7 +127,7 @@ test("דיווח: החזרה לתיקון, הסטודנט מתקן ושולח מ
   await page.goto("/reports?status=approved");
   await expect(item()).toContainText("אושר: 3");
   await expect(item().getByRole("button", { name: "ביטול אישור" })).toHaveCount(0);
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
 
   await login(page, "manager@demo.test");
   await page.goto("/reports?status=approved");

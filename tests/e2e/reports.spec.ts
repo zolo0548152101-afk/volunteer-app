@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
-import { login } from "./helpers";
+import { login, logout } from "./helpers";
 
 try { process.loadEnvFile(".env.local"); } catch {}
 
@@ -39,7 +39,7 @@ test("סטודנט מדווח, רכז מאשר עם שינוי שעות, הסט�
   await page.getByLabel("תאריך").fill(yesterday);
   await page.getByRole("button", { name: "שליחה לאישור" }).click();
   await expect(page.locator("p[role=alert]")).toContainText("כבר דיווחת");
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
   await expect(page).toHaveURL(/\/login/);
 
   await login(page, "coord1@demo.test");
@@ -54,7 +54,7 @@ test("סטודנט מדווח, רכז מאשר עם שינוי שעות, הסט�
   await expect(page.locator("li", { hasText: "e2e-report" })).toHaveCount(0);
   await page.goto("/reports?status=approved");
   await expect(page.locator("li", { hasText: "e2e-report" })).toContainText("אושר: 2.5");
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
   await expect(page).toHaveURL(/\/login/);
 
   await login(page, "student2@demo.test");
@@ -92,16 +92,24 @@ test("טופס הדיווח: מתג היעדרות מחליף את השיבוץ 
 test("תיבת הרכז: מסננים ואישור מרובה מוצגים; הצ'קבוקס נגיש בשם הסטודנט", async ({ page }) => {
   await login(page, "coord1@demo.test");
   await page.goto("/reports");
+  // סרגל אחד: חיפוש וכפתור "סינון"; המסננים עצמם בחלון
+  await expect(page.getByRole("button", { name: /^סינון/ })).toBeVisible();
+  await expect(page.getByLabel("סטודנט", { exact: true })).toBeHidden();
+  await page.getByRole("button", { name: /^סינון/ }).click();
   await expect(page.getByLabel("סטודנט", { exact: true })).toBeVisible();
   await expect(page.getByLabel("מקום", { exact: true })).toBeVisible();
-  await expect(page.getByLabel("חודש", { exact: true })).toBeVisible();
+  const month = page.getByLabel("חודש", { exact: true });
+  await expect(month).toBeVisible();
+  expect(await month.evaluate((el) => el.tagName)).toBe("SELECT"); // רשימת חודשים, לא "---------- ----"
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "אישור המסומנים בשעות שדווחו" })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: /בחירה לאישור מרובה/ }).first()).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(overflow).toBe(false);
 });
 
-test("רשימות דיווחים: כרטיסים או טבלה, וחיפוש חי", async ({ page }) => {
+test("רשימות דיווחים: כרטיסים או טבלה, וחיפוש חי", async ({ page, isMobile }) => {
+  test.skip(isMobile, "בטלפון תמיד כרטיסים, אין מתג (נבדק בנפרד)");
   await login(page, "coord1@demo.test");
   await page.goto("/reports?status=approved");
   const search = page.getByRole("searchbox", { name: "חיפוש" });
@@ -119,4 +127,35 @@ test("רשימות דיווחים: כרטיסים או טבלה, וחיפוש ח
   await search.fill("");
   await page.getByRole("button", { name: "כרטיסים" }).click();
   await expect(page.locator("[data-pane=cards]")).toBeVisible();
+});
+
+test("תיבת אישורים בטלפון: כפתור האישור גלוי בלי גלילה, והשורה הראשונה בחצי העליון", async ({ page, isMobile }) => {
+  test.skip(!isMobile, "בדיקת טלפון");
+  await login(page, "coord1@demo.test");
+  await page.goto("/reports");
+  await page.evaluate(() => localStorage.setItem("listview:inbox", "table")); // גם אם נבחרה טבלה: בטלפון תמיד כרטיסים
+  await page.reload();
+  const first = page.locator("[data-pane=cards] [data-search]").first();
+  await expect(first).toBeVisible();
+  await expect(page.locator("[data-pane=table]")).toBeHidden();
+  const box = await first.boundingBox();
+  const vh = page.viewportSize()!.height;
+  expect(box!.y).toBeLessThan(vh / 2);
+  const approve = first.getByRole("button", { name: "אישור", exact: true });
+  if (await approve.count()) {
+    const b = await approve.boundingBox();
+    expect(b!.y + b!.height).toBeLessThanOrEqual(vh);
+  }
+});
+
+test("תיבת אישורים: מיון בלחיצה על כותרת (aria-sort)", async ({ page, isMobile }) => {
+  test.skip(isMobile, "טבלה רק במחשב");
+  await login(page, "coord1@demo.test");
+  await page.goto("/reports");
+  await page.getByRole("button", { name: "טבלה" }).click();
+  const th = page.getByRole("columnheader", { name: /תאריך/ });
+  await th.click();
+  await expect(th).toHaveAttribute("aria-sort", "ascending");
+  await th.click();
+  await expect(th).toHaveAttribute("aria-sort", "descending");
 });

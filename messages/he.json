@@ -17,7 +17,7 @@
     "settings": "הגדרות",
     "logout": "יציאה",
     "skipToContent": "דילוג לתוכן",
-    "groupMain": "ניהול",
+    "groupMain": "עבודה שוטפת",
     "groupReports": "דוחות",
     "groupSettings": "הגדרות",
     "groupMe": "שלי",
@@ -27,7 +27,10 @@
     "more": "עוד",
     "mainNav": "ניווט ראשי",
     "bottomNav": "ניווט תחתון",
-    "pendingCount": "{n} דיווחים ממתינים"
+    "pendingCount": "{n} דיווחים ממתינים",
+    "groupAdmin": "ניהול מערכת",
+    "admin": "ניהול מערכת",
+    "userMenu": "תפריט משתמש"
   },
   "auth": {
     "loginTitle": "כניסה למערכת",
@@ -75,7 +78,15 @@
     "hours": "שעות",
     "comingSoon": "בקרוב",
     "sending": "שולחים…",
-    "close": "סגירה"
+    "close": "סגירה",
+    "saved": "נשמר",
+    "saveFailed": "השמירה לא הצליחה. נסו שוב",
+    "discardTitle": "לצאת בלי לשמור?",
+    "keepEditing": "המשך עריכה",
+    "discard": "יציאה בלי לשמור",
+    "confirm": "אישור",
+    "breadcrumb": "נתיב",
+    "backTo": "חזרה: {name}"
   },
   "statuses": {
     "pending": "ממתין לאישור",
@@ -135,7 +146,10 @@
     },
     "editRow": "עריכה",
     "user": "משתמש",
-    "statusCol": "סטטוס"
+    "statusCol": "סטטוס",
+    "confirmDeactivate": "להשבית את {name}? הוא לא יוכל להיכנס למערכת",
+    "save": "שמירה",
+    "searchPlaceholder": "חיפוש לפי שם, אימייל או תפקיד"
   },
   "places": {
     "title": "מקומות התנדבות",
@@ -195,7 +209,11 @@
     },
     "statusCol": "סטטוס",
     "editRow": "עריכה",
-    "activeBadge": "פעיל"
+    "activeBadge": "פעיל",
+    "confirmDeactivateWindow": "להשבית את חלון הזמן {name}? לא ניתן יהיה לשבץ אליו",
+    "searchPlaceholder": "חיפוש לפי שם מקום, עיר או סוג",
+    "overTarget": "מעבר ליעד",
+    "occupancy": "תפוסה"
   },
   "days": {
     "sun": "ראשון",
@@ -472,7 +490,9 @@
     "backToList": "חזרה לרשימת הסטודנטים",
     "continueInterview": "המשך ראיון (טיוטה)",
     "continueReassign": "המשך שיבוץ מחדש (טיוטה)",
-    "draftHint": "יש טיוטה פתוחה שטרם נשמרה. אפשר להמשיך אותה או לבטל אותה בתוך המסך."
+    "draftHint": "יש טיוטה פתוחה שטרם נשמרה. אפשר להמשיך אותה או לבטל אותה בתוך המסך.",
+    "searchPlaceholder": "חיפוש לפי שם, אימייל או רכז",
+    "open": "פתיחה"
   },
   "queue": {
     "title": "ממתינים לראיון",
@@ -570,7 +590,8 @@
       "approved": "אושרו",
       "status": "סטטוס",
       "actions": "פעולות"
-    }
+    },
+    "searchPlaceholder": "חיפוש לפי תאריך, מקום או סטטוס"
   },
   "inbox": {
     "title": "דיווחי שעות",
@@ -640,7 +661,10 @@
     "approveQuick": "אישור הדיווח של {student}",
     "details": "פרטים",
     "pickColumn": "בחירה",
-    "editShort": "עריכה"
+    "editShort": "עריכה",
+    "searchPlaceholder": "חיפוש לפי סטודנט, מקום, תאריך או סטטוס",
+    "filtersTitle": "סינון דיווחים",
+    "removeFilter": "הסרת מסנן"
   },
   "nav2": {
     "reports": "דיווחי שעות",
@@ -719,7 +743,14 @@
     "edit": "עריכה",
     "currentBadge": "נוכחית",
     "inactiveBadge": "לא פעיל",
-    "hoursUnit": "שעות"
+    "hoursUnit": "שעות",
+    "statusCol": "סטטוס",
+    "moveUp": "הזזה למעלה",
+    "moveDown": "הזזה למטה",
+    "ruleOff": "כבוי",
+    "ruleSummary": "אחרי {first} ימים, עד {max} פעמים, {channels}",
+    "ruleDigestSummary": "סיכום לרכז: {channels}",
+    "comingSoon": "בקרוב"
   },
   "nav3": {
     "settings": "הגדרות"
@@ -885,7 +916,13 @@
       "approved": "אושר",
       "rejected": "נדחה",
       "needs_correction": "בתיקון"
-    }
+    },
+    "searchPlaceholder": "חיפוש בשורות הדוח",
+    "filterTitle": "סינון הדוח",
+    "allValues": "הכול",
+    "apply": "הצגה",
+    "clearFilters": "ניקוי סינון",
+    "removeFilter": "הסרת מסנן"
   },
   "certificate": {
     "title": "תעודת שעות התנדבות",
