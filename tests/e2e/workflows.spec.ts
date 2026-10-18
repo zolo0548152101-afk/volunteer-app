@@ -42,11 +42,14 @@ test("הזמנה: מנהל מזמין, המוזמן קובע סיסמה ונכנ
   const email = `e2e-wf-${Date.now()}@demo.test`;
   await login(page, "manager@demo.test");
   await page.goto("/manager/users");
-  await page.getByLabel("שם פרטי").fill("מוזמן");
-  await page.getByLabel("שם משפחה").fill("חדש");
-  await page.getByLabel("אימייל").fill(email);
-  await page.getByRole("button", { name: "שליחת הזמנה", exact: true }).click();
-  await expect(page.getByRole("status")).toContainText("ההזמנה נשלחה");
+  const dlg = page.getByRole("dialog", { name: "הזמנת משתמש" });
+  await page.getByRole("button", { name: /הזמנת משתמש/ }).click();
+  await dlg.getByLabel("שם פרטי").fill("מוזמן");
+  await dlg.getByLabel("שם משפחה").fill("חדש");
+  await dlg.getByLabel("אימייל").fill(email);
+  await dlg.getByRole("button", { name: "שליחת הזמנה", exact: true }).click();
+  await expect(dlg).toBeHidden();
+  await expect(page.getByText(email)).toBeVisible();
   await page.getByRole("button", { name: "יציאה" }).click();
   await expect(page).toHaveURL(/\/login/);
 

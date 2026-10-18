@@ -45,8 +45,8 @@ test("מנהל עורך הגדרות ושדה מותאם; רכז חסום; cron 
 
   await page.goto("/manager/custom-fields?page=profile");
   await expect(page.getByRole("heading", { name: "שדות בטפסים" })).toBeVisible();
-  await page.getByText("הוספת שדה ל:").click();
-  const add = page.locator("form", { hasText: "שם בעברית" }).last();
+  await page.getByRole("button", { name: /הוספת שדה ל:/ }).click();
+  const add = page.getByRole("dialog").locator("form", { hasText: "שם בעברית" });
   await add.getByLabel("שם בעברית").fill("e2e-מידת נעל");
   await add.getByLabel("סוג").selectOption("number");
   await add.getByRole("button", { name: "הוספת שדה" }).click();

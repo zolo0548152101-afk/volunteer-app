@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server";
+import { MultiSelect } from "@/components/multi-select";
 import { DAYS } from "@/lib/services/places";
 import { IdInput } from "@/components/student/id-input";
 import type { ProfileData } from "@/lib/services/students";
@@ -54,19 +55,9 @@ export async function PrefsSection({ p, types }: { p: ProfileData; types: { key:
   const td = await getTranslations("days");
   return (
     <div className="flex flex-col gap-3">
-      <fieldset className="flex flex-wrap gap-4">
-        <legend className="mb-1 text-sm">{t("preferredTypes")}</legend>
-        {types.map((x) => (
-          <label key={x.key} className="flex items-center gap-2 text-sm"><input type="checkbox" name="preferredTypes" value={x.key} defaultChecked={p.preferredTypes.includes(x.key)} /> {x.label}</label>
-        ))}
-      </fieldset>
+      <MultiSelect name="preferredTypes" label={t("preferredTypes")} options={types.map((x) => ({ value: x.key, label: x.label }))} defaultValue={p.preferredTypes} />
       <T label={t("preferredActivities")} name="preferredActivities" value={p.preferredActivities} />
-      <fieldset className="flex flex-wrap gap-4">
-        <legend className="mb-1 text-sm">{t("availableDays")}</legend>
-        {DAYS.map((d) => (
-          <label key={d} className="flex items-center gap-2 text-sm"><input type="checkbox" name="availableDays" value={d} defaultChecked={p.availableDays.includes(d)} /> {td(d)}</label>
-        ))}
-      </fieldset>
+      <MultiSelect name="availableDays" label={t("availableDays")} options={DAYS.map((d) => ({ value: d, label: td(d) }))} defaultValue={p.availableDays} />
       <T label={t("availableHours")} name="availableHours" value={p.availableHours} />
       <label className="flex flex-col gap-1 text-sm">{t("generalPreferences")}<textarea name="generalPreferences" defaultValue={p.generalPreferences ?? ""} rows={2} className={input} /></label>
       <label className="flex flex-col gap-1 text-sm">{t("studentNotes")}<textarea name="studentNotes" defaultValue={p.studentNotes ?? ""} rows={2} className={input} /></label>

@@ -5,22 +5,27 @@ import { requireRole } from "@/lib/session";
 import { loadAdminSettings, LOOKUP_KINDS } from "@/lib/services/settings";
 import type { RuleKind } from "@/lib/services/reminders";
 import { SubmitButton } from "@/components/submit-button";
+import { EditDialog } from "@/components/edit-dialog";
+import { MultiSelect } from "@/components/multi-select";
 import { Flash } from "@/components/flash";
 
 const input = "w-full rounded-md border border-border bg-background px-2.5 py-1.5 text-sm";
 const btn = "self-end justify-self-start rounded-md bg-primary px-4 py-1.5 text-sm text-primary-foreground";
 const row = "grid items-end gap-x-3 gap-y-2 border-b border-border py-3 last:border-0";
-/** שורה מקופלת: תקציר + "עריכה" שפותחת את הטופס במקום. הוספה: כפתור "+" שפותח טופס ריק */
-function Disclosure({ summary, editLabel, add, children }: { summary: React.ReactNode; editLabel: string; add?: boolean; children: React.ReactNode }) {
+/** שורה בטבלת הגדרות: תקציר + כפתור "עריכה" שפותח חלון עם הטופס. הוספה: כפתור "＋" שפותח חלון עם טופס ריק */
+function Disclosure({ summary, editLabel, title, add, children }: { summary: React.ReactNode; editLabel: string; title?: string; add?: boolean; children: React.ReactNode }) {
+  if (add) {
+    return (
+      <div className="pt-3">
+        <EditDialog label={`＋ ${String(summary)}`} title={String(summary)} className="inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">{children}</EditDialog>
+      </div>
+    );
+  }
   return (
-    <details className={`group border-b border-border last:border-0 ${add ? "pt-3" : ""}`}>
-      <summary className={add
-        ? "flex w-fit cursor-pointer list-none items-center gap-1 rounded-md border border-dashed border-border px-3 py-1.5 text-sm text-primary hover:bg-card"
-        : "flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-sm"}>
-        {add ? <><span aria-hidden>＋</span>{summary}</> : <><span className="min-w-0 flex-1">{summary}</span><span className="rounded-md px-2 py-1 text-primary underline group-open:hidden">{editLabel}</span></>}
-      </summary>
-      <div className="pb-3">{children}</div>
-    </details>
+    <div className="flex items-center justify-between gap-3 border-b border-hairline py-2.5 text-sm last:border-0">
+      <span className="min-w-0 flex-1">{summary}</span>
+      <EditDialog label={editLabel} title={title ?? ""}>{children}</EditDialog>
+    </div>
   );
 }
 const KNOWN = ["invalid", "bad_dates", "name_required", "bad_milestones", "not_found", "forbidden", "generic"];
@@ -45,9 +50,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {section("general", t("general"), (
         <form action={saveGeneralAction} className="mt-2 grid items-end gap-3 sm:grid-cols-[12rem_auto_auto]">
           {field(t("tolerance"), <input name="tolerance" title={t("toleranceHint")} type="number" step="0.25" min="0" max="24" defaultValue={s.tolerance} className={input} />)}
-                    <fieldset className="flex gap-4"><legend className="mb-1 text-xs text-muted">{t("languages")}</legend>
-            {(["he", "en"] as const).map((l) => <label key={l} className="flex items-center gap-1 text-sm"><input type="checkbox" name="languages" value={l} defaultChecked={s.languages.includes(l)} />{t(`lang.${l}`)}</label>)}
-          </fieldset>
+                    <MultiSelect name="languages" label={t("languages")} options={(["he", "en"] as const).map((l) => ({ value: l, label: t(`lang.${l}`) }))} defaultValue={s.languages} />
           <SubmitButton className={btn}>{t("save")}</SubmitButton>
         </form>
       ))}
@@ -55,7 +58,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {section("year", t("year"), (
         <div className="mt-1 flex flex-col">
           {[...(current ? [current] : []), ...s.years.filter((y) => !y.isCurrent)].map((y) => (
-            <Disclosure key={y.id} editLabel={t("edit")} summary={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><b>{y.name}</b><span className="text-muted">{String(y.startDate)} – {String(y.endDate)}</span>{y.isCurrent && <span className="rounded-full bg-info-bg px-2 py-0.5 text-xs font-semibold text-info-fg">{t("currentBadge")}</span>}</span>}>
+            <Disclosure key={y.id} editLabel={t("edit")} title={y.name} summary={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><b>{y.name}</b><span className="text-muted">{String(y.startDate)} – {String(y.endDate)}</span>{y.isCurrent && <span className="rounded-full bg-info-bg px-2 py-0.5 text-xs font-semibold text-info-fg">{t("currentBadge")}</span>}</span>}>
               <form action={saveYearAction} className={`${row} grid-cols-2 lg:grid-cols-[1.2fr_1fr_1fr_1fr_auto_auto]`}>
                 <input type="hidden" name="id" value={y.id} />
                 {field(t("yearName"), <input name="name" required defaultValue={y.name} className={input} />)}
@@ -83,7 +86,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       {section("programs", t("programs"), (
         <div className="mt-1 flex flex-col">
           {s.programs.map((p) => (
-            <Disclosure key={p.id} editLabel={t("edit")} summary={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><b>{p.name}</b><span className="text-muted">{Number(p.requiredHours)} {t("hoursUnit")}{p.maxHoursPerDay != null ? ` · ${t("maxHoursPerDay")}: ${Number(p.maxHoursPerDay)}` : ""}</span>{!p.isActive && <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted">{t("inactiveBadge")}</span>}</span>}>
+            <Disclosure key={p.id} editLabel={t("edit")} title={p.name} summary={<span className="flex flex-wrap items-center gap-x-3 gap-y-1"><b>{p.name}</b><span className="text-muted">{Number(p.requiredHours)} {t("hoursUnit")}{p.maxHoursPerDay != null ? ` · ${t("maxHoursPerDay")}: ${Number(p.maxHoursPerDay)}` : ""}</span>{!p.isActive && <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted">{t("inactiveBadge")}</span>}</span>}>
               <form action={saveProgramAction} className={`${row} grid-cols-2 lg:grid-cols-[1.5fr_.8fr_.8fr_auto_1.6fr_auto]`}>
                 <input type="hidden" name="id" value={p.id} />
                 {field(t("programName"), <input name="name" required defaultValue={p.name} className={input} />)}
@@ -125,9 +128,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
                   {field(t("repeatEveryDays"), <input name="repeatEveryDays" type="number" min="1" max="365" defaultValue={r.repeatEveryDays} className={input} />)}
                 </>}
                 {k === "coordinator_digest" && <><input type="hidden" name="firstAfterDays" value={r.firstAfterDays} /><input type="hidden" name="maxSends" value={r.maxSends} /><input type="hidden" name="repeatEveryDays" value={r.repeatEveryDays} /></>}
-                <fieldset className="col-span-3 flex flex-wrap gap-4"><legend className="mb-1 text-xs text-muted">{t("channels")}</legend>
-                  {(["email", "sms", "whatsapp"] as const).map((c) => <label key={c} className="flex items-center gap-1 text-sm"><input type="checkbox" name="channels" value={c} defaultChecked={r.channels.includes(c)} />{t(`channel.${c}`)}</label>)}
-                </fieldset>
+                <MultiSelect className="col-span-3" name="channels" label={t("channels")} options={(["email", "sms", "whatsapp"] as const).map((c) => ({ value: c, label: t(`channel.${c}`) }))} defaultValue={r.channels} />
                 {k !== "coordinator_digest" && <label className="col-span-2 flex items-center gap-2 text-sm"><input type="checkbox" name="copyManager" defaultChecked={r.copyManager} />{t("copyManager")}</label>}
                 <SubmitButton className={btn}>{t("save")}</SubmitButton>
               </form>

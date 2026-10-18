@@ -6,6 +6,8 @@ import { FIELD_TYPES, listAllFields } from "@/lib/services/custom-field-admin";
 import { effectivePage, PAGES, type PageKey } from "@/lib/services/custom-fields";
 import Link from "next/link";
 import { SubmitButton } from "@/components/submit-button";
+import { MultiSelect } from "@/components/multi-select";
+import { EditDialog } from "@/components/edit-dialog";
 import { Flash } from "@/components/flash";
 
 const input = "rounded-lg border border-border bg-background px-3 py-2";
@@ -20,7 +22,7 @@ export default async function CustomFieldsPage({ searchParams }: { searchParams:
   const onPage = (k: PageKey) => fields.filter((f) => effectivePage(f.entity, f.page) === k);
   const orphans = fields.filter((f) => effectivePage(f.entity, f.page) === null);
   const form = (f: (typeof fields)[number] | null, entity: string, page: PageKey | null) => (
-    <form key={f?.id ?? `new-${entity}`} action={saveFieldAction} className={`grid grid-cols-2 gap-3 rounded-xl border p-3 text-sm ${f ? "border-border" : "border-dashed border-border"}`}>
+    <form key={f?.id ?? `new-${entity}`} action={saveFieldAction} className="grid grid-cols-2 gap-3 text-sm">
       {f && <input type="hidden" name="id" value={f.id} />}
       <input type="hidden" name="entity" value={entity} />
       {f && page && PAGES.filter((x) => x.entity === entity).length > 1 ? (
@@ -38,12 +40,8 @@ export default async function CustomFieldsPage({ searchParams }: { searchParams:
       {(!f || f.type === "select" || f.type === "multi_select") && (
         <label className="col-span-2 flex flex-col gap-1">{t("options")}<textarea name="options" rows={3} defaultValue={(f?.options ?? []).map((o) => (o.label_en ? `${o.label_he} | ${o.label_en}` : o.label_he)).join("\n")} className={input} /><span className="text-xs text-muted">{t("optionsHint")}</span></label>
       )}
-      <fieldset className="flex flex-wrap gap-3"><legend>{t("visibleTo")}</legend>
-        {ROLES.map((r) => <label key={r} className="flex items-center gap-1"><input type="checkbox" name="visibleToRoles" value={r} defaultChecked={f ? f.visibleToRoles.includes(r) : r === "manager"} disabled={r === "manager"} />{tr(r)}</label>)}
-      </fieldset>
-      <fieldset className="flex flex-wrap gap-3"><legend>{t("editableBy")}</legend>
-        {ROLES.map((r) => <label key={r} className="flex items-center gap-1"><input type="checkbox" name="editableByRoles" value={r} defaultChecked={f ? f.editableByRoles.includes(r) : r === "manager"} disabled={r === "manager"} />{tr(r)}</label>)}
-      </fieldset>
+      <MultiSelect className="col-span-2" name="visibleToRoles" label={t("visibleTo")} options={ROLES.map((r) => ({ value: r, label: tr(r), disabled: r === "manager" }))} defaultValue={f ? f.visibleToRoles : ["manager"]} />
+      <MultiSelect className="col-span-2" name="editableByRoles" label={t("editableBy")} options={ROLES.map((r) => ({ value: r, label: tr(r), disabled: r === "manager" }))} defaultValue={f ? f.editableByRoles : ["manager"]} />
       <label className="flex items-center gap-2"><input type="checkbox" name="required" defaultChecked={f?.required} />{t("required")}</label>
       {f && <label className="flex items-center gap-2"><input type="checkbox" name="isActive" defaultChecked={f.isActive} />{t("active")}</label>}
       <SubmitButton className="col-span-2 min-h-11 self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{f ? t("save") : t("add")}</SubmitButton>
@@ -82,19 +80,36 @@ export default async function CustomFieldsPage({ searchParams }: { searchParams:
           {onPage(current).filter((f) => f.isActive).map((f) => <li key={f.id} className="rounded-full border border-primary/60 px-3 py-1">{f.labelHe} <span className="text-xs text-muted">({t("custom")})</span></li>)}
         </ul>
 
-        <details className="mt-5 rounded-xl border border-dashed border-border p-3" open={!!sp.error || undefined}>
-          <summary className="flex min-h-11 cursor-pointer items-center font-medium">{t("addToPage", { page: t(`pages.${current}.title`) })}</summary>
-          <div className="mt-3">{form(null, meta.entity, current)}</div>
-        </details>
-
-        {onPage(current).length > 0 && <h3 className="mt-6 text-sm font-medium">{t("manageExisting")}</h3>}
-        <div className="mt-2 flex flex-col gap-3">
-          {onPage(current).map((f) => (
-            <details key={f.id} className="rounded-xl border border-border p-3">
-              <summary className="flex min-h-11 cursor-pointer items-center gap-2 font-medium">{f.labelHe}{!f.isActive && <span className="text-xs font-normal text-muted">({t("inactive")})</span>}</summary>
-              <div className="mt-3">{form(f, f.entity, current)}</div>
-            </details>
-          ))}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="text-sm font-medium">{t("manageExisting")}</h3>
+          <EditDialog label={`＋ ${t("addToPage", { page: t(`pages.${current}.title`) })}`} title={t("addToPage", { page: t(`pages.${current}.title`) })} className="inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">
+            {form(null, meta.entity, current)}
+          </EditDialog>
+        </div>
+        <div role="region" aria-label={t("manageExisting")} tabIndex={0} className="mt-2 overflow-x-auto rounded-xl border border-hairline bg-card">
+          <table className="w-full text-sm">
+            <thead className="bg-paper text-xs text-ink-3"><tr>
+              <th scope="col" className="px-3 py-2 text-start font-medium">{t("labelHe")}</th>
+              <th scope="col" className="hidden px-3 py-2 text-start font-medium sm:table-cell">{t("type")}</th>
+              <th scope="col" className="hidden px-3 py-2 text-start font-medium sm:table-cell">{t("required")}</th>
+              <th scope="col" className="hidden px-3 py-2 text-start font-medium sm:table-cell">{t("editableBy")}</th>
+              <th scope="col" className="px-3 py-2 text-start font-medium">{t("statusCol")}</th>
+              <th scope="col" className="px-3 py-2"><span className="sr-only">{t("editRow")}</span></th>
+            </tr></thead>
+            <tbody className="divide-y divide-hairline">
+              {onPage(current).length === 0 && <tr><td colSpan={6} className="px-3 py-4 text-ink-3">{t("noneYet")}</td></tr>}
+              {onPage(current).map((f) => (
+                <tr key={f.id}>
+                  <th scope="row" className="px-3 py-2 text-start font-medium">{f.labelHe}</th>
+                  <td className="hidden px-3 py-2 sm:table-cell">{t(`types.${f.type}`)}</td>
+                  <td className="hidden px-3 py-2 sm:table-cell">{f.required ? "✓" : "—"}</td>
+                  <td className="hidden px-3 py-2 sm:table-cell">{f.editableByRoles.map((r) => tr(r)).join(", ") || "—"}</td>
+                  <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-xs ${f.isActive ? "bg-ok-bg text-ok-fg" : "bg-paper text-ink-3"}`}>{f.isActive ? t("active") : t("inactive")}</span></td>
+                  <td className="px-3 py-2 text-end"><EditDialog label={t("editRow")} title={f.labelHe}>{form(f, f.entity, current)}</EditDialog></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 

@@ -1,4 +1,5 @@
 import { getLocale } from "next-intl/server";
+import { MultiSelect } from "@/components/multi-select";
 import type { FieldDef, FieldValue } from "@/lib/services/custom-fields";
 
 const input = "min-h-11 rounded-lg border border-border bg-transparent px-3 py-2 text-base";
@@ -23,15 +24,10 @@ export async function CustomFields({ fields, values }: { fields: FieldDef[]; val
         if (f.type === "multi_select") {
           // קבוצת צ'קבוקסים: fieldset+legend, כדי שקורא מסך יקרא את שם השדה לפני כל אפשרות
           return (
-            <fieldset key={f.id} className="flex flex-col gap-1 text-sm">
-              <legend className="mb-1">{label(f)}{f.required && " *"}</legend>
-              <div className="flex flex-wrap gap-x-4">
-                {f.options.map((o) => (
-                  <label key={o.key} className="flex min-h-11 items-center gap-2"><input type="checkbox" name={name} value={o.key} defaultChecked={Array.isArray(v) && v.includes(o.key)} className="size-5" />{optLabel(o)}</label>
-                ))}
-              </div>
+            <div key={f.id}>
+              <MultiSelect name={name} label={`${label(f)}${f.required ? " *" : ""}`} options={f.options.map((o) => ({ value: o.key, label: optLabel(o) }))} defaultValue={Array.isArray(v) ? (v as string[]) : []} />
               <input type="hidden" name={name} value="" />
-            </fieldset>
+            </div>
           );
         }
         return (

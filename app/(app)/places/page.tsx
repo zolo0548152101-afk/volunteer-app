@@ -8,6 +8,7 @@ import { listPlaces, type StaffPlace } from "@/lib/services/places";
 import { loadCategories } from "@/lib/services/lookups";
 import { PlaceFields } from "@/components/places/place-fields";
 import { PlaceError } from "@/components/places/place-error";
+import { EditDialog } from "@/components/edit-dialog";
 import { SubmitButton } from "@/components/submit-button";
 
 export default async function PlacesPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
@@ -17,7 +18,17 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
   const label = new Map(categories.map((c) => [c.key, c.label]));
   return (
     <main className="mx-auto w-full max-w-5xl p-4">
-      <h1 className="text-xl font-semibold">{t("title")}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold">{t("title")}</h1>
+        {canCreate && (
+          <EditDialog label={`＋ ${t("newPlace")}`} title={t("newPlace")} className="inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">
+            <form action={createPlaceAction} className="flex flex-col gap-3">
+              <PlaceFields categories={categories} />
+              <SubmitButton className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground">{t("create")}</SubmitButton>
+            </form>
+          </EditDialog>
+        )}
+      </div>
       <PlaceError code={error} />
       {list.length === 0 && <p className="mt-4 text-muted">{t("empty")}</p>}
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -37,15 +48,6 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
           );
         })}
       </ul>
-      {canCreate && (
-        <details className="mt-4 rounded-xl border border-dashed border-border bg-card p-4" open={!!error || undefined}>
-          <summary className="flex min-h-10 cursor-pointer items-center gap-1 text-sm font-medium text-info-fg"><span aria-hidden>＋</span>{t("newPlace")}</summary>
-          <form action={createPlaceAction} className="mt-3 flex flex-col gap-3">
-            <PlaceFields categories={categories} />
-            <SubmitButton className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground ">{t("create")}</SubmitButton>
-          </form>
-        </details>
-      )}
     </main>
   );
 }

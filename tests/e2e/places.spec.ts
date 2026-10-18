@@ -12,23 +12,26 @@ test.afterAll(async () => {
   await closeDb();
 });
 
-test("מנהל יוצר מקום וחלון זמן ורואה תפוסה מחושבת", async ({ page }) => {
+test("מנהל יוצר מקום וחלון זמן ורואה תפוסה מחושבת", async ({ page, isMobile }) => {
   const name = `e2e מקום ${Date.now()}`;
   await login(page, "manager@demo.test");
   await page.goto("/places");
-  await page.getByText("מקום חדש").click();
+  await page.getByRole("button", { name: /מקום חדש/ }).click();
   await page.getByLabel("שם המקום").fill(name);
   await page.getByLabel("איש קשר", { exact: true }).fill("דנה לוי");
   await page.getByRole("button", { name: "יצירת מקום" }).click();
   await expect(page.getByRole("heading", { name, level: 1 })).toBeVisible();
 
-  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "הוספת חלון" }) });
+  await page.getByRole("button", { name: /חלון זמן חדש/ }).click();
+  const form = page.getByRole("dialog", { name: "חלון זמן חדש" });
   await form.getByLabel("שם החלון").fill("ראשון בוקר");
-  await form.getByLabel("ראשון", { exact: true }).check();
+  await form.getByRole("combobox", { name: "ימים" }).click();
+  await form.getByRole("option", { name: "ראשון" }).getByRole("checkbox").check();
   await form.getByLabel("מספר תקנים").fill("1.5");
   await form.getByLabel("שעות שבועיות לתקן").fill("4");
   await form.getByRole("button", { name: "הוספת חלון" }).click();
-  await expect(page.getByText("1.5 תקנים × 4 ש' = 6 ש'")).toBeVisible();
+  await expect(page.getByRole("rowheader", { name: "ראשון בוקר" })).toBeVisible();
+  if (!isMobile) await expect(page.getByText("1.5 תקנים × 4 ש' = 6 ש'")).toBeVisible(); // עמודת הסיכום מוסתרת בטלפון
   await expect(page.getByText("איש קשר: דנה לוי")).toBeVisible();
 
 });

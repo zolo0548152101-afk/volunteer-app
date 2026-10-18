@@ -132,7 +132,10 @@
       "required": "Required fields are missing",
       "email_failed": "The email wasn't sent (the user is saved). Try 'Resend' from the list",
       "generic": "Something went wrong. Try again in a moment"
-    }
+    },
+    "editRow": "Edit",
+    "user": "User",
+    "statusCol": "Status"
   },
   "places": {
     "title": "Volunteer places",
@@ -189,7 +192,10 @@
       "below_allocated": "Can't reduce slots or hours below what's already placed in this window",
       "has_active_placements": "There are active placements. Re-place the students first",
       "generic": "Something went wrong. Try again in a moment"
-    }
+    },
+    "statusCol": "Status",
+    "editRow": "Edit",
+    "activeBadge": "Active"
   },
   "days": {
     "sun": "Sunday",
@@ -396,7 +402,8 @@
       "bad_id": "Invalid national ID",
       "cf_required": "A required field is missing"
     },
-    "certificateLink": "Hours certificate"
+    "certificateLink": "Hours certificate",
+    "days": "Assigned days"
   },
   "issues": {
     "window_not_found": "Window not found",
@@ -803,7 +810,10 @@
           "Absence reason and file (for absences)"
         ]
       }
-    }
+    },
+    "statusCol": "Status",
+    "editRow": "Edit",
+    "noneYet": "No fields on this page yet"
   },
   "analytics": {
     "dashboardTitle": "Dashboard",
@@ -1023,5 +1033,13 @@
     "light": "Light",
     "dark": "Dark",
     "contrast": "High contrast"
+  },
+  "multiSelect": {
+    "none": "None selected",
+    "edit": "Edit",
+    "close": "Done",
+    "search": "Search",
+    "noResults": "No results",
+    "remove": "Remove {name}"
   }
 }
