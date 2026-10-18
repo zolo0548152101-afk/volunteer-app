@@ -15,7 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const actor = await requireActor();
   const [t, tApp, tA, tR, locale, pending] = await Promise.all([
     getTranslations("nav"), getTranslations("app"), getTranslations("a11y"), getTranslations("roles"), getLocale(),
-    actor.roles.some((r) => r === "manager" || r === "coordinator") ? countPendingInbox(db(), actor) : Promise.resolve(0),
+    actor.roles.includes("coordinator") && !actor.roles.includes("manager") ? countPendingInbox(db(), actor) : Promise.resolve(0),
   ]);
   const groups = await navFor(actor, pending);
   const other = locale === "he" ? "en" : "he";

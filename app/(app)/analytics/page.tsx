@@ -42,37 +42,52 @@ export default async function Analytics() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1 basis-80">
           <h1 className="text-xl font-bold">{t(`greeting.${daypart()}`, { name: firstName })}</h1>
-          <p className="mt-1 text-sm text-ink-2">{t("statusLine", { pending: d.pendingReports, stale, days: d.escalationDays, awaiting: d.awaitingInterview, percent: Math.round(d.slots.percent) })}</p>
+          <p className="mt-1 text-sm text-ink-2">{isManager ? t("statusLineManager", { awaiting: d.awaitingInterview, percent: Math.round(d.slots.percent) }) : t("statusLine", { pending: d.pendingReports, stale, days: d.escalationDays, awaiting: d.awaitingInterview, percent: Math.round(d.slots.percent) })}</p>
           {d.yearName && <p className="mt-1 text-xs text-ink-3">{ta("year", { name: d.yearName })}</p>}
         </div>
-        <Link href="/reports?status=pending" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity duration-150 hover:opacity-90">
+        {!isManager && (
+          <Link href="/reports?status=pending" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity duration-150 hover:opacity-90">
           {t("toInbox")}<span aria-hidden="true" className="rtl:rotate-180">→</span>
-        </Link>
+          </Link>
+        )}
       </div>
 
       {/* פס המדדים */}
       <section aria-label={ta("dashboardTitle")} className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KpiCard href="/reports?status=pending" label={t("kpi.pending")} value={d.pendingReports} note={t("kpi.stale", { n: stale, days: d.escalationDays })} tone={stale > 0 ? "warn" : "neutral"} icon={icon(ICONS.pending)} />
+        {!isManager && (<KpiCard href="/reports?status=pending" label={t("kpi.pending")} value={d.pendingReports} note={t("kpi.stale", { n: stale, days: d.escalationDays })} tone={stale > 0 ? "warn" : "neutral"} icon={icon(ICONS.pending)} />)}
         <KpiCard href={isManager ? "/interviewer" : undefined} label={t("kpi.awaiting")} value={d.awaitingInterview} note={t("kpi.awaitingWeek", { n: d.awaitingThisWeek })} tone={d.awaitingInterview > 0 ? "info" : "neutral"} icon={icon(ICONS.awaiting)} />
         <KpiCard href="/analytics/months" label={t("kpi.hoursYear")} value={format.number(d.hoursYear)} note={t("kpi.hours30", { n: format.number(d.hoursLast30Days) })} tone={d.hoursLast30Days > 0 ? "ok" : "neutral"} icon={icon(ICONS.hours)} />
+        {isManager && <KpiCard href="/places" label={t("kpi.occupancy")} value={`${Math.round(d.slots.percent)}%`} note={t("kpi.occupancyOf", { used: d.slots.used, total: d.slots.total })} icon={icon(ICONS.slots)} />}
         <KpiCard href="/students" label={t("kpi.activeStudents")} value={d.activeStudents} note={t("kpi.newThisMonth", { n: d.newStudentsThisMonth })} tone={d.newStudentsThisMonth > 0 ? "ok" : "neutral"} icon={icon(ICONS.students)} />
       </section>
 
-      <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-        <OldestPending rows={d.oldestPending} escalationDays={d.escalationDays} />
-        {isManager ? <CoordinatorLoad rows={d.coordinators} escalationDays={d.escalationDays} /> : <YearFacts yearName={d.yearName} year={d.year} />}
-      </div>
-
-      <div className="mt-3 grid gap-3 lg:grid-cols-3">
-        <PlaceOccupancy rows={d.placeOccupancy} />
-        <MonthChart data={d.byMonth} />
-        {isManager ? <YearFacts yearName={d.yearName} year={d.year} /> : (
-          <section className="rounded-xl border border-hairline bg-card p-4" aria-labelledby="h-reports">
-            <h2 id="h-reports" className="text-sm font-semibold">{t("reports")}</h2>
-            <ul className="mt-1 flex flex-col">{kinds.map((k) => <li key={k}><Link href={`/analytics/${k}`} className="inline-flex min-h-10 items-center text-sm hover:underline">{ta(`kinds.${k}`)}</Link></li>)}</ul>
-          </section>
-        )}
-      </div>
+      {isManager ? (
+        <>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <PlaceOccupancy rows={d.placeOccupancy} />
+            <CoordinatorLoad rows={d.coordinators} escalationDays={d.escalationDays} manager />
+          </div>
+          <div className="mt-3 grid gap-3 lg:grid-cols-2">
+            <MonthChart data={d.byMonth} />
+            <YearFacts yearName={d.yearName} year={d.year} />
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <OldestPending rows={d.oldestPending} escalationDays={d.escalationDays} />
+            <YearFacts yearName={d.yearName} year={d.year} />
+          </div>
+          <div className="mt-3 grid gap-3 lg:grid-cols-3">
+            <PlaceOccupancy rows={d.placeOccupancy} />
+            <MonthChart data={d.byMonth} />
+            <section className="rounded-xl border border-hairline bg-card p-4" aria-labelledby="h-reports">
+              <h2 id="h-reports" className="text-sm font-semibold">{t("reports")}</h2>
+              <ul className="mt-1 flex flex-col">{kinds.map((k) => <li key={k}><Link href={`/analytics/${k}`} className="inline-flex min-h-10 items-center text-sm hover:underline">{ta(`kinds.${k}`)}</Link></li>)}</ul>
+            </section>
+          </div>
+        </>
+      )}
 
       {isManager && (
         <nav aria-label={t("reports")} className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">

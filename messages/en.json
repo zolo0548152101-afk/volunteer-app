@@ -930,7 +930,8 @@
       "oldest": "{n, plural, =0 {today} one {one day} other {# days}}",
       "noQueue": "No queue",
       "hint": "The tag shows the age of the oldest report waiting with the coordinator.",
-      "empty": "No active coordinators yet"
+      "empty": "No active coordinators yet",
+      "lineManager": "{students, plural, one {1 student} other {# students}}"
     },
     "oldest": {
       "title": "Longest-waiting reports",
@@ -961,7 +962,8 @@
       "noYear": "No current year set"
     },
     "provenance": "All numbers are computed live from approved reports and active placements. Updated {at}.",
-    "reports": "Reports"
+    "reports": "Reports",
+    "statusLineManager": "{awaiting, plural, =0 {No one is waiting for an interview} one {1 student is waiting for an interview} other {# students are waiting for an interview}}. Slot occupancy {percent}%."
   },
   "devLogin": {
     "title": "Sign in as a demo user",

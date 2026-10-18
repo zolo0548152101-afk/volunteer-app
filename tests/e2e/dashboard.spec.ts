@@ -6,17 +6,19 @@ test("מנהל: לוח הבקרה – ברכה, משפט מצב, 5 מדדים מ
   await login(page, "manager@demo.test");
   await expect(page).toHaveURL(/\/manager$/);
   await expect(page.getByRole("heading", { level: 1, name: /מירב/ })).toBeVisible();
-  await expect(page.getByText(/מחכים לאישור|מחכה לאישור|אין דיווחים שמחכים/)).toBeVisible();
+  // אישור שעות הוא עבודת הרכז: המנהל לא רואה תור, מדד או כפתור ראשי של דיווחים ממתינים
+  await expect(page.getByText(/מחכים לאישור|מחכה לאישור/)).toHaveCount(0);
+  await expect(page.getByRole("link", { name: /דיווחים ממתינים|לתיבת הדיווחים/ })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "דיווחים שמחכים הכי הרבה" })).toHaveCount(0);
   // המדדים הם קישורים עם הטקסט המלא
   await expect(page.getByRole("link", { name: /סטודנטים פעילים/ })).toHaveAttribute("href", "/students");
-  await expect(page.getByRole("link", { name: /דיווחים ממתינים/ })).toHaveAttribute("href", "/reports?status=pending");
+  await expect(page.getByRole("link", { name: /תפוסת תקנים/ })).toHaveAttribute("href", "/places");
   // "ממתינים לראיון" פתוח גם למנהל
   await page.getByRole("link", { name: /ממתינים לראיון/ }).first().click();
   await expect(page).toHaveURL(/\/interviewer$/);
   await expect(page.getByRole("heading", { name: "ממתינים לראיון" })).toBeVisible();
   await page.goBack();
   await expect(page.getByRole("heading", { name: "עומס רכזים" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "דיווחים שמחכים הכי הרבה" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "תפוסה לפי מקום" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
   const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
