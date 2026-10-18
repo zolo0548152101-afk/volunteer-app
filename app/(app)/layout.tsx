@@ -6,7 +6,7 @@ import { logoutAction } from "@/lib/actions/auth";
 import { setLocale } from "@/lib/actions/locale";
 import { countPendingInbox } from "@/lib/services/reports";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { BottomNav, Sidebar, navFor } from "@/components/nav/app-nav";
+import { BottomNav, TopNav, navFor } from "@/components/nav/app-nav";
 
 /**
  * המעטפת של כל המסכים המחוברים: סרגל צד במחשב, כותרת דקה + ניווט תחתון בטלפון.
@@ -25,7 +25,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const tools = (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
       <ThemeToggle />
-      <form action={logoutAction}><button type="submit" className="min-h-11 underline">{t("logout")}</button></form>
+      <form action={logoutAction}><button type="submit" className="min-h-11 rounded-full border border-white/40 px-4 hover:bg-white/10">{t("logout")}</button></form>
       <Link href="/accessibility" className="inline-flex min-h-11 items-center underline">{tA("title")}</Link>
       <form action={setLocale}>
         <input type="hidden" name="locale" value={other} />
@@ -35,16 +35,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   );
 
   return (
-    <div className="flex flex-1 flex-col bg-paper lg:flex-row">
+    <div className="app-navy flex min-h-dvh flex-1 flex-col">
       <a href="#content" className="sr-only focus:not-sr-only focus:absolute focus:start-2 focus:top-2 focus:z-50 focus:rounded-lg focus:bg-card focus:p-2 focus:underline">{t("skipToContent")}</a>
 
-      <Sidebar groups={groups} appName={tApp("name")} userName={actor.name} roleName={tR(primaryRole)} label={t("mainNav")}>{tools}</Sidebar>
+      <TopNav groups={groups} appName={tApp("name")} userName={actor.name} roleName={tR(primaryRole)} label={t("mainNav")}>{tools}</TopNav>
 
-      <div className="flex min-h-dvh min-w-0 flex-1 flex-col bg-paper lg:min-h-0">
-        <header className="flex items-center justify-between border-b border-hairline bg-card px-4 py-2 lg:hidden">
-          <Link href="/" className="inline-flex min-h-11 items-center font-semibold">{tApp("name")}</Link>
-          <form action={logoutAction}><button type="submit" className="min-h-11 text-sm underline">{t("logout")}</button></form>
-        </header>
+      <header className="flex items-center justify-between px-4 py-2 text-white lg:hidden">
+        <Link href="/" className="inline-flex min-h-11 items-center font-semibold">{tApp("name")}</Link>
+        <form action={logoutAction}><button type="submit" className="min-h-10 rounded-full border border-white/40 px-4 text-sm">{t("logout")}</button></form>
+      </header>
+      <div className="flex min-w-0 flex-1 flex-col rounded-t-3xl bg-paper lg:mx-4">
         <div id="content" tabIndex={-1} className="flex flex-1 flex-col outline-none">{children}</div>
         <footer className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-hairline bg-card px-4 py-1 text-sm lg:hidden">
           <ThemeToggle />
@@ -54,8 +54,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <button type="submit" className="min-h-11 underline" lang={other}>{other === "en" ? "English" : "עברית"}</button>
           </form>
         </footer>
-        <BottomNav groups={groups} label={t("bottomNav")} moreLabel={t("more")} />
       </div>
+      <BottomNav groups={groups} label={t("bottomNav")} moreLabel={t("more")} />
     </div>
   );
 }

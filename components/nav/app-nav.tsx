@@ -69,35 +69,33 @@ export function Icon({ name, size = 18 }: { name: keyof typeof ICONS; size?: num
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={ICONS[name]} /></svg>;
 }
 
-/** סרגל צד למחשב (מוסתר בטלפון) */
-export function Sidebar({ groups, appName, userName, roleName, label, children }: { groups: NavGroup[]; appName: string; userName: string; roleName: string; label: string; children: ReactNode }) {
+/** ניווט עליון למחשב (מוסתר בטלפון): כפתורי גלולה על רקע כחול כהה, ומתחתיהם שורת משתמש וכלים */
+export function TopNav({ groups, appName, userName, roleName, label, children }: { groups: NavGroup[]; appName: string; userName: string; roleName: string; label: string; children: ReactNode }) {
+  const items = groups.flatMap((g) => g.items);
   return (
-    <aside className="hidden w-56 flex-none flex-col gap-5 overflow-y-auto border-e border-hairline bg-card p-3 lg:sticky lg:top-0 lg:flex lg:h-dvh">
-      <Link href="/" className="flex items-center gap-2.5 px-1.5">
-        <span aria-hidden="true" className="grid size-8 place-items-center rounded-lg bg-info text-xs font-bold text-white">{appName.slice(0, 2)}</span>
-        <span className="text-[15px] font-bold">{appName}</span>
-      </Link>
-      <nav aria-label={label} className="flex flex-col gap-6">
-        {groups.map((g) => (
-          <div key={g.label} className="flex flex-col gap-0.5">
-            <p className="mb-1.5 px-3 text-[11px] tracking-wider text-ink-3">{g.label}</p>
-            {g.items.map((it) => (
-              <NavLink key={it.href} href={it.href} exact={it.exact} className="flex min-h-10 items-center justify-between rounded-lg px-3 text-sm text-ink-2 transition-colors duration-150 hover:bg-paper hover:text-ink" activeClassName="bg-info-bg font-semibold text-info-fg">
-                <span className="flex items-center gap-2.5"><Icon name={it.icon} size={16} />{it.label}</span>
-                {it.count ? <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-semibold tabular-nums text-warn-fg">{it.count}</span> : null}
-              </NavLink>
-            ))}
-          </div>
-        ))}
-      </nav>
-      <div className="mt-auto flex flex-col gap-2 border-t border-hairline pt-3">
-        <div className="flex items-center gap-2.5 px-1.5">
+    <header className="hidden px-6 pb-5 pt-4 text-white lg:block">
+      <div className="flex items-center gap-4">
+        <Link href="/" className="flex flex-none items-center gap-2.5">
+          <span aria-hidden="true" className="grid size-9 place-items-center rounded-xl bg-white/15 text-xs font-bold">{appName.slice(0, 2)}</span>
+          <span className="text-base font-bold">{appName}</span>
+        </Link>
+        <nav aria-label={label} className="flex flex-wrap items-center gap-2">
+          {items.map((it) => (
+            <NavLink key={it.href} href={it.href} exact={it.exact} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-white/10 px-4 text-sm text-white/90 transition-colors duration-150 hover:bg-white/20" activeClassName="!bg-white/25 font-semibold !text-white ring-1 ring-white/40">
+              <Icon name={it.icon} size={15} />{it.label}
+              {it.count ? <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-semibold tabular-nums text-warn-fg">{it.count}</span> : null}
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-white/90">
+        <div className="flex items-center gap-2.5">
           <span aria-hidden="true" className="grid size-8 place-items-center rounded-full bg-[#d97757] text-xs font-bold text-white">{userName.charAt(0)}</span>
-          <span className="flex min-w-0 flex-col"><span className="truncate text-[13px] font-semibold">{userName}</span><span className="text-xs text-ink-3">{roleName}</span></span>
+          <span className="font-semibold">{userName}</span><span className="text-white/70">· {roleName}</span>
         </div>
         {children}
       </div>
-    </aside>
+    </header>
   );
 }
 
