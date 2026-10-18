@@ -74,7 +74,8 @@
     "no": "לא",
     "hours": "שעות",
     "comingSoon": "בקרוב",
-    "sending": "שולחים…"
+    "sending": "שולחים…",
+    "close": "סגירה"
   },
   "statuses": {
     "pending": "ממתין לאישור",
@@ -453,7 +454,14 @@
     "colName": "שם",
     "colEmail": "אימייל",
     "colCoordinator": "רכז",
-    "colStatus": "סטטוס"
+    "colStatus": "סטטוס",
+    "section": {
+      "academic": "פרטים אישיים ולימודים",
+      "prefs": "העדפות וזמינות",
+      "bank": "חשבון בנק",
+      "program": "תוכנית"
+    },
+    "noHistory": "אין היסטוריה עדיין"
   },
   "queue": {
     "title": "ממתינים לראיון",
@@ -620,7 +628,8 @@
     },
     "approveQuick": "אישור הדיווח של {student}",
     "details": "פרטים",
-    "pickColumn": "בחירה"
+    "pickColumn": "בחירה",
+    "editShort": "עריכה"
   },
   "nav2": {
     "reports": "דיווחי שעות",
@@ -1002,5 +1011,12 @@
     "none": "אין תוצאות לחיפוש הזה",
     "details": "פרטים",
     "approveQuick": "אישור"
+  },
+  "theme": {
+    "label": "מצב תצוגה",
+    "auto": "אוטומטי",
+    "light": "בהיר",
+    "dark": "כהה",
+    "contrast": "ניגודיות גבוהה"
   }
 }

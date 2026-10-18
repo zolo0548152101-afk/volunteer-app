@@ -74,7 +74,8 @@
     "no": "No",
     "hours": "hours",
     "comingSoon": "Coming soon",
-    "sending": "Sending…"
+    "sending": "Sending…",
+    "close": "Close"
   },
   "statuses": {
     "pending": "Pending approval",
@@ -453,7 +454,14 @@
     "colName": "Name",
     "colEmail": "Email",
     "colCoordinator": "Coordinator",
-    "colStatus": "Status"
+    "colStatus": "Status",
+    "section": {
+      "academic": "Personal and academic details",
+      "prefs": "Preferences and availability",
+      "bank": "Bank account",
+      "program": "Program"
+    },
+    "noHistory": "No history yet"
   },
   "queue": {
     "title": "Awaiting interview",
@@ -620,7 +628,8 @@
     },
     "approveQuick": "Approve report by {student}",
     "details": "Details",
-    "pickColumn": "Select"
+    "pickColumn": "Select",
+    "editShort": "Edit"
   },
   "nav2": {
     "reports": "Hour reports",
@@ -1002,5 +1011,12 @@
     "none": "No results for this search",
     "details": "Details",
     "approveQuick": "Approve"
+  },
+  "theme": {
+    "label": "Display mode",
+    "auto": "Auto",
+    "light": "Light",
+    "dark": "Dark",
+    "contrast": "High contrast"
   }
 }

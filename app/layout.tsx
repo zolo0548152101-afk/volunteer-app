@@ -15,7 +15,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} dir={dirOf(locale)} className="h-full antialiased">
+    <html lang={locale} dir={dirOf(locale)} className="h-full antialiased" suppressHydrationWarning>
+      <head>
+        {/* מחיל את מצב התצוגה השמור לפני הציור הראשון, כדי שלא יהיה הבהוב */}
+        <script dangerouslySetInnerHTML={{ __html: `try{var d=document.documentElement,t=localStorage.getItem("theme"),c=localStorage.getItem("contrast");if(t)d.setAttribute("data-theme",t);if(c)d.setAttribute("data-contrast",c)}catch(e){}` }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}

@@ -5,6 +5,7 @@ import { requireActor } from "@/lib/session";
 import { logoutAction } from "@/lib/actions/auth";
 import { setLocale } from "@/lib/actions/locale";
 import { countPendingInbox } from "@/lib/services/reports";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { BottomNav, Sidebar, navFor } from "@/components/nav/app-nav";
 
 /**
@@ -23,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   const tools = (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+      <ThemeToggle />
       <form action={logoutAction}><button type="submit" className="min-h-11 underline">{t("logout")}</button></form>
       <Link href="/accessibility" className="inline-flex min-h-11 items-center underline">{tA("title")}</Link>
       <form action={setLocale}>
@@ -44,7 +46,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <form action={logoutAction}><button type="submit" className="min-h-11 text-sm underline">{t("logout")}</button></form>
         </header>
         <div id="content" tabIndex={-1} className="flex flex-1 flex-col outline-none">{children}</div>
-        <footer className="flex items-center justify-between gap-4 border-t border-hairline bg-card px-4 py-1 text-sm lg:hidden">
+        <footer className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-hairline bg-card px-4 py-1 text-sm lg:hidden">
+          <ThemeToggle />
           <Link href="/accessibility" className="inline-flex min-h-11 items-center underline">{tA("title")}</Link>
           <form action={setLocale}>
             <input type="hidden" name="locale" value={other} />

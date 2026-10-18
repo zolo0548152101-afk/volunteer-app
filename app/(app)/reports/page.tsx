@@ -12,6 +12,7 @@ import { ReportErrorBanner } from "@/components/student/report-error";
 import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
 import { ListView } from "@/components/list-view";
+import { EditDialog } from "@/components/edit-dialog";
 
 const STATUSES: ReportStatus[] = ["pending", "needs_correction", "approved", "rejected"];
 const input = "rounded-lg border border-border bg-background px-3 py-2";
@@ -45,6 +46,45 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
     g.rows.push(r);
   }
   const date = (d: string) => format.dateTime(new Date(`${d}T00:00:00Z`), { dateStyle: "medium", timeZone: "UTC" });
+  const actions = (r: (typeof list)[number]) => (
+    <div className="flex flex-col gap-2">
+              {status === "pending" && (
+                <form action={decideAction} className="mt-2 flex flex-wrap items-end gap-2">
+                  <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
+                  <div className="contents">
+                    <label className="flex flex-col gap-1">{t("approvedHoursLabel")}<input name="approvedHours" type="number" step="0.25" min="0" max={r.reportedHours} defaultValue={r.approvedHours} className={`${input} w-28`} /></label>
+                    {r.reportType === "absence" && <label className="flex items-center gap-1"><input type="checkbox" name="countsTowardTarget" value="1" defaultChecked />{t("countsTowardTarget")}</label>}
+                    <SubmitButton name="kind" value="approve" className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("approve")}</SubmitButton>
+                  </div>
+                  <label className="flex min-w-48 flex-1 flex-col gap-1">{t("notesLabel")}<input name="notes" className={input} /></label>
+                  <div className="flex gap-2">
+                    <SubmitButton name="kind" value="needs_correction" className="rounded-lg border border-border px-3 py-1.5">{t("needsCorrection")}</SubmitButton>
+                    <SubmitButton name="kind" value="reject" className="rounded-lg border border-bad/50 px-3 py-1.5 text-bad-fg">{t("reject")}</SubmitButton>
+                  </div>
+                </form>
+              )}
+              {status === "approved" && actor.roles.includes("manager") && (
+                <form action={decideAction} className="mt-2 flex flex-wrap items-end gap-2">
+                  <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} /><input type="hidden" name="kind" value="unapprove" />
+                  <label className="flex flex-col gap-1">{t("unapproveReason")}<input name="notes" required className={input} /></label>
+                  <SubmitButton className="rounded-lg border border-border px-3 py-1.5">{t("unapprove")}</SubmitButton>
+                </form>
+              )}
+              <h3 className="mt-4 text-sm font-semibold">{t("edit")}</h3>
+                <form action={editReportAction} className="mt-2 grid grid-cols-2 gap-2">
+                  <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
+                  <label className="flex flex-col gap-1">{t("editDate")}<input name="volunteerDate" type="date" required defaultValue={r.volunteerDate} className={`${input} min-h-11`} /></label>
+                  <label className="flex flex-col gap-1">{t("editReported")}<input name="reportedHours" type="number" step="0.25" min="0" required defaultValue={r.reportedHours} className={`${input} min-h-11`} /></label>
+                  <label className="flex flex-col gap-1">{t("editStart")}<input name="startTime" type="time" defaultValue={r.startTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
+                  <label className="flex flex-col gap-1">{t("editEnd")}<input name="endTime" type="time" defaultValue={r.endTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
+                  <label className="flex flex-col gap-1">{t("editApproved")}<input name="approvedHours" type="number" step="0.25" min="0" required defaultValue={r.approvedHours ?? r.reportedHours} className={`${input} min-h-11`} /></label>
+                  <label className="col-span-2 flex flex-col gap-1">{t("notesLabelEdit")}<input name="notes" defaultValue={r.coordinatorNotes ?? ""} className={`${input} min-h-11`} /></label>
+                  <SubmitButton className="col-span-2 min-h-11 rounded-lg border border-border px-4">{t("editSave")}</SubmitButton>
+                </form>
+                <p className="mt-1 text-muted">{t("editHint")}</p>
+              
+    </div>
+  );
   return (
     <main className="mx-auto w-full max-w-5xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
@@ -176,7 +216,10 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
                         <SubmitButton aria-label={t("approveQuick", { student: r.studentName })} className="min-h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground">{t("approve")}</SubmitButton>
                       </form>
                     )}
-                    <a href={`#${r.id}`} data-open-card={r.id} className="inline-flex min-h-8 items-center underline">{t("details")}</a>
+                    <EditDialog label={t("editShort")} title={`${r.studentName} · ${date(r.volunteerDate)}`}>
+                      <p className="mb-3 text-ink-2">{r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} · ${r.windowLabel ?? ""}`} · {t("reported", { n: r.reportedHours })}</p>
+                      {actions(r)}
+                    </EditDialog>
                   </span>
                 </td>
               </tr>
