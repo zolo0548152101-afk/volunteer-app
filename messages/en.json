@@ -543,7 +543,15 @@
     "fix": "Fix it",
     "edit": "Edit",
     "back": "Back",
-    "attachment": "Attached document"
+    "attachment": "Attached document",
+    "col": {
+      "date": "Date",
+      "place": "Place",
+      "reported": "Reported",
+      "approved": "Approved",
+      "status": "Status",
+      "actions": "Actions"
+    }
   },
   "inbox": {
     "title": "Hour reports",
@@ -599,7 +607,20 @@
     "notesLabelEdit": "Coordinator note",
     "editSave": "Save changes",
     "editHint": "Editing does not change the report status",
-    "editApproved": "Approved hours"
+    "editApproved": "Approved hours",
+    "col": {
+      "date": "Date",
+      "place": "Place",
+      "reported": "Reported",
+      "approved": "Approved",
+      "status": "Status",
+      "actions": "Actions",
+      "student": "Student",
+      "coordinator": "Coordinator"
+    },
+    "approveQuick": "Approve report by {student}",
+    "details": "Details",
+    "pickColumn": "Select"
   },
   "nav2": {
     "reports": "Hour reports",
@@ -970,5 +991,16 @@
     "hint": "Test environment only, no password. Pick who you are right now.",
     "empty": "No demo users in this environment",
     "enter": "Enter"
+  },
+  "listView": {
+    "search": "Search",
+    "placeholder": "Live search: name, place, date, status…",
+    "viewLabel": "View",
+    "cards": "Cards",
+    "table": "Table",
+    "count": "{n, plural, =0 {No results} one {1 result} other {# results}}",
+    "none": "No results for this search",
+    "details": "Details",
+    "approveQuick": "Approve"
   }
 }

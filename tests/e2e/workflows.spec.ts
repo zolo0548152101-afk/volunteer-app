@@ -106,7 +106,7 @@ test("דיווח: החזרה לתיקון, הסטודנט מתקן ושולח מ
   // הסטודנט רואה את ההערה, מתקן שעות ושולח מחדש
   await login(page, "student2@demo.test");
   await page.goto("/student/reports");
-  await expect(page.getByText("השעות לא תואמות לחוזה")).toBeVisible();
+  await expect(page.locator("[data-pane=cards]").getByText("השעות לא תואמות לחוזה")).toBeVisible();
   await page.getByRole("link", { name: "לתיקון" }).first().click();
   await page.locator("input[name=reportedHours]").fill("3");
   // שליחה מחדש מחליפה גם את ההערות של הסטודנט, אז מחזירים את הסימון שלנו

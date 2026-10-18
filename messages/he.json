@@ -543,7 +543,15 @@
     "fix": "לתיקון",
     "edit": "עריכה",
     "back": "חזרה",
-    "attachment": "מסמך מצורף"
+    "attachment": "מסמך מצורף",
+    "col": {
+      "date": "תאריך",
+      "place": "מקום",
+      "reported": "דווחו",
+      "approved": "אושרו",
+      "status": "סטטוס",
+      "actions": "פעולות"
+    }
   },
   "inbox": {
     "title": "דיווחי שעות",
@@ -599,7 +607,20 @@
     "notesLabelEdit": "הערת רכז",
     "editSave": "שמירת השינויים",
     "editHint": "עריכה לא משנה את מצב הדיווח",
-    "editApproved": "שעות מאושרות"
+    "editApproved": "שעות מאושרות",
+    "col": {
+      "date": "תאריך",
+      "place": "מקום",
+      "reported": "דווחו",
+      "approved": "אושרו",
+      "status": "סטטוס",
+      "actions": "פעולות",
+      "student": "סטודנט",
+      "coordinator": "רכז"
+    },
+    "approveQuick": "אישור הדיווח של {student}",
+    "details": "פרטים",
+    "pickColumn": "בחירה"
   },
   "nav2": {
     "reports": "דיווחי שעות",
@@ -970,5 +991,16 @@
     "hint": "סביבת בדיקה בלבד, בלי סיסמה. בחרו מי אתם עכשיו.",
     "empty": "אין משתמשי הדגמה בסביבה הזו",
     "enter": "כניסה"
+  },
+  "listView": {
+    "search": "חיפוש",
+    "placeholder": "חיפוש חי: שם, מקום, תאריך, סטטוס…",
+    "viewLabel": "תצוגה",
+    "cards": "כרטיסים",
+    "table": "טבלה",
+    "count": "{n, plural, =0 {לא נמצאו תוצאות} one {תוצאה אחת} other {# תוצאות}}",
+    "none": "אין תוצאות לחיפוש הזה",
+    "details": "פרטים",
+    "approveQuick": "אישור"
   }
 }

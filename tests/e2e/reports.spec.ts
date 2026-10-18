@@ -100,3 +100,23 @@ test("תיבת הרכז: מסננים ואישור מרובה מוצגים; הצ
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   expect(overflow).toBe(false);
 });
+
+test("רשימות דיווחים: כרטיסים או טבלה, וחיפוש חי", async ({ page }) => {
+  await login(page, "coord1@demo.test");
+  await page.goto("/reports?status=approved");
+  const search = page.getByRole("searchbox", { name: "חיפוש" });
+  await expect(page.getByRole("button", { name: "כרטיסים" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "טבלה" }).click();
+  await expect(page.getByRole("columnheader", { name: "סטודנט" })).toBeVisible();
+  const rows = page.locator("[data-pane=table] tbody tr");
+  const all = await rows.count();
+  expect(all).toBeGreaterThan(1);
+  const first = (await rows.first().locator("td").first().innerText()).trim();
+  await search.fill(first);
+  await expect.poll(async () => rows.filter({ visible: true }).count()).toBeLessThanOrEqual(all);
+  await search.fill("zzzzקקק");
+  await expect(page.getByText("אין תוצאות לחיפוש הזה")).toBeVisible();
+  await search.fill("");
+  await page.getByRole("button", { name: "כרטיסים" }).click();
+  await expect(page.locator("[data-pane=cards]")).toBeVisible();
+});

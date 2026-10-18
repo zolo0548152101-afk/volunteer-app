@@ -6,6 +6,7 @@ import { ForbiddenError } from "@/lib/permissions";
 import { requireActor } from "@/lib/session";
 import { buildReport, REPORT_KINDS, type Cell, type Column, type ReportKind } from "@/lib/services/analytics";
 import { listUsers } from "@/lib/services/users";
+import { ListView } from "@/components/list-view";
 
 export default async function ReportPage({ params, searchParams }: { params: Promise<{ kind: string }>; searchParams: Promise<{ month?: string; coordinatorId?: string }> }) {
   const [{ kind }, sp, t, actor] = await Promise.all([params, searchParams, getTranslations("analytics"), requireActor()]);
@@ -41,12 +42,12 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
         <a href={`/api/export/${kind}${qs ? `?${qs}` : ""}`} className="rounded-lg bg-primary px-3 py-2 text-primary-foreground">{t("exportExcel")}</a>
       </form>
       {table.rows.length === 0 ? <p className="mt-4 text-muted">{t("noRows")}</p> : (
-        <div className="mt-4 overflow-x-auto" role="region" aria-label={t(`kinds.${kind}`)} tabIndex={0}>
+        <ListView storageKey={`report-${kind}`} table={(
           <table className="w-full text-sm">
             <thead><tr>{table.columns.map((c) => <th key={c.key} scope="col" className="border-b border-border px-2 py-2 text-start font-medium">{c.key.startsWith("cf:") ? c.key.slice(3) : t(`columns.${c.key}`)}</th>)}</tr></thead>
             <tbody>
               {table.rows.map((r, i) => (
-                <tr key={i} className="border-b border-border/50">
+                <tr key={i} data-search={table.columns.map((c) => fmt(c, r[c.key])).join(" ")} className="border-b border-border/50">
                   {table.columns.map((c, j) => (j === 0
                     ? <th key={c.key} scope="row" className="px-2 py-2 text-start font-normal">{r.studentId && c.key === "student" ? <Link className="underline" href={`/students/${r.studentId}`}>{String(r[c.key])}</Link> : fmt(c, r[c.key])}</th>
                     : <td key={c.key} className="px-2 py-2">{fmt(c, r[c.key])}</td>))}
@@ -54,7 +55,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
               ))}
             </tbody>
           </table>
-        </div>
+        )} />
       )}
     </main>
   );

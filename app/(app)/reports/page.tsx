@@ -11,6 +11,7 @@ import { redirect } from "next/navigation";
 import { ReportErrorBanner } from "@/components/student/report-error";
 import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
+import { ListView } from "@/components/list-view";
 
 const STATUSES: ReportStatus[] = ["pending", "needs_correction", "approved", "rejected"];
 const input = "rounded-lg border border-border bg-background px-3 py-2";
@@ -32,6 +33,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
   const reportValues = reportFields.length ? await loadValuesMany(db(), actor.organizationId, list.map((r) => r.id), reportFields) : new Map();
   const qs = new URLSearchParams({ status, ...(studentId ? { student: studentId } : {}), ...(placeId ? { place: placeId } : {}), ...(month ? { month } : {}), ...(coordinatorId ? { coordinator: coordinatorId } : {}) }).toString();
   const back = `/reports?${qs}`;
+  const search = (r: (typeof list)[number]) => [r.studentName, r.volunteerDate, date(r.volunteerDate), r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} ${r.windowLabel ?? ""}`, r.coordinatorName, t(`status.${r.status}`), r.reportedHours, r.studentNotes, r.coordinatorNotes].filter(Boolean).join(" ");
   const filtered = !!(studentId || placeId || month || coordinatorId);
   const [bOk, bFail] = (sp.bulk ?? "").split("-").map(Number);
   const bulkMsg = sp.bulk && Number.isFinite(bOk) ? (bFail ? t("bulkPartial", { n: bOk, failed: bFail }) : bOk ? t("bulkDone", { n: bOk }) : t("bulkNone")) : null;
@@ -88,62 +90,100 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
         </form>
       )}
       {list.length === 0 && <p className="mt-4 text-muted">{t(`empty.${status}`)}</p>}
-      {groups.map((g) => (
-        <section key={g.key} className="mt-4" aria-label={isManager ? g.name : undefined}>
-          {isManager && <h2 className="text-base font-semibold">{g.name} <span className="text-sm font-normal text-muted">({t("groupCount", { n: g.rows.length })})</span></h2>}
-          <ul className="mt-2 flex flex-col gap-3">
-        {g.rows.map((r) => (
-          <li key={r.id} id={r.id} className="rounded-xl border border-border p-3 text-sm">
-            <p className="flex flex-wrap items-center gap-x-2 font-medium">
-              {status === "pending" && r.reportType !== "absence" && <input type="checkbox" name="ids" value={r.id} form="bulk" aria-label={t("pick", { student: r.studentName })} className="size-5" />}
-              <Link href={`/students/${r.studentId}`} className="underline">{r.studentName}</Link> · {date(r.volunteerDate)}</p>
-            <p>{r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} · ${r.windowLabel ?? ""}`}</p>
-            <p>{t("reported", { n: r.reportedHours })}{r.startTime && r.endTime ? <> · <span dir="ltr">{r.startTime.slice(0, 5)}–{r.endTime.slice(0, 5)}</span></> : ""}{r.status === "approved" ? ` · ${t("approved", { n: r.approvedHours })}` : ""}</p>
-            {r.studentNotes && <p className="text-muted">{t("studentNote", { note: r.studentNotes })}</p>}
-            {r.coordinatorNotes && r.status !== "pending" && <p className="text-muted">{t("coordinatorNote", { note: r.coordinatorNotes })}</p>}
-            {reportFields.length > 0 && <div className="mt-1"><CustomFields fields={reportFields} values={reportValues.get(r.id) ?? {}} /></div>}
-            {r.attachment && <p><a href={`/api/reports/${r.id}/attachment`} target="_blank" rel="noopener" className="underline">{t("attachment")}</a></p>}
-            {status === "pending" && (
-              <form action={decideAction} className="mt-2 flex flex-wrap items-end gap-2">
-                <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
-                <div className="contents">
-                  <label className="flex flex-col gap-1">{t("approvedHoursLabel")}<input name="approvedHours" type="number" step="0.25" min="0" max={r.reportedHours} defaultValue={r.approvedHours} className={`${input} w-28`} /></label>
-                  {r.reportType === "absence" && <label className="flex items-center gap-1"><input type="checkbox" name="countsTowardTarget" value="1" defaultChecked />{t("countsTowardTarget")}</label>}
-                  <SubmitButton name="kind" value="approve" className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("approve")}</SubmitButton>
-                </div>
-                <label className="flex min-w-48 flex-1 flex-col gap-1">{t("notesLabel")}<input name="notes" className={input} /></label>
-                <div className="flex gap-2">
-                  <SubmitButton name="kind" value="needs_correction" className="rounded-lg border border-border px-3 py-1.5">{t("needsCorrection")}</SubmitButton>
-                  <SubmitButton name="kind" value="reject" className="rounded-lg border border-bad/50 px-3 py-1.5 text-bad-fg">{t("reject")}</SubmitButton>
-                </div>
-              </form>
-            )}
-            {status === "approved" && actor.roles.includes("manager") && (
-              <form action={decideAction} className="mt-2 flex flex-wrap items-end gap-2">
-                <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} /><input type="hidden" name="kind" value="unapprove" />
-                <label className="flex flex-col gap-1">{t("unapproveReason")}<input name="notes" required className={input} /></label>
-                <SubmitButton className="rounded-lg border border-border px-3 py-1.5">{t("unapprove")}</SubmitButton>
-              </form>
-            )}
-            <details className="mt-2">
-              <summary className="inline-flex min-h-11 cursor-pointer items-center underline">{t("edit")}</summary>
-              <form action={editReportAction} className="mt-2 grid grid-cols-2 gap-2">
-                <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
-                <label className="flex flex-col gap-1">{t("editDate")}<input name="volunteerDate" type="date" required defaultValue={r.volunteerDate} className={`${input} min-h-11`} /></label>
-                <label className="flex flex-col gap-1">{t("editReported")}<input name="reportedHours" type="number" step="0.25" min="0" required defaultValue={r.reportedHours} className={`${input} min-h-11`} /></label>
-                <label className="flex flex-col gap-1">{t("editStart")}<input name="startTime" type="time" defaultValue={r.startTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
-                <label className="flex flex-col gap-1">{t("editEnd")}<input name="endTime" type="time" defaultValue={r.endTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
-                <label className="flex flex-col gap-1">{t("editApproved")}<input name="approvedHours" type="number" step="0.25" min="0" required defaultValue={r.approvedHours ?? r.reportedHours} className={`${input} min-h-11`} /></label>
-                <label className="col-span-2 flex flex-col gap-1">{t("notesLabelEdit")}<input name="notes" defaultValue={r.coordinatorNotes ?? ""} className={`${input} min-h-11`} /></label>
-                <SubmitButton className="col-span-2 min-h-11 rounded-lg border border-border px-4">{t("editSave")}</SubmitButton>
-              </form>
-              <p className="mt-1 text-muted">{t("editHint")}</p>
-            </details>
-          </li>
+      <ListView storageKey="inbox" cards={(
+        <>
+        {groups.map((g) => (
+          <section key={g.key} data-group className="mt-4" aria-label={isManager ? g.name : undefined}>
+            {isManager && <h2 className="text-base font-semibold">{g.name} <span className="text-sm font-normal text-muted">({t("groupCount", { n: g.rows.length })})</span></h2>}
+            <ul className="mt-2 flex flex-col gap-3">
+          {g.rows.map((r) => (
+            <li key={r.id} id={r.id} tabIndex={-1} data-search={search(r)} className="rounded-xl border border-border p-3 text-sm outline-none">
+              <p className="flex flex-wrap items-center gap-x-2 font-medium">
+                {status === "pending" && r.reportType !== "absence" && <input type="checkbox" name="ids" value={r.id} form="bulk" aria-label={t("pick", { student: r.studentName })} className="size-5" />}
+                <Link href={`/students/${r.studentId}`} className="underline">{r.studentName}</Link> · {date(r.volunteerDate)}</p>
+              <p>{r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} · ${r.windowLabel ?? ""}`}</p>
+              <p>{t("reported", { n: r.reportedHours })}{r.startTime && r.endTime ? <> · <span dir="ltr">{r.startTime.slice(0, 5)}–{r.endTime.slice(0, 5)}</span></> : ""}{r.status === "approved" ? ` · ${t("approved", { n: r.approvedHours })}` : ""}</p>
+              {r.studentNotes && <p className="text-muted">{t("studentNote", { note: r.studentNotes })}</p>}
+              {r.coordinatorNotes && r.status !== "pending" && <p className="text-muted">{t("coordinatorNote", { note: r.coordinatorNotes })}</p>}
+              {reportFields.length > 0 && <div className="mt-1"><CustomFields fields={reportFields} values={reportValues.get(r.id) ?? {}} /></div>}
+              {r.attachment && <p><a href={`/api/reports/${r.id}/attachment`} target="_blank" rel="noopener" className="underline">{t("attachment")}</a></p>}
+              {status === "pending" && (
+                <form action={decideAction} className="mt-2 flex flex-wrap items-end gap-2">
+                  <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
+                  <div className="contents">
+                    <label className="flex flex-col gap-1">{t("approvedHoursLabel")}<input name="approvedHours" type="number" step="0.25" min="0" max={r.reportedHours} defaultValue={r.approvedHours} className={`${input} w-28`} /></label>
+                    {r.reportType === "absence" && <label className="flex items-center gap-1"><input type="checkbox" name="countsTowardTarget" value="1" defaultChecked />{t("countsTowardTarget")}</label>}
+                    <SubmitButton name="kind" value="approve" className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("approve")}</SubmitButton>
+                  </div>
+                  <label className="flex min-w-48 flex-1 flex-col gap-1">{t("notesLabel")}<input name="notes" className={input} /></label>
+                  <div className="flex gap-2">
+                    <SubmitButton name="kind" value="needs_correction" className="rounded-lg border border-border px-3 py-1.5">{t("needsCorrection")}</SubmitButton>
+                    <SubmitButton name="kind" value="reject" className="rounded-lg border border-bad/50 px-3 py-1.5 text-bad-fg">{t("reject")}</SubmitButton>
+                  </div>
+                </form>
+              )}
+              {status === "approved" && actor.roles.includes("manager") && (
+                <form action={decideAction} className="mt-2 flex flex-wrap items-end gap-2">
+                  <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} /><input type="hidden" name="kind" value="unapprove" />
+                  <label className="flex flex-col gap-1">{t("unapproveReason")}<input name="notes" required className={input} /></label>
+                  <SubmitButton className="rounded-lg border border-border px-3 py-1.5">{t("unapprove")}</SubmitButton>
+                </form>
+              )}
+              <details className="mt-2">
+                <summary className="inline-flex min-h-11 cursor-pointer items-center underline">{t("edit")}</summary>
+                <form action={editReportAction} className="mt-2 grid grid-cols-2 gap-2">
+                  <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
+                  <label className="flex flex-col gap-1">{t("editDate")}<input name="volunteerDate" type="date" required defaultValue={r.volunteerDate} className={`${input} min-h-11`} /></label>
+                  <label className="flex flex-col gap-1">{t("editReported")}<input name="reportedHours" type="number" step="0.25" min="0" required defaultValue={r.reportedHours} className={`${input} min-h-11`} /></label>
+                  <label className="flex flex-col gap-1">{t("editStart")}<input name="startTime" type="time" defaultValue={r.startTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
+                  <label className="flex flex-col gap-1">{t("editEnd")}<input name="endTime" type="time" defaultValue={r.endTime?.slice(0, 5) ?? ""} className={`${input} min-h-11`} /></label>
+                  <label className="flex flex-col gap-1">{t("editApproved")}<input name="approvedHours" type="number" step="0.25" min="0" required defaultValue={r.approvedHours ?? r.reportedHours} className={`${input} min-h-11`} /></label>
+                  <label className="col-span-2 flex flex-col gap-1">{t("notesLabelEdit")}<input name="notes" defaultValue={r.coordinatorNotes ?? ""} className={`${input} min-h-11`} /></label>
+                  <SubmitButton className="col-span-2 min-h-11 rounded-lg border border-border px-4">{t("editSave")}</SubmitButton>
+                </form>
+                <p className="mt-1 text-muted">{t("editHint")}</p>
+              </details>
+            </li>
+          ))}
+            </ul>
+          </section>
         ))}
-          </ul>
-        </section>
-      ))}
+        </>
+      )} table={(
+        <table className="w-full text-sm">
+          <thead className="bg-paper text-xs text-ink-3">
+            <tr>
+              {status === "pending" && <th scope="col" className="w-0 px-3 py-2"><span className="sr-only">{t("pickColumn")}</span></th>}
+              {(isManager ? ["student", "date", "place", "coordinator", "reported", "approved", "status", "actions"] : ["student", "date", "place", "reported", "approved", "status", "actions"] as const).map((k) => <th key={k} scope="col" className="px-3 py-2 text-start font-medium">{t(`col.${k}`)}</th>)}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-hairline">
+            {list.map((r) => (
+              <tr key={r.id} data-search={search(r)}>
+                {status === "pending" && <td className="px-3 py-2">{r.reportType !== "absence" && <input type="checkbox" name="ids" value={r.id} form="bulk" aria-label={t("pick", { student: r.studentName })} className="size-5" />}</td>}
+                <td className="px-3 py-2 font-medium"><Link href={`/students/${r.studentId}`} className="underline">{r.studentName}</Link></td>
+                <td className="whitespace-nowrap px-3 py-2">{date(r.volunteerDate)}</td>
+                <td className="px-3 py-2">{r.reportType === "absence" ? t("absence") : `${r.placeName ?? ""} · ${r.windowLabel ?? ""}`}</td>
+                {isManager && <td className="px-3 py-2">{r.coordinatorName ?? t("noCoordinator")}</td>}
+                <td className="px-3 py-2 tabular-nums">{r.reportedHours}</td>
+                <td className="px-3 py-2 tabular-nums">{r.status === "approved" ? r.approvedHours : "—"}</td>
+                <td className="px-3 py-2">{t(`status.${r.status}`)}</td>
+                <td className="whitespace-nowrap px-3 py-2">
+                  <span className="flex items-center gap-3">
+                    {status === "pending" && r.reportType !== "absence" && (
+                      <form action={decideAction}>
+                        <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} /><input type="hidden" name="kind" value="approve" /><input type="hidden" name="approvedHours" value={r.approvedHours ?? r.reportedHours} />
+                        <SubmitButton aria-label={t("approveQuick", { student: r.studentName })} className="min-h-8 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground">{t("approve")}</SubmitButton>
+                      </form>
+                    )}
+                    <a href={`#${r.id}`} data-open-card={r.id} className="inline-flex min-h-8 items-center underline">{t("details")}</a>
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )} />
     </main>
   );
 }
