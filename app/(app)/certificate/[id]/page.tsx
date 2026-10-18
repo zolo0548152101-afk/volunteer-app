@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { formatDay, formatInstant } from "@/lib/date-format";
@@ -15,6 +16,7 @@ export default async function Certificate({ params }: { params: Promise<{ id: st
   if (!c) notFound();
   return (
     <main className="mx-auto w-full max-w-2xl p-6 print:p-0">
+      <Link href={actor.roles.includes("student") && actor.roles.length === 1 ? "/student" : `/students/${id}`} className="mb-3 inline-flex min-h-10 items-center text-sm underline print:hidden">→ {t("back")}</Link>
       <div className="flex items-start justify-between"><h1 className="text-2xl font-semibold">{t("title")}</h1><PrintButton label={t("print")} /></div>
       <p className="mt-4 text-lg">{c.student}</p>
       <p className="text-sm text-muted">{t("year", { name: c.yearName })}{c.track ? ` · ${c.track}` : ""}</p>

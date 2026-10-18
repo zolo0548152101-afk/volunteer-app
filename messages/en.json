@@ -461,7 +461,11 @@
       "bank": "Bank account",
       "program": "Program"
     },
-    "noHistory": "No history yet"
+    "noHistory": "No history yet",
+    "backToList": "Back to students",
+    "continueInterview": "Continue interview (draft)",
+    "continueReassign": "Continue reassignment (draft)",
+    "draftHint": "There is an unsaved draft open. Continue it or cancel it from inside."
   },
   "queue": {
     "title": "Awaiting interview",
@@ -885,7 +889,8 @@
     "hours": "Hours",
     "absence": "Approved absence",
     "total": "Total",
-    "issued": "Issued on {date}"
+    "issued": "Issued on {date}",
+    "back": "Back"
   },
   "nav4": {
     "analytics": "Dashboard and reports",

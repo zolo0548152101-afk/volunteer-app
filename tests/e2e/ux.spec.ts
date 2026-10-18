@@ -27,4 +27,9 @@ test("כרטיס סטודנט: צפייה, ועריכה במקום עם שמיר
   await expect(card.getByLabel("עיר מגורים")).toBeVisible();
   await card.getByRole("button", { name: "ביטול" }).click();
   await expect(card.getByRole("textbox")).toHaveCount(0);
+  await page.getByRole("link", { name: "תעודת שעות" }).click();
+  await page.getByRole("link", { name: "חזרה" }).click();
+  await expect(page).toHaveURL(/\/students\/[0-9a-f-]{36}$/);
+  await page.getByRole("link", { name: "חזרה לרשימת הסטודנטים" }).click();
+  await expect(page).toHaveURL(/\/students$/);
 });

@@ -53,6 +53,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
 
   return (
     <main className="mx-auto w-full max-w-6xl p-4">
+      <Link href="/students" className="mb-2 inline-flex min-h-10 items-center text-sm text-ink-2 underline">→ {t("backToList")}</Link>
       <header className={`${card} flex flex-wrap items-start justify-between gap-4`}>
         <div className="flex min-w-0 items-center gap-3">
           <span aria-hidden="true" className="grid size-12 flex-none place-items-center rounded-full bg-info text-lg font-bold text-white">{s.firstName.charAt(0)}</span>
@@ -63,7 +64,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href={`/certificate/${id}`} className="inline-flex min-h-10 items-center rounded-lg border border-border px-4 text-sm hover:bg-paper">{ti("certificateLink")}</Link>
-          {draft && <Link href={`/interviews/${draft.id}`} className="inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm text-primary-foreground">{t("continueDraft")}</Link>}
+          {draft && <Link href={`/interviews/${draft.id}`} className="inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm text-primary-foreground">{draft.kind === "interview" ? t("continueInterview") : t("continueReassign")}</Link>}
           {!draft && canInterview && (
             <form action={startInterviewAction}><input type="hidden" name="studentId" value={id} /><input type="hidden" name="kind" value="interview" />
               <SubmitButton className="min-h-10 rounded-lg bg-primary px-4 text-sm text-primary-foreground">{t("startInterview")}</SubmitButton></form>
@@ -74,6 +75,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
           )}
         </div>
       </header>
+      {draft && <p className="mt-2 text-sm text-ink-2">{t("draftHint")}</p>}
       {sp.done && <Flash tone="status" className="mt-3 rounded-lg border border-ok/50 p-3 text-sm text-ok-fg">{sp.done === "saved" ? t("saved") : t("done")}</Flash>}
       {sp.invite === "failed" && <Flash tone="error" className="mt-3 rounded-lg border border-warn/50 bg-warn-bg p-3 text-sm text-warn-fg">{t("inviteFailed")}</Flash>}
       {errorKey && <Flash tone="error" className="mt-3 rounded-lg border border-bad/50 p-3 text-sm text-bad-fg">{ti(`errors.${errorKey}`)}</Flash>}
