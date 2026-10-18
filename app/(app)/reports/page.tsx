@@ -44,7 +44,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
   }
   const date = (d: string) => format.dateTime(new Date(`${d}T00:00:00Z`), { dateStyle: "medium", timeZone: "UTC" });
   return (
-    <main className="mx-auto w-full max-w-3xl p-4">
+    <main className="mx-auto w-full max-w-5xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <nav className="mt-3 flex flex-wrap gap-2" aria-label={t("filter")}>
         {STATUSES.map((s) => <Link key={s} href={`/reports?status=${s}`} aria-current={s === status ? "page" : undefined} className={`rounded-full border px-3 py-1 text-sm ${s === status ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{t(`status.${s}`)}</Link>)}
@@ -104,14 +104,14 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
             {reportFields.length > 0 && <div className="mt-1"><CustomFields fields={reportFields} values={reportValues.get(r.id) ?? {}} /></div>}
             {r.attachment && <p><a href={`/api/reports/${r.id}/attachment`} target="_blank" rel="noopener" className="underline">{t("attachment")}</a></p>}
             {status === "pending" && (
-              <form action={decideAction} className="mt-2 flex flex-col gap-2">
+              <form action={decideAction} className="mt-2 flex flex-wrap items-end gap-2">
                 <input type="hidden" name="reportId" value={r.id} /><input type="hidden" name="back" value={back} />
-                <div className="flex flex-wrap items-end gap-2">
+                <div className="contents">
                   <label className="flex flex-col gap-1">{t("approvedHoursLabel")}<input name="approvedHours" type="number" step="0.25" min="0" max={r.reportedHours} defaultValue={r.approvedHours} className={`${input} w-28`} /></label>
                   {r.reportType === "absence" && <label className="flex items-center gap-1"><input type="checkbox" name="countsTowardTarget" value="1" defaultChecked />{t("countsTowardTarget")}</label>}
                   <SubmitButton name="kind" value="approve" className="rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("approve")}</SubmitButton>
                 </div>
-                <label className="flex flex-col gap-1">{t("notesLabel")}<input name="notes" className={input} /></label>
+                <label className="flex min-w-48 flex-1 flex-col gap-1">{t("notesLabel")}<input name="notes" className={input} /></label>
                 <div className="flex gap-2">
                   <SubmitButton name="kind" value="needs_correction" className="rounded-lg border border-border px-3 py-1.5">{t("needsCorrection")}</SubmitButton>
                   <SubmitButton name="kind" value="reject" className="rounded-lg border border-bad/50 px-3 py-1.5 text-bad-fg">{t("reject")}</SubmitButton>

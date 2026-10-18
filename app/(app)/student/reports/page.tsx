@@ -10,7 +10,7 @@ export default async function MyReports({ searchParams }: { searchParams: Promis
   const [sp, t, actor, format] = await Promise.all([searchParams, getTranslations("myReports"), requireRole("student"), getFormatter()]);
   const [list, progress] = await Promise.all([listMyReports(db(), actor), myProgress(db(), actor)]);
   return (
-    <main className="mx-auto w-full max-w-xl p-4">
+    <main className="mx-auto w-full max-w-2xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       {sp.sent && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-3 text-sm text-ok-fg">{t("sent")}</Flash>}
       <p className="mt-2 text-sm text-muted">{t("progress", { approved: progress.approved, pending: progress.pending })}</p>

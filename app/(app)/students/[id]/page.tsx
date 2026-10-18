@@ -40,7 +40,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
   const row = (k: string, v: React.ReactNode) => <div key={k}><dt className="text-muted">{k}</dt><dd>{v || "—"}</dd></div>;
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-4">
+    <main className="mx-auto w-full max-w-5xl p-4">
       <h1 className="text-xl font-semibold">{s.firstName} {s.lastName}</h1>
       {sp.done && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-3 text-sm text-ok-fg">{sp.done === "saved" ? t("saved") : t("done")}</Flash>}
       {sp.invite === "failed" && <Flash tone="error" className="mt-2 rounded-lg border border-warn/50 bg-warn-bg p-3 text-sm text-warn-fg">{t("inviteFailed")}</Flash>}

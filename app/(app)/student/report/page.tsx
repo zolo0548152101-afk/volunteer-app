@@ -16,7 +16,7 @@ export default async function NewReport({ searchParams }: { searchParams: Promis
   const fields = await listFields(db(), actor, "report", "report_form");
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Asia/Jerusalem" });
   return (
-    <main className="mx-auto w-full max-w-xl p-4">
+    <main className="mx-auto w-full max-w-2xl p-4">
       <h1 className="text-xl font-semibold">{absence ? t("titleAbsence") : t("title")}</h1>
       <ReportErrorBanner code={sp.error} />
       {!absence && pls.length === 0 ? (

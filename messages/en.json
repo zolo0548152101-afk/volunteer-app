@@ -449,7 +449,11 @@
     "saveDetails": "Save",
     "bank": "Bank account",
     "branch": "branch",
-    "inviteFailed": "The interview is closed, but the sign-in email failed. You can resend it from Users"
+    "inviteFailed": "The interview is closed, but the sign-in email failed. You can resend it from Users",
+    "colName": "Name",
+    "colEmail": "Email",
+    "colCoordinator": "Coordinator",
+    "colStatus": "Status"
   },
   "queue": {
     "title": "Awaiting interview",

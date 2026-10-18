@@ -19,7 +19,7 @@ export default async function EditReport({ params, searchParams }: { params: Pro
   const values = await loadValues(db(), actor.organizationId, id, fields);
   const pls = await reportablePlacements(db(), actor);
   return (
-    <main className="mx-auto w-full max-w-xl p-4">
+    <main className="mx-auto w-full max-w-2xl p-4">
       <h1 className="text-xl font-semibold">{t("titleEdit")}</h1>
       {report.coordinatorNotes && report.status === "needs_correction" && <p className="mt-2 rounded-lg border border-warn/50 p-3 text-sm">{t("coordinatorAsked", { note: report.coordinatorNotes })}</p>}
       <ReportErrorBanner code={sp.error} />

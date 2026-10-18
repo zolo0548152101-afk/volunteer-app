@@ -31,7 +31,7 @@ export default async function PlaceCard({ params, searchParams }: { params: Prom
   const catLabel = categories.find((c) => c.key === place.category)?.label;
 
   return (
-    <main className="mx-auto w-full max-w-3xl p-4">
+    <main className="mx-auto w-full max-w-5xl p-4">
       <Link href="/places" className="text-sm underline">{t("back")}</Link>
       <h1 className="mt-2 text-xl font-semibold">{place.name}</h1>
       <p className="text-sm text-muted">{[place.address, place.city, catLabel].filter(Boolean).join(" · ")}</p>

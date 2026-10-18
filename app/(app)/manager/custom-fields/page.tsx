@@ -51,7 +51,7 @@ export default async function CustomFieldsPage({ searchParams }: { searchParams:
   );
   const builtin = t.raw(`pages.${current}.builtin`) as string[];
   return (
-    <main className="mx-auto w-full max-w-3xl p-4">
+    <main className="mx-auto w-full max-w-5xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <p className="mt-1 text-sm text-muted">{t("intro")}</p>
       {sp.saved && <Flash tone="status" className="mt-3 rounded-lg border border-ok/50 p-2 text-sm text-ok-fg">{t("saved")}</Flash>}

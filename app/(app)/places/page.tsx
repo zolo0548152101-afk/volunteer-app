@@ -16,16 +16,16 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
   const canCreate = can(actor, "create", "place", { organizationId: actor.organizationId });
   const label = new Map(categories.map((c) => [c.key, c.label]));
   return (
-    <main className="mx-auto w-full max-w-3xl p-4">
+    <main className="mx-auto w-full max-w-5xl p-4">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <PlaceError code={error} />
       {list.length === 0 && <p className="mt-4 text-muted">{t("empty")}</p>}
-      <ul className="mt-4 flex flex-col gap-3">
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
         {list.map((p) => {
           const sp = p as Partial<StaffPlace>;
           return (
-            <li key={p.id} className="rounded-xl border border-border p-3">
-              <Link href={`/places/${p.id}`} className="font-medium underline">{p.name}</Link>
+            <li key={p.id} className="rounded-xl border border-hairline bg-card p-4">
+              <Link href={`/places/${p.id}`} className="font-semibold text-info-fg hover:underline">{p.name}</Link>
               <p className="text-sm text-muted">{[p.city, p.category ? label.get(p.category) ?? p.category : null].filter(Boolean).join(" · ")}</p>
               {sp.requestedHours !== undefined && (
                 <p className="mt-1 text-sm">
@@ -38,13 +38,13 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
         })}
       </ul>
       {canCreate && (
-        <section className="mt-8" aria-labelledby="new-h">
-          <h2 id="new-h" className="text-lg font-medium">{t("newPlace")}</h2>
+        <details className="mt-4 rounded-xl border border-dashed border-border bg-card p-4" open={!!error || undefined}>
+          <summary className="flex min-h-10 cursor-pointer items-center gap-1 text-sm font-medium text-info-fg"><span aria-hidden>＋</span>{t("newPlace")}</summary>
           <form action={createPlaceAction} className="mt-3 flex flex-col gap-3">
             <PlaceFields categories={categories} />
-            <SubmitButton className="rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground">{t("create")}</SubmitButton>
+            <SubmitButton className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground ">{t("create")}</SubmitButton>
           </form>
-        </section>
+        </details>
       )}
     </main>
   );

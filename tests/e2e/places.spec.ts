@@ -16,6 +16,7 @@ test("מנהל יוצר מקום וחלון זמן ורואה תפוסה מחו�
   const name = `e2e מקום ${Date.now()}`;
   await login(page, "manager@demo.test");
   await page.goto("/places");
+  await page.getByText("מקום חדש").click();
   await page.getByLabel("שם המקום").fill(name);
   await page.getByLabel("איש קשר", { exact: true }).fill("דנה לוי");
   await page.getByRole("button", { name: "יצירת מקום" }).click();
