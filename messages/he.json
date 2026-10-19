@@ -30,7 +30,8 @@
     "pendingCount": "{n} דיווחים ממתינים",
     "groupAdmin": "ניהול מערכת",
     "admin": "ניהול מערכת",
-    "userMenu": "תפריט משתמש"
+    "userMenu": "תפריט משתמש",
+    "applicants": "מועמדים"
   },
   "auth": {
     "loginTitle": "כניסה למערכת",
@@ -670,7 +671,11 @@
     "editShort": "עריכה",
     "searchPlaceholder": "חיפוש לפי סטודנט, מקום, תאריך או סטטוס",
     "filtersTitle": "סינון דיווחים",
-    "removeFilter": "הסרת מסנן"
+    "removeFilter": "הסרת מסנן",
+    "byCoordinator": "סינון לפי רכז",
+    "coordinatorTotals": "{coordinators} רכזים · {reports} רשומות · {hours} שעות",
+    "allCoordinators": "כל הרכזים",
+    "coordinatorCounts": "{reports} רשומות · {hours} ש'"
   },
   "nav2": {
     "reports": "דיווחי שעות",
@@ -1134,6 +1139,51 @@
     "unsaved": "יש שינויים שעוד לא נשמרו",
     "overrideReason": "השיבוץ חורג מהיעד. סיבה לאישור החריגה (חובה)",
     "needsManager": "השיבוץ חורג מיעד הסטודנט. רק מנהל יכול לאשר אותו",
-    "mobileSummary": "צפי: {projected} מתוך {target} ש'"
+    "mobileSummary": "צפי: {projected} מתוך {target} ש'",
+    "edit": "עריכה",
+    "doneEditing": "סיום עריכה",
+    "collapsedError": "יש בעיה בשורה הזו. לוחצים על \"עריכה\" כדי לתקן"
+  },
+  "applicants": {
+    "title": "מועמדים",
+    "intro": "מי שמילא את טופס ההרשמה מופיע כאן. אחרי אישור הוא עובר לתור הראיונות עם כל הפרטים שמילא.",
+    "linkTitle": "קישור לטופס ההרשמה",
+    "linkHint": "זה הקישור לשלוח למועמדים (במייל, בוואטסאפ או באתר). הטופס פתוח לכולם, בלי כניסה.",
+    "copy": "העתקת הקישור",
+    "copied": "הקישור הועתק",
+    "openForm": "פתיחת הטופס",
+    "editFields": "עריכת השדות בטופס ההרשמה",
+    "statusNav": "סטטוס מועמדות",
+    "status": {
+      "pending": "ממתינים לבדיקה",
+      "approved": "אושרו לראיון",
+      "rejected": "נדחו"
+    },
+    "empty": {
+      "pending": "אין מועמדים שממתינים לבדיקה",
+      "approved": "עוד לא אושרו מועמדים",
+      "rejected": "אין מועמדים שנדחו"
+    },
+    "searchPlaceholder": "חיפוש לפי שם, טלפון, עיר או מוסד",
+    "col": {
+      "name": "מועמד",
+      "phone": "טלפון",
+      "city": "עיר",
+      "studies": "לימודים",
+      "days": "ימים פנויים",
+      "submitted": "הוגש",
+      "contact": "פרטי קשר"
+    },
+    "review": "בדיקה",
+    "details": "פרטים",
+    "approve": "אישור והעברה לראיון",
+    "reject": "דחייה",
+    "rejectConfirm": "לדחות את המועמדות של {name}? הוא לא יעבור לראיון",
+    "openCard": "לכרטיס הסטודנט",
+    "submittedOn": "הוגש ב-{date}",
+    "decidedOn": "טופל ב-{date}",
+    "doneApproved": "המועמד אושר ועבר לתור הראיונות",
+    "doneRejected": "המועמדות נדחתה",
+    "error": "הפעולה לא הצליחה. נסו שוב"
   }
 }

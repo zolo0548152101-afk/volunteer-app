@@ -6,6 +6,7 @@ import { logoutAction } from "@/lib/actions/auth";
 import { setLocale } from "@/lib/actions/locale";
 import { countPendingInbox } from "@/lib/services/reports";
 import { listAwaitingInterview } from "@/lib/services/students";
+import { countApplications } from "@/lib/services/applications";
 import { UserMenu } from "@/components/nav/user-menu";
 import { Toaster } from "@/components/toast";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -18,12 +19,13 @@ import { BottomNav, TopNav, navFor } from "@/components/nav/app-nav";
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const actor = await requireActor();
   const isManager = actor.roles.includes("manager");
-  const [t, tApp, tA, tR, locale, pending, awaiting] = await Promise.all([
+  const [t, tApp, tA, tR, locale, pending, awaiting, applicants] = await Promise.all([
     getTranslations("nav"), getTranslations("app"), getTranslations("a11y"), getTranslations("roles"), getLocale(),
     actor.roles.includes("coordinator") && !isManager ? countPendingInbox(db(), actor) : Promise.resolve(0),
     actor.roles.includes("interviewer") && !isManager && !actor.roles.includes("coordinator") ? listAwaitingInterview(db(), actor).then((l) => l.length) : Promise.resolve(0),
+    isManager ? countApplications(db(), actor).then((c) => c.pending) : Promise.resolve(0),
   ]);
-  const groups = await navFor(actor, pending, awaiting);
+  const groups = await navFor(actor, pending, awaiting, applicants);
   const other = locale === "he" ? "en" : "he";
   const primaryRole = (["manager", "coordinator", "interviewer", "student"] as const).find((r) => actor.roles.includes(r)) ?? "student";
   const item = "flex min-h-11 w-full items-center rounded-lg px-3 text-sm text-ink-2 hover:bg-paper";

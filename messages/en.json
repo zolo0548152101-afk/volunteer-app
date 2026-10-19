@@ -30,7 +30,8 @@
     "pendingCount": "{n} pending reports",
     "groupAdmin": "Administration",
     "admin": "Administration",
-    "userMenu": "User menu"
+    "userMenu": "User menu",
+    "applicants": "Applicants"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -670,7 +671,11 @@
     "editShort": "Edit",
     "searchPlaceholder": "Search by student, place, date or status",
     "filtersTitle": "Filter reports",
-    "removeFilter": "Remove filter"
+    "removeFilter": "Remove filter",
+    "byCoordinator": "Filter by coordinator",
+    "coordinatorTotals": "{coordinators} coordinators · {reports} records · {hours} hours",
+    "allCoordinators": "All coordinators",
+    "coordinatorCounts": "{reports} records · {hours} h"
   },
   "nav2": {
     "reports": "Hour reports",
@@ -1134,6 +1139,51 @@
     "unsaved": "Unsaved changes",
     "overrideReason": "The placement misses the target. Reason for approving (required)",
     "needsManager": "The placement misses the student's target. Only a manager can approve it",
-    "mobileSummary": "Expected: {projected} of {target} h"
+    "mobileSummary": "Expected: {projected} of {target} h",
+    "edit": "Edit",
+    "doneEditing": "Done",
+    "collapsedError": "This row has a problem. Click \"Edit\" to fix it"
+  },
+  "applicants": {
+    "title": "Applicants",
+    "intro": "People who filled the registration form appear here. Once approved they move to the interview queue with everything they filled in.",
+    "linkTitle": "Registration form link",
+    "linkHint": "Send this link to applicants (email, WhatsApp or website). The form is open to everyone, no sign-in.",
+    "copy": "Copy link",
+    "copied": "Link copied",
+    "openForm": "Open form",
+    "editFields": "Edit registration form fields",
+    "statusNav": "Application status",
+    "status": {
+      "pending": "Awaiting review",
+      "approved": "Approved for interview",
+      "rejected": "Rejected"
+    },
+    "empty": {
+      "pending": "No applicants awaiting review",
+      "approved": "No approved applicants yet",
+      "rejected": "No rejected applicants"
+    },
+    "searchPlaceholder": "Search by name, phone, city or institution",
+    "col": {
+      "name": "Applicant",
+      "phone": "Phone",
+      "city": "City",
+      "studies": "Studies",
+      "days": "Free days",
+      "submitted": "Submitted",
+      "contact": "Contact"
+    },
+    "review": "Review",
+    "details": "Details",
+    "approve": "Approve for interview",
+    "reject": "Reject",
+    "rejectConfirm": "Reject {name}'s application? They won't move to interview",
+    "openCard": "Open student card",
+    "submittedOn": "Submitted {date}",
+    "decidedOn": "Handled {date}",
+    "doneApproved": "Approved and moved to the interview queue",
+    "doneRejected": "Application rejected",
+    "error": "That didn't work. Try again"
   }
 }

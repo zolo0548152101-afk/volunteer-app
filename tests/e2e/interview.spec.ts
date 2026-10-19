@@ -44,6 +44,9 @@ test("מראיין רואה את התור, מנהל מראיין ומשבץ סט
   await page.getByRole("button", { name: /^הוספה:/ }).first().click();
   await page.getByRole("button", { name: "הוספה לשיבוץ" }).click();
   const line = page.getByRole("region", { name: /המקומות של ליאן/ }).getByRole("listitem").first();
+  // הכרטיס מקובץ: אין שדות עד שלוחצים "עריכה"
+  await expect(line.getByLabel("תקנים")).toHaveCount(0);
+  await line.getByRole("button", { name: /^עריכה:/ }).click();
   await expect(line.getByLabel("תקנים")).toBeVisible();
   // תחזית חיה: שינוי התקנים מעדכן את החריגה ואת השעות עד סוף השנה לפני שמירה
   const slots = line.getByLabel("תקנים");
