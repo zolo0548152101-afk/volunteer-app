@@ -5,7 +5,7 @@
   --foreground: #1c1b19;
   --muted: #6b6860;
   --border: #e2dfd6;
-  --primary: #1f5eff;
+  --primary: #1a4fe0;
   --primary-foreground: #ffffff;
 }
 
@@ -44,7 +44,7 @@ body {
 
 /* ── לוח הבקרה: "Soft Paper" (קנבס אפרפר, כרטיסים לבנים, קווי שיער) ── */
 :root {
-  --paper: #f4f5f7;
+  --paper: #f1f0ed;
   --card: #ffffff;
   --hairline: #e3e5ea;
   --ink: #0a0a0a;
@@ -84,8 +84,8 @@ body {
 
 /* ── מצב תצוגה ידני (מתג בתפריט): גובר על העדפת המערכת ── */
 :root[data-theme="light"] {
-  --background: #fbfaf7; --foreground: #1c1b19; --muted: #6b6860; --border: #e2dfd6; --primary: #1f5eff; --primary-foreground: #ffffff;
-  --paper: #f4f5f7; --card: #ffffff; --hairline: #e3e5ea; --ink: #0a0a0a; --ink-2: #3a3a38; --ink-3: #6b6b68;
+  --background: #fbfaf7; --foreground: #1c1b19; --muted: #6b6860; --border: #e2dfd6; --primary: #1a4fe0; --primary-foreground: #ffffff;
+  --paper: #f1f0ed; --card: #ffffff; --hairline: #e3e5ea; --ink: #0a0a0a; --ink-2: #3a3a38; --ink-3: #6b6b68;
   --ok-bg: #e6f4ea; --ok-fg: #1f7a3a; --ok: #2f8f4e; --warn-bg: #fff3db; --warn-fg: #8a5a00; --warn: #d9900b;
   --bad-bg: #fde8e8; --bad-fg: #b42318; --bad: #d92d20; --info-bg: #e8eeff; --info-fg: #2746b8; --info: #3b5bdb;
   color-scheme: light;
@@ -108,3 +108,12 @@ body {
   :root[data-contrast="high"]:not([data-theme]) { --foreground: #000000; --ink: #000000; --card: #ffffff; --paper: #ffffff; --background: #ffffff; --primary: #0033cc; }
 }
 :root[data-contrast="high"] a { text-decoration: underline; }
+
+/* ── מעטפת כחולה כהה: גרדיאנט, כפתורי גלולה, ופאנל בהיר מעליו ── */
+.app-navy { background: linear-gradient(180deg, #17346b 0, #0d1d3e 420px, #0a1329 100%); background-color: #0a1329; }
+
+/* כותרות טבלה ממוינות (ListView): חץ לפי aria-sort */
+th[data-sort] { cursor: pointer; user-select: none; }
+th[data-sort]::after { content: " ↕"; opacity: .35; }
+th[data-sort][aria-sort="ascending"]::after { content: " ↑"; opacity: 1; }
+th[data-sort][aria-sort="descending"]::after { content: " ↓"; opacity: 1; }

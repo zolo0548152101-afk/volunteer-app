@@ -1,37 +1,34 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { assignCoordinatorAction, type UserActionState } from "@/lib/actions/users";
 import { FormError, Submit } from "@/components/auth/fields";
+import { MultiSelect } from "@/components/multi-select";
 
-export function BulkAssign({ coordinators, students }: {
+/** שיוך סטודנטים לרכז: שדה בחירה מרובה (עם חיפוש) + רכז. אפשר לפתוח אותו עם סטודנט וברירת מחדל ממולאים */
+export function BulkAssign({ coordinators, students, defaultStudentIds = [], defaultCoordinatorId = "" }: {
   coordinators: { id: string; name: string }[];
   students: { id: string; name: string; coordinator: string | null }[];
+  defaultStudentIds?: string[];
+  defaultCoordinatorId?: string;
 }) {
   const t = useTranslations("users");
   const [state, action, pending] = useActionState<UserActionState, FormData>(assignCoordinatorAction, {});
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => { if (state.ok) form.current?.dispatchEvent(new Event("dialogdone", { bubbles: true })); }, [state]);
   return (
-    <form action={action} className="mt-3 flex flex-col gap-3">
-      <fieldset className="grid max-h-48 gap-x-4 overflow-auto rounded-lg border border-border p-3 sm:grid-cols-2">
-        <legend className="px-1 text-xs text-muted">{t("pickStudents")}</legend>
-        {students.length === 0 && <p className="text-sm text-muted">{t("noStudents")}</p>}
-        {students.map((s) => (
-          <label key={s.id} className="flex items-center gap-2 py-1 text-sm">
-            <input type="checkbox" name="studentIds" value={s.id} />
-            <span>{s.name}</span>
-            <span className="text-muted">{s.coordinator ?? t("unassigned")}</span>
-          </label>
-        ))}
-      </fieldset>
+    <form ref={form} action={action} className="flex flex-col gap-3">
+      {students.length === 0
+        ? <p className="text-sm text-ink-3">{t("noStudents")}</p>
+        : <MultiSelect name="studentIds" label={t("pickStudents")} searchable options={students.map((s) => ({ value: s.id, label: s.name, hint: s.coordinator ?? t("unassigned") }))} defaultValue={defaultStudentIds} />}
       <label className="flex flex-col gap-1 text-sm">
         {t("coordinator")}
-        <select name="coordinatorId" defaultValue="" className="rounded-lg border border-border bg-transparent px-3 py-2 text-base">
+        <select name="coordinatorId" defaultValue={defaultCoordinatorId} className="rounded-lg border border-border bg-transparent px-3 py-2 text-base">
           <option value="">{t("noCoordinator")}</option>
           {coordinators.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </label>
       <FormError message={state.error ? t(`errors.${state.error}` as never) : undefined} />
-      {state.ok && <p role="status" className="text-sm text-ok-fg">{t("assigned")}</p>}
       <Submit pending={pending}>{t("assign")}</Submit>
     </form>
   );

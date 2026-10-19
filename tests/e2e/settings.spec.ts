@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
-import { login } from "./helpers";
+import { login, logout } from "./helpers";
 
 try { process.loadEnvFile(".env.local"); } catch {}
 
@@ -24,7 +24,7 @@ test("מנהל עורך הגדרות ושדה מותאם; רכז חסום; cron 
   await login(page, "coord1@demo.test");
   await page.goto("/manager/settings");
   await expect(page).not.toHaveURL(/\/manager\/settings/);
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
   await expect(page).toHaveURL(/\/login/);
 
   await login(page, "manager@demo.test");
@@ -37,20 +37,22 @@ test("מנהל עורך הגדרות ושדה מותאם; רכז חסום; cron 
   await expect(page.locator("#general form").getByLabel("סף פער מיעד הסטודנט (שעות)")).toHaveValue("1.5");
 
   // כלל התראה: שינוי "אחרי כמה ימים" נשמר ומוצג מחדש
-  const esc = page.locator("form", { hasText: "הסלמת דיווח שממתין" });
+  const ruleRow = page.locator("#rules").locator("div", { hasText: "הסלמת דיווח שממתין" }).filter({ has: page.getByRole("button", { name: "עריכה" }) }).last();
+  await ruleRow.getByRole("button", { name: "עריכה" }).click();
+  const esc = page.getByRole("dialog", { name: /הסלמת דיווח שממתין/ });
   await esc.getByLabel("אחרי כמה ימים לשלוח").fill("2");
   await esc.getByRole("button", { name: "שמירה" }).click();
   await expect(page).toHaveURL(/saved=rules/);
-  await expect(page.locator("form", { hasText: "הסלמת דיווח שממתין" }).getByLabel("אחרי כמה ימים לשלוח")).toHaveValue("2");
+  await expect(page.locator("#rules").getByText("אחרי 2 ימים")).toBeVisible(); // שורת תקציר
 
   await page.goto("/manager/custom-fields?page=profile");
   await expect(page.getByRole("heading", { name: "שדות בטפסים" })).toBeVisible();
-  await page.getByText("הוספת שדה ל:").click();
-  const add = page.locator("form", { hasText: "שם בעברית" }).last();
+  await page.getByRole("button", { name: /הוספת שדה ל:/ }).click();
+  const add = page.getByRole("dialog").locator("form", { hasText: "שם בעברית" });
   await add.getByLabel("שם בעברית").fill("e2e-מידת נעל");
   await add.getByLabel("סוג").selectOption("number");
   await add.getByRole("button", { name: "הוספת שדה" }).click();
   await expect(page).toHaveURL(/page=profile/);
-  await expect(page.getByText("נשמר")).toBeVisible();
+  await expect(page.getByText("נשמר").first()).toBeVisible();
   await expect(page.getByText("e2e-מידת נעל").first()).toBeVisible();
 });

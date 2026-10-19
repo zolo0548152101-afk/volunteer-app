@@ -12,6 +12,8 @@ import { ForbiddenError } from "@/lib/permissions";
 import { PlaceFields } from "@/components/places/place-fields";
 import { WindowFields } from "@/components/places/window-form";
 import { PlaceError } from "@/components/places/place-error";
+import { ConfirmSubmit } from "@/components/confirm-submit";
+import { EditDialog } from "@/components/edit-dialog";
 import { SubmitButton } from "@/components/submit-button";
 
 export default async function PlaceCard({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }) {
@@ -56,52 +58,72 @@ export default async function PlaceCard({ params, searchParams }: { params: Prom
           </p>
           {staff.notes && <p className="mt-1 text-sm text-muted">{staff.notes}</p>}
 
-          <h2 className="mt-8 text-lg font-medium">{t("windows")}</h2>
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-medium">{t("windows")}</h2>
+            {canEdit && (
+              <div className="flex flex-wrap gap-2">
+                <EditDialog label={`＋ ${t("newWindow")}`} title={t("newWindow")} className="inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground">
+                  <form action={createWindowAction} className="flex flex-col gap-3">
+                    <input type="hidden" name="placeId" value={id} />
+                    <WindowFields />
+                    <SubmitButton className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground">{t("addWindow")}</SubmitButton>
+                  </form>
+                </EditDialog>
+                <EditDialog label={t("editPlace")} title={t("editPlace")} className="inline-flex min-h-10 items-center rounded-lg border border-border bg-card px-4 text-sm hover:bg-paper">
+                  <form action={updatePlaceAction} className="flex flex-col gap-3">
+                    <input type="hidden" name="placeId" value={id} />
+                    <PlaceFields place={staff as StaffPlace} categories={categories} />
+                    <SubmitButton className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground">{t("save")}</SubmitButton>
+                  </form>
+                </EditDialog>
+              </div>
+            )}
+          </div>
           {windows.length === 0 && <p className="mt-2 text-muted">{t("noWindows")}</p>}
-          <ul className="mt-3 flex flex-col gap-3">
-            {windows.map((w) => (
-              <li key={w.id} className={`rounded-xl border border-border p-3 ${w.isActive ? "" : "opacity-60"}`}>
-                <p className="font-medium">{w.label}{!w.isActive && <span className="ms-2 text-xs">({t("inactive")})</span>}</p>
-                <p className="text-sm text-muted">
-                  {w.days.map((d) => td(d)).join(", ")} {w.startTime && w.endTime ? <>· <span dir="ltr">{w.startTime.slice(0, 5)}–{w.endTime.slice(0, 5)}</span></> : ""}
-                </p>
-                <p className="mt-1 text-sm">{t("windowSummary", { slots: w.slots, perSlot: w.hoursPerSlot, requested: w.requestedHours, allocated: w.allocatedSlots, remaining: w.remainingSlots })}</p>
-                {canEdit && (
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-sm underline">{t("editWindow")}</summary>
-                    <form action={updateWindowAction} className="mt-2 flex flex-col gap-3">
-                      <input type="hidden" name="placeId" value={id} />
-                      <input type="hidden" name="windowId" value={w.id} />
-                      <WindowFields w={w} />
-                      <SubmitButton className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("save")}</SubmitButton>
-                    </form>
-                    <form action={toggleWindowAction} className="mt-2">
-                      <input type="hidden" name="placeId" value={id} />
-                      <input type="hidden" name="windowId" value={w.id} />
-                      <input type="hidden" name="active" value={w.isActive ? "0" : "1"} />
-                      <SubmitButton className="text-sm underline">{w.isActive ? t("deactivate") : t("activate")}</SubmitButton>
-                    </form>
-                  </details>
-                )}
-              </li>
-            ))}
-          </ul>
-
-          {canEdit && (
-            <>
-              <h2 className="mt-8 text-lg font-medium">{t("newWindow")}</h2>
-              <form action={createWindowAction} className="mt-3 flex flex-col gap-3">
-                <input type="hidden" name="placeId" value={id} />
-                <WindowFields />
-                <SubmitButton className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("addWindow")}</SubmitButton>
-              </form>
-              <h2 className="mt-8 text-lg font-medium">{t("editPlace")}</h2>
-              <form action={updatePlaceAction} className="mt-3 flex flex-col gap-3">
-                <input type="hidden" name="placeId" value={id} />
-                <PlaceFields place={staff as StaffPlace} categories={categories} />
-                <SubmitButton className="self-start rounded-lg bg-primary px-4 py-2 text-primary-foreground">{t("save")}</SubmitButton>
-              </form>
-            </>
+          {windows.length > 0 && (
+            <div role="region" aria-label={t("windows")} tabIndex={0} className="mt-3 overflow-x-auto rounded-xl border border-hairline bg-card">
+              <table className="w-full text-sm">
+                <thead className="bg-paper text-xs text-ink-3"><tr>
+                  <th scope="col" className="px-3 py-2 text-start font-medium">{t("windowLabel")}</th>
+                  <th scope="col" className="px-3 py-2 text-start font-medium">{t("days")}</th>
+                  <th scope="col" className="hidden px-3 py-2 text-start font-medium md:table-cell">{t("from")}–{t("to")}</th>
+                  <th scope="col" className="hidden px-3 py-2 text-start font-medium md:table-cell">{t("slots")}</th>
+                  <th scope="col" className="hidden px-3 py-2 text-start font-medium md:table-cell">{t("statusCol")}</th>
+                  <th scope="col" className="px-3 py-2"><span className="sr-only">{t("editWindow")}</span></th>
+                </tr></thead>
+                <tbody className="divide-y divide-hairline">
+                  {windows.map((w) => (
+                    <tr key={w.id} className={w.isActive ? "" : "opacity-70"}>
+                      <th scope="row" className="px-3 py-2.5 text-start font-medium">{w.label}</th>
+                      <td className="px-3 py-2.5">{w.days.map((d) => td(d)).join(", ") || "—"}</td>
+                      <td className="hidden px-3 py-2.5 md:table-cell">{w.startTime && w.endTime ? <span dir="ltr">{w.startTime.slice(0, 5)}–{w.endTime.slice(0, 5)}</span> : "—"}</td>
+                      <td className="hidden px-3 py-2.5 md:table-cell">{t("windowSummary", { slots: w.slots, perSlot: w.hoursPerSlot, requested: w.requestedHours, allocated: w.allocatedSlots, remaining: w.remainingSlots })}</td>
+                      <td className="hidden px-3 py-2.5 md:table-cell"><span className={`rounded-full px-2 py-0.5 text-xs ${w.isActive ? "bg-ok-bg text-ok-fg" : "bg-paper text-ink-3"}`}>{w.isActive ? t("activeBadge") : t("inactive")}</span></td>
+                      <td className="px-3 py-2.5 text-end">
+                        {canEdit && (
+                          <EditDialog label={t("editRow")} title={`${t("editWindow")}: ${w.label}`}>
+                            <form action={updateWindowAction} className="flex flex-col gap-3">
+                              <input type="hidden" name="placeId" value={id} />
+                              <input type="hidden" name="windowId" value={w.id} />
+                              <WindowFields w={w} />
+                              <SubmitButton className="self-start rounded-lg bg-primary px-5 py-2 text-sm font-medium text-primary-foreground">{t("save")}</SubmitButton>
+                            </form>
+                            <form action={toggleWindowAction} className="mt-4 border-t border-hairline pt-3">
+                              <input type="hidden" name="placeId" value={id} />
+                              <input type="hidden" name="windowId" value={w.id} />
+                              <input type="hidden" name="active" value={w.isActive ? "0" : "1"} />
+                              {w.isActive
+                                ? <ConfirmSubmit label={t("deactivate")} message={t("confirmDeactivateWindow", { name: w.label })} confirmLabel={t("deactivate")} className="min-h-10 rounded-lg border border-bad/50 px-4 text-sm text-bad-fg hover:bg-bad-bg" />
+                                : <SubmitButton className="min-h-10 rounded-lg border border-border px-4 text-sm hover:bg-paper">{t("activate")}</SubmitButton>}
+                            </form>
+                          </EditDialog>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </>
       )}

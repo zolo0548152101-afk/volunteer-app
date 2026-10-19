@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
-import { login } from "./helpers";
+import { login, logout } from "./helpers";
 
 try { process.loadEnvFile(".env.local"); } catch {}
 
@@ -25,7 +25,7 @@ test("מראיין רואה את התור, מנהל מראיין ומשבץ סט
   await login(page, "interviewer@demo.test");
   await expect(page.getByRole("heading", { name: "ממתינים לראיון" })).toBeVisible();
   await expect(page.getByRole("link", { name: /ליאן/ })).toBeVisible();
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
   await expect(page).toHaveURL(/\/login/);
 
   await login(page, "manager@demo.test");

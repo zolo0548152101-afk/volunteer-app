@@ -12,6 +12,7 @@ import { ForbiddenError } from "@/lib/permissions";
 import { DAYS } from "@/lib/services/places";
 import { SubmitButton } from "@/components/submit-button";
 import { Flash } from "@/components/flash";
+import { MultiSelect } from "@/components/multi-select";
 import { LiveBanks } from "@/components/interview/live-banks";
 
 const input = "rounded-lg border border-border bg-transparent px-2 py-1.5 text-base";
@@ -103,9 +104,7 @@ export default async function InterviewPage({ params, searchParams }: { params: 
               <label className="flex flex-col gap-1 text-sm">{t("assignedHours")}<input name={`l_${i}_hours`} defaultValue={l.assignedHours ?? ""} className={input} /></label>
               <label className="flex flex-col gap-1 text-sm">{t("reportHours")}<input name={`l_${i}_report`} type="number" step="any" min="0" defaultValue={l.defaultReportHours ?? ""} className={input} /></label>
             </div>
-            <div className="mt-2 flex flex-wrap gap-3">
-              {DAYS.map((d) => <label key={d} className="flex items-center gap-1 text-sm"><input type="checkbox" name={`l_${i}_days`} value={d} defaultChecked={l.assignedDays.includes(d)} /> {td(d)}</label>)}
-            </div>
+            <MultiSelect className="mt-2" name={`l_${i}_days`} label={t("days")} options={DAYS.map((d) => ({ value: d, label: td(d) }))} defaultValue={l.assignedDays} />
             <label className="mt-2 flex flex-col gap-1 text-sm">{t("description")}<input name={`l_${i}_desc`} defaultValue={l.description ?? ""} className={input} /></label>
             {editable && <SubmitButton name="remove" value={String(i)} className="mt-2 text-sm underline">{t("removeLine")}</SubmitButton>}
           </fieldset>

@@ -23,8 +23,6 @@ export default async function InterviewerHome() {
           </li>
         ))}
       </ul>
-      <Link href="/students" className="mt-6 inline-block underline">{t("allStudents")}</Link>
-      <Link href="/places" className="ms-4 mt-6 inline-block underline">{t("places")}</Link>
     </main>
   );
 }

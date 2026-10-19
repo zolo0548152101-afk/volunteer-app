@@ -1,3 +1,4 @@
+import { logout } from "./helpers";
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
 
@@ -46,7 +47,7 @@ for (const [email, path, heading] of [
     await login(page, email);
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
-    await page.getByRole("button", { name: "יציאה" }).click();
+    await logout(page);
     await expect(page).toHaveURL(/\/login/);
     await page.goto(path);
     await expect(page).toHaveURL(/\/login/);
@@ -81,7 +82,7 @@ test.describe("ניהול משתמשים", () => {
     await expect(page).toHaveURL(/\/coordinator$/);
     await page.goto("/manager/users");
     await expect(page).toHaveURL(/\/coordinator$/);
-    await page.getByRole("button", { name: "יציאה" }).click();
+    await logout(page);
     await expect(page).toHaveURL(/\/login/);
 
     await login(page, "manager@demo.test");
@@ -89,18 +90,21 @@ test.describe("ניהול משתמשים", () => {
     await page.goto("/manager/users");
     await expect(page.getByRole("heading", { name: "משתמשים", level: 1 })).toBeVisible();
     const email = `e2e-${Date.now()}@demo.test`;
-    await page.getByLabel("שם פרטי").fill("בדיקה");
-    await page.getByLabel("שם משפחה").fill("אוטומטית");
-    await page.getByLabel("אימייל").fill(email);
-    await page.getByRole("button", { name: "שליחת הזמנה", exact: true }).click();
-    await expect(page.getByRole("status")).toContainText("ההזמנה נשלחה");
+    const dlg = page.getByRole("dialog", { name: "הזמנת משתמש" });
+    await page.getByRole("button", { name: /הזמנת משתמש/ }).click();
+    await dlg.getByLabel("שם פרטי").fill("בדיקה");
+    await dlg.getByLabel("שם משפחה").fill("אוטומטית");
+    await dlg.getByLabel("אימייל").fill(email);
+    await dlg.getByRole("button", { name: "שליחת הזמנה", exact: true }).click();
+    await expect(dlg).toBeHidden(); // החלון נסגר אחרי הצלחה, והמשתמש מופיע בטבלה
     await expect(page.getByText(email)).toBeVisible();
-    // אותה כתובת פעם שנייה
-    await page.getByLabel("שם פרטי").fill("שוב");
-    await page.getByLabel("שם משפחה").fill("שוב");
-    await page.getByLabel("אימייל").fill(email);
-    await page.getByRole("button", { name: "שליחת הזמנה", exact: true }).click();
-    await expect(page.locator("p[role=alert]")).toContainText("כבר רשום");
+    // אותה כתובת פעם שנייה: החלון נשאר פתוח עם שגיאה
+    await page.getByRole("button", { name: /הזמנת משתמש/ }).click();
+    await dlg.getByLabel("שם פרטי").fill("שוב");
+    await dlg.getByLabel("שם משפחה").fill("שוב");
+    await dlg.getByLabel("אימייל").fill(email);
+    await dlg.getByRole("button", { name: "שליחת הזמנה", exact: true }).click();
+    await expect(dlg.locator("p[role=alert]")).toContainText("כבר רשום");
   });
 });
 
@@ -142,7 +146,7 @@ test("אחרי יציאה, עוגייה ישנה שחוזרת לדפדפן כב�
   await login(page, "coord2@demo.test");
   await expect(page).toHaveURL(/\/coordinator$/);
   const old = (await context.cookies()).find((c) => c.name.endsWith("session-token"))!;
-  await page.getByRole("button", { name: "יציאה" }).click();
+  await logout(page);
   await expect(page).toHaveURL(/\/login/);
   await context.addCookies([old]); // כמו תשובה מאוחרת שמחזירה את העוגייה
   await page.goto("/coordinator");

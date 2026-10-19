@@ -18,6 +18,7 @@ import { CustomFields } from "@/components/custom-fields/custom-fields";
 import { SubmitButton } from "@/components/submit-button";
 import { InlineEdit } from "@/components/inline-edit";
 import { Flash } from "@/components/flash";
+import { PageHeader } from "@/components/page-header";
 
 export default async function StudentCard({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; done?: string; invite?: string }> }) {
   const [{ id }, sp, actor, t, ti, td, tdt, tdy, tp, format] = await Promise.all([params, searchParams, requireActor(), getTranslations("studentCard"), getTranslations("interviews"), getTranslations("days"), getTranslations("degreeTypes"), getTranslations("degreeYears"), getTranslations("profile"), getFormatter()]);
@@ -53,7 +54,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
 
   return (
     <main className="mx-auto w-full max-w-6xl p-4">
-      <Link href="/students" className="mb-2 inline-flex min-h-10 items-center text-sm text-ink-2 underline">→ {t("backToList")}</Link>
+      <PageHeader crumbs={[{ label: t("listTitle"), href: "/students" }]} current={`${s.firstName} ${s.lastName}`} />
       <header className={`${card} flex flex-wrap items-start justify-between gap-4`}>
         <div className="flex min-w-0 items-center gap-3">
           <span aria-hidden="true" className="grid size-12 flex-none place-items-center rounded-full bg-info text-lg font-bold text-white">{s.firstName.charAt(0)}</span>

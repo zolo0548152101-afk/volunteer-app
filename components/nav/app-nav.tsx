@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import type { SessionUser } from "@/lib/permissions";
 import { MoreMenu } from "./more-menu";
 import { NavLink } from "./nav-link";
+import { NavMenu } from "./nav-menu";
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS; count?: number; exact?: boolean };
 export type NavGroup = { label: string; items: NavItem[] };
@@ -22,7 +23,7 @@ export const ICONS = {
 };
 
 /** פריטי התפריט לפי תפקיד. הקבוצה הראשונה היא גם הניווט התחתון בטלפון (עד 5) */
-export async function navFor(actor: SessionUser, pending: number): Promise<NavGroup[]> {
+export async function navFor(actor: SessionUser, pending: number, awaiting = 0): Promise<NavGroup[]> {
   const t = await getTranslations("nav");
   const r = actor.roles;
   if (r.includes("manager")) {
@@ -33,10 +34,10 @@ export async function navFor(actor: SessionUser, pending: number): Promise<NavGr
         { href: "/students", label: t("students"), icon: "students" },
         { href: "/places", label: t("places"), icon: "places" },
         { href: "/interviewer", label: t("queue"), icon: "queue" },
+      ] },
+      { label: t("groupAdmin"), items: [
         { href: "/manager/users", label: t("users"), icon: "users" },
         { href: "/manager/custom-fields", label: t("customFields"), icon: "fields" },
-      ] },
-      { label: t("groupSettings"), items: [
         { href: "/manager/settings", label: t("settings"), icon: "settings" },
       ] },
     ];
@@ -51,7 +52,7 @@ export async function navFor(actor: SessionUser, pending: number): Promise<NavGr
   }
   if (r.includes("interviewer")) {
     return [{ label: t("groupMain"), items: [
-      { href: "/interviewer", label: t("queue"), icon: "queue" },
+      { href: "/interviewer", label: t("queue"), icon: "queue", count: awaiting },
       { href: "/students", label: t("students"), icon: "students" },
       { href: "/places", label: t("places"), icon: "places" },
     ] }];
@@ -69,35 +70,30 @@ export function Icon({ name, size = 18 }: { name: keyof typeof ICONS; size?: num
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={ICONS[name]} /></svg>;
 }
 
-/** סרגל צד למחשב (מוסתר בטלפון) */
-export function Sidebar({ groups, appName, userName, roleName, label, children }: { groups: NavGroup[]; appName: string; userName: string; roleName: string; label: string; children: ReactNode }) {
+/** ניווט עליון למחשב (מוסתר בטלפון): גלולות על רקע כחול כהה. פריטי הניהול בתפריט "ניהול", והמשתמש בתפריט משלו בקצה */
+export function TopNav({ groups, appName, label, adminLabel, children }: { groups: NavGroup[]; appName: string; label: string; adminLabel: string; children: ReactNode }) {
+  const [main, ...rest] = groups;
+  const admin = rest.flatMap((g) => g.items);
+  const pill = "inline-flex min-h-10 items-center gap-2 rounded-full bg-white/10 px-4 text-sm text-white/90 transition-colors duration-150 hover:bg-white/20";
   return (
-    <aside className="hidden w-56 flex-none flex-col gap-5 overflow-y-auto border-e border-hairline bg-card p-3 lg:sticky lg:top-0 lg:flex lg:h-dvh">
-      <Link href="/" className="flex items-center gap-2.5 px-1.5">
-        <span aria-hidden="true" className="grid size-8 place-items-center rounded-lg bg-info text-xs font-bold text-white">{appName.slice(0, 2)}</span>
-        <span className="text-[15px] font-bold">{appName}</span>
-      </Link>
-      <nav aria-label={label} className="flex flex-col gap-6">
-        {groups.map((g) => (
-          <div key={g.label} className="flex flex-col gap-0.5">
-            <p className="mb-1.5 px-3 text-[11px] tracking-wider text-ink-3">{g.label}</p>
-            {g.items.map((it) => (
-              <NavLink key={it.href} href={it.href} exact={it.exact} className="flex min-h-10 items-center justify-between rounded-lg px-3 text-sm text-ink-2 transition-colors duration-150 hover:bg-paper hover:text-ink" activeClassName="bg-info-bg font-semibold text-info-fg">
-                <span className="flex items-center gap-2.5"><Icon name={it.icon} size={16} />{it.label}</span>
-                {it.count ? <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-semibold tabular-nums text-warn-fg">{it.count}</span> : null}
-              </NavLink>
-            ))}
-          </div>
-        ))}
-      </nav>
-      <div className="mt-auto flex flex-col gap-2 border-t border-hairline pt-3">
-        <div className="flex items-center gap-2.5 px-1.5">
-          <span aria-hidden="true" className="grid size-8 place-items-center rounded-full bg-[#d97757] text-xs font-bold text-white">{userName.charAt(0)}</span>
-          <span className="flex min-w-0 flex-col"><span className="truncate text-[13px] font-semibold">{userName}</span><span className="text-xs text-ink-3">{roleName}</span></span>
-        </div>
-        {children}
+    <header className="hidden px-6 pb-5 pt-4 text-white lg:block">
+      <div className="flex items-center gap-4">
+        <Link href="/" className="flex flex-none items-center gap-2.5">
+          <span aria-hidden="true" className="grid size-9 place-items-center rounded-xl bg-white/15 text-xs font-bold">{appName.slice(0, 2)}</span>
+          <span className="text-base font-bold">{appName}</span>
+        </Link>
+        <nav aria-label={label} className="flex flex-wrap items-center gap-2">
+          {main.items.map((it) => (
+            <NavLink key={it.href} href={it.href} exact={it.exact} className={pill} activeClassName="!bg-white/25 font-semibold !text-white ring-1 ring-white/40">
+              <Icon name={it.icon} size={15} />{it.label}
+              {it.count ? <span className="rounded-full bg-warn-bg px-2 py-0.5 text-xs font-semibold tabular-nums text-warn-fg">{it.count}</span> : null}
+            </NavLink>
+          ))}
+          {admin.length > 0 && <NavMenu label={adminLabel} items={admin.map((i) => ({ href: i.href, label: i.label, icon: <Icon name={i.icon} size={16} /> }))} triggerClassName={pill} />}
+        </nav>
+        <div className="ms-auto">{children}</div>
       </div>
-    </aside>
+    </header>
   );
 }
 
@@ -112,8 +108,8 @@ export function BottomNav({ groups, label, moreLabel }: { groups: NavGroup[]; la
   return (
     <nav aria-label={label} className="sticky bottom-0 z-40 flex border-t border-hairline bg-card px-2 pb-2.5 pt-1.5 lg:hidden">
       {shown.map((it) => (
-        <NavLink key={it.href} href={it.href} exact={it.exact} className="relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] text-ink-3" activeClassName="font-semibold text-ink">
-          <Icon name={it.icon} size={20} />
+        <NavLink key={it.href} href={it.href} exact={it.exact} className="group relative flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] text-ink-3" activeClassName="font-semibold !text-primary">
+          <span className="grid h-7 w-12 place-items-center rounded-full transition-colors duration-150 group-aria-[current=page]:bg-info-bg"><Icon name={it.icon} size={20} /></span>
           {it.label}
           {it.count ? <span className="absolute top-0 inline-flex min-w-4 justify-center rounded-full bg-warn-bg px-1 text-[10px] font-bold text-warn-fg" style={{ insetInlineEnd: "18%" }}>{it.count}</span> : null}
         </NavLink>

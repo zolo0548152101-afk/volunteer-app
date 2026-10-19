@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { ForbiddenError } from "@/lib/permissions";
 import { requireActor } from "@/lib/session";
-import { saveGeneral, saveLookup, saveProgram, saveRule, saveYear, SettingsError } from "@/lib/services/settings";
+import { loadAdminSettings, LOOKUP_KINDS, saveGeneral, saveLookup, saveProgram, saveRule, saveYear, SettingsError } from "@/lib/services/settings";
 import { saveField } from "@/lib/services/custom-field-admin";
 import type { Channel } from "@/lib/services/notify";
 import { num, trimmed as str } from "./_form";
@@ -48,6 +48,24 @@ export async function saveRuleAction(fd: FormData) {
 export async function saveLookupAction(fd: FormData) {
   await run("lookups", async () => {
     await saveLookup(db(), await requireActor(), { id: str(fd, "id") || undefined, kind: str(fd, "kind"), labelHe: str(fd, "labelHe"), labelEn: str(fd, "labelEn"), sortOrder: Number(str(fd, "sortOrder") || 0), isActive: !fd.has("id") || fd.has("isActive") });
+  });
+}
+
+/** סדר ברשימת בחירה: חץ מעלה/מטה מחליף מקום עם השכן (בלי מספר ידני) */
+export async function moveLookupAction(fd: FormData) {
+  await run("lookups", async () => {
+    const actor = await requireActor();
+    const kind = str(fd, "kind");
+    if (!(LOOKUP_KINDS as readonly string[]).includes(kind)) return;
+    const list = (await loadAdminSettings(db(), actor)).lookups[kind as (typeof LOOKUP_KINDS)[number]];
+    const i = list.findIndex((l) => l.id === str(fd, "id"));
+    const j = i + (str(fd, "dir") === "up" ? -1 : 1);
+    if (i < 0 || j < 0 || j >= list.length) return;
+    const order = [...list]; [order[i], order[j]] = [order[j], order[i]];
+    for (const [idx, l] of order.entries()) {
+      if (l.sortOrder === idx) continue;
+      await saveLookup(db(), actor, { id: l.id, kind, labelHe: l.labelHe, labelEn: l.labelEn ?? "", sortOrder: idx, isActive: l.isActive });
+    }
   });
 }
 
