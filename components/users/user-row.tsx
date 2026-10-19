@@ -20,7 +20,7 @@ export async function UserRow({ user, coordinatorName, self, coordinators }: { u
     <tr data-search={`${name} ${user.email} ${user.roles.map((r) => tr(r)).join(" ")} ${coordinatorName ?? ""}`}>
       <th scope="row" className="px-3 py-2.5 text-start font-medium">
         <span className="block">{name}</span>
-        <span className="block text-xs font-normal text-ink-3" dir="ltr">{user.email}</span>
+        <span className="block text-xs font-normal text-ink-3"><bdi dir="ltr">{user.email}</bdi></span>
       </th>
       <td className="px-3 py-2.5"><span className="flex flex-wrap gap-1">{user.roles.map((r) => <span key={r} className="rounded-full bg-info-bg px-2 py-0.5 text-xs text-info-fg">{tr(r)}</span>)}</span></td>
       <td className="hidden px-3 py-2.5 sm:table-cell"><span className={`rounded-full px-2 py-0.5 text-xs ${chip[user.status]}`}>{t(`status.${user.status}`)}</span></td>

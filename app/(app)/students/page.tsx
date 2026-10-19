@@ -12,7 +12,7 @@ export default async function StudentsPage() {
   const names = new Map((await listUsers(db(), actor)).map((u) => [u.id, `${u.firstName} ${u.lastName}`]));
   const coord = (u: (typeof list)[number]) => (u.coordinatorId ? names.get(u.coordinatorId) ?? "" : t("unassigned"));
   return (
-    <main className="mx-auto w-full max-w-5xl p-4">
+    <main className="mx-auto w-full max-w-7xl p-4 lg:p-8">
       <h1 className="text-xl font-semibold">{t("listTitle")} <span className="text-base font-normal text-ink-3">({list.length})</span></h1>
       {list.length === 0 && <p className="mt-3 text-muted">{t("emptyList")}</p>}
       {list.length > 0 && (

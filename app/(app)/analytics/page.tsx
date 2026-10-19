@@ -37,7 +37,7 @@ export default async function Analytics() {
   const stale = d.staleReports;
 
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+    <main className="mx-auto w-full max-w-7xl p-4 lg:p-8">
       {/* כותרת: ברכה + משפט מצב אחד + פעולה ראשית אחת */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1 basis-80">

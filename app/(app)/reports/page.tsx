@@ -99,7 +99,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
     </div>
   );
   return (
-    <main className="mx-auto w-full max-w-5xl p-4">
+    <main className="mx-auto w-full max-w-7xl p-4 lg:p-8">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <nav className="mt-3 flex flex-wrap gap-2" aria-label={t("filter")}>
         {STATUSES.map((s) => <Link key={s} href={`/reports?status=${s}`} aria-current={s === status ? "page" : undefined} className={`rounded-full border px-3 py-1 text-sm ${s === status ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{t(`status.${s}`)}</Link>)}

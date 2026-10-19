@@ -20,7 +20,7 @@ export default async function PlacesPage({ searchParams }: { searchParams: Promi
   const label = new Map(categories.map((c) => [c.key, c.label]));
   const searchOf = (p: (typeof list)[number]) => [p.name, p.city, p.category ? label.get(p.category) ?? p.category : ""].filter(Boolean).join(" ");
   return (
-    <main className="mx-auto w-full max-w-5xl p-4">
+    <main className="mx-auto w-full max-w-7xl p-4 lg:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">{t("title")}</h1>
         {canCreate && (

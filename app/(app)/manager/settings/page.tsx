@@ -41,7 +41,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
     <section id={id} className="scroll-mt-16 rounded-xl border border-border p-4"><h2 className="text-base font-semibold">{title}</h2>{sp.saved === id && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-2 text-sm text-ok-fg">{t("saved")}</Flash>}{body}</section>
   );
   return (
-    <main className="mx-auto w-full max-w-5xl p-4">
+    <main className="mx-auto w-full max-w-7xl p-4 lg:p-8">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <nav aria-label={t("title")} className="sticky top-0 z-10 -mx-4 mt-2 flex gap-1 overflow-x-auto border-b border-border bg-background px-4 py-2 text-sm">
         {(["general", "year", "programs", "rules", "lookups"] as const).map((id) => <a key={id} href={`#${id}`} className="whitespace-nowrap rounded-md px-3 py-1.5 hover:bg-card">{t(id)}</a>)}
