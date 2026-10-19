@@ -19,11 +19,12 @@ export const ICONS = {
   profile: "M20 21a8 8 0 0 0-16 0M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z",
   settings: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm7.4-3a7.4 7.4 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a7.5 7.5 0 0 0-1.7-1l-.4-2.6H9.2l-.4 2.6a7.5 7.5 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.4 7.4 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.5 7.5 0 0 0 1.7 1l.4 2.6h5.6l.4-2.6a7.5 7.5 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6c.1-.3.1-.7.1-1Z",
   fields: "M4 6h16M4 12h10M4 18h7",
+  applicants: "M15 19a6 6 0 0 0-12 0M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm10-3v6m3-3h-6",
   users: "M16 11a4 4 0 1 0-8 0 4 4 0 0 0 8 0Zm-12 10a8 8 0 0 1 16 0M19 8a3 3 0 1 0 0-6",
 };
 
 /** פריטי התפריט לפי תפקיד. הקבוצה הראשונה היא גם הניווט התחתון בטלפון (עד 5) */
-export async function navFor(actor: SessionUser, pending: number, awaiting = 0): Promise<NavGroup[]> {
+export async function navFor(actor: SessionUser, pending: number, awaiting = 0, applicants = 0): Promise<NavGroup[]> {
   const t = await getTranslations("nav");
   const r = actor.roles;
   if (r.includes("manager")) {
@@ -33,6 +34,7 @@ export async function navFor(actor: SessionUser, pending: number, awaiting = 0):
         { href: "/reports", label: t("inbox"), icon: "reports", count: pending },
         { href: "/students", label: t("students"), icon: "students" },
         { href: "/places", label: t("places"), icon: "places" },
+        { href: "/manager/applicants", label: t("applicants"), icon: "applicants", count: applicants },
         { href: "/interviewer", label: t("queue"), icon: "queue" },
       ] },
       { label: t("groupAdmin"), items: [

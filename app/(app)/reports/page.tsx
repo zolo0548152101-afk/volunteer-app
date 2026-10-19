@@ -29,8 +29,25 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
   const coordinatorId = uuid.test(sp.coordinator ?? "") && actor.roles.includes("manager") ? sp.coordinator : undefined;
   const isManager = actor.roles.includes("manager");
   let list, options;
+  let byCoordinator: { id: string; name: string; reports: number; hours: number }[] = [];
+  // שעות לכל רשומה: מאושרות כשאושר, אחרת מדווחות
+  const hoursOf = (r: { status: string; approvedHours: number | null; reportedHours: number }) => (r.status === "approved" ? r.approvedHours ?? 0 : r.reportedHours);
+  const summarize = (rows: Awaited<ReturnType<typeof listInbox>>) => {
+    const m = new Map<string, { id: string; name: string; reports: number; hours: number }>();
+    for (const r of rows) {
+      const id = r.coordinatorId ?? "";
+      const c = m.get(id) ?? { id, name: r.coordinatorName ?? t("noCoordinator"), reports: 0, hours: 0 };
+      c.reports += 1; c.hours = Math.round((c.hours + hoursOf(r)) * 100) / 100;
+      m.set(id, c);
+    }
+    return [...m.values()].sort((a, b) => b.reports - a.reports);
+  };
   try {
-    [list, options] = await Promise.all([listInbox(db(), actor, { status, studentId, placeId, month, coordinatorId }), inboxFilterOptions(db(), actor, status)]);
+    // מנהל: טוענים את כל הרכזים כדי לספור לכל אחד, ומסננים לפי רכז כאן
+    let all;
+    [all, options] = await Promise.all([listInbox(db(), actor, { status, studentId, placeId, month }), inboxFilterOptions(db(), actor, status)]);
+    byCoordinator = summarize(all);
+    list = coordinatorId ? all.filter((r) => r.coordinatorId === coordinatorId) : all;
   } catch (e) { if (e instanceof ForbiddenError) redirect("/"); throw e; }
   const reportFields = (await listFields(db(), actor, "report", "report_form")).map((f) => ({ ...f, canEdit: false }));
   const reportValues = reportFields.length ? await loadValuesMany(db(), actor.organizationId, list.map((r) => r.id), reportFields) : new Map();
@@ -46,7 +63,6 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
   const filterFields = [
     { name: "student", label: t("filterStudent"), value: studentId, options: options.students.map((o) => ({ value: o.id, label: o.name })) },
     { name: "place", label: t("filterPlace"), value: placeId, options: options.places.map((o) => ({ value: o.id, label: o.name })) },
-    ...(isManager && options.coordinators.length > 0 ? [{ name: "coordinator", label: t("filterCoordinator"), value: coordinatorId, options: options.coordinators.map((o) => ({ value: o.id, label: o.name })) }] : []),
     { name: "month", label: t("filterMonth"), value: month, options: monthOptions },
   ];
   const [bOk, bFail] = (sp.bulk ?? "").split("-").map(Number);
@@ -104,6 +120,35 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
       <nav className="mt-3 flex flex-wrap gap-2" aria-label={t("filter")}>
         {STATUSES.map((s) => <Link key={s} href={`/reports?status=${s}`} aria-current={s === status ? "page" : undefined} className={`rounded-full border px-3 py-1 text-sm ${s === status ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}>{t(`status.${s}`)}</Link>)}
       </nav>
+      {isManager && byCoordinator.length > 0 && (() => {
+        const base = new URLSearchParams({ status, ...(studentId ? { student: studentId } : {}), ...(placeId ? { place: placeId } : {}), ...(month ? { month } : {}) });
+        const href = (id?: string) => { const p = new URLSearchParams(base); if (id) p.set("coordinator", id); return `/reports?${p.toString()}`; };
+        const total = byCoordinator.reduce((a, c) => ({ reports: a.reports + c.reports, hours: Math.round((a.hours + c.hours) * 100) / 100 }), { reports: 0, hours: 0 });
+        const pill = "inline-flex min-h-11 items-center gap-2 rounded-xl border px-4 text-sm transition-colors duration-150";
+        return (
+          <nav aria-label={t("byCoordinator")} className="mt-4 rounded-2xl border border-hairline bg-card p-4">
+            <p className="text-sm text-ink-2">{t("coordinatorTotals", { coordinators: byCoordinator.filter((c) => c.id).length, reports: total.reports, hours: total.hours })}</p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              <li><a href={href()} aria-current={!coordinatorId ? "page" : undefined} className={`${pill} ${!coordinatorId ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-paper"}`}>{t("allCoordinators")}</a></li>
+              {byCoordinator.map((c) => {
+                const on = coordinatorId === c.id;
+                return (
+                  <li key={c.id || "none"}>
+                    {c.id ? (
+                      <a href={href(c.id)} aria-current={on ? "page" : undefined} className={`${pill} ${on ? "border-primary bg-primary text-primary-foreground" : "border-border hover:bg-paper"}`}>
+                        <span className="font-medium">{c.name}</span>
+                        <span className={on ? "" : "text-ink-3"}>{t("coordinatorCounts", { reports: c.reports, hours: c.hours })}</span>
+                      </a>
+                    ) : (
+                      <span className={`${pill} border-dashed border-border text-ink-2`}><span className="font-medium">{c.name}</span><span className="text-ink-3">{t("coordinatorCounts", { reports: c.reports, hours: c.hours })}</span></span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        );
+      })()}
       <ReportErrorBanner code={sp.error} />
       {sp.saved && <Flash tone="status" className="mt-3 rounded-lg border border-border p-3 text-sm">{t("saved")}</Flash>}
       {bulkMsg && <Flash tone="status" className="mt-3 rounded-lg border border-border p-3 text-sm">{bulkMsg}</Flash>}
@@ -116,7 +161,7 @@ export default async function Inbox({ searchParams }: { searchParams: Promise<{ 
       )}
       {list.length === 0 && <p className="mt-4 text-muted">{t(`empty.${status}`)}</p>}
       <ListView storageKey="inbox" placeholder={t("searchPlaceholder")}
-        toolbar={<FilterBar action="/reports" keep={{ status }} fields={filterFields} labels={{ filter: t("filters"), title: t("filtersTitle"), all: t("filterAll"), apply: t("applyFilters"), clear: t("clearFilters"), remove: t("removeFilter") }} />}
+        toolbar={<FilterBar action="/reports" keep={{ status, ...(coordinatorId ? { coordinator: coordinatorId } : {}) }} fields={filterFields} labels={{ filter: t("filters"), title: t("filtersTitle"), all: t("filterAll"), apply: t("applyFilters"), clear: t("clearFilters"), remove: t("removeFilter") }} />}
         cards={(
         <>
         {groups.map((g) => (

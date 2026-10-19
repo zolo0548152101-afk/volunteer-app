@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { sql } from "drizzle-orm";
-import { login } from "./helpers";
+import { login, logout } from "./helpers";
 
 try { process.loadEnvFile(".env.local"); } catch {}
 
@@ -41,9 +41,29 @@ test("טופס פתוח: שליחה בלי חשבון, אחר כך מופיע ב
   await page.getByRole("button", { name: "כניסה" }).click();
   await expect(page).toHaveURL(/\/login/);
 
+  // לפני אישור: לא בתור הראיונות
   await login(page, "interviewer@demo.test");
   await page.goto("/interviewer");
-  await expect(page.getByText("נועה בדיקה")).toBeVisible();
+  const before = await page.getByText("נועה בדיקה").count();
+  await logout(page);
+
+  // מנהל רואה את הקישור לטופס ואת המועמד, ומאשר אותו מתוך חלון הפרטים
+  await login(page, "manager@demo.test");
+  await page.goto("/manager/applicants");
+  await expect(page.getByRole("button", { name: "העתקת הקישור" })).toBeVisible();
+  await expect(page.locator("code", { hasText: "/register" })).toBeVisible();
+  const row = page.getByRole("row", { name: new RegExp(email.replace(/[.+]/g, "\\$&")) });
+  await row.getByRole("button", { name: "בדיקה" }).click();
+  const dlg = page.getByRole("dialog", { name: "נועה בדיקה" });
+  await expect(dlg.getByText("אוניברסיטת חיפה")).toBeVisible();
+  await dlg.getByRole("button", { name: "אישור והעברה לראיון" }).click();
+  await expect(page.getByText("המועמד אושר ועבר לתור הראיונות")).toBeVisible();
+  await logout(page);
+
+  // אחרי אישור: מופיע בתור של המראיין
+  await login(page, "interviewer@demo.test");
+  await page.goto("/interviewer");
+  await expect(page.getByText("נועה בדיקה")).toHaveCount(before + 1);
 });
 
 test("הגשה עם מייל קיים: אותו עמוד תודה, בלי לחשוף שהמייל רשום", async ({ page }) => {

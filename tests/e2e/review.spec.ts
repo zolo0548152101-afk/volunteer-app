@@ -53,11 +53,11 @@ test("שדה בחירה: עד 4 אפשרויות כתגיות גלויות, ומ
   expect(box!.height).toBeGreaterThanOrEqual(43);
 });
 
-test("תפריט מנהל: 5 פריטי עבודה, ניהול מערכת בתפריט, ו'יציאה' בתפריט המשתמש", async ({ page, isMobile }) => {
+test("תפריט מנהל: 6 פריטי עבודה, ניהול מערכת בתפריט, ו'יציאה' בתפריט המשתמש", async ({ page, isMobile }) => {
   test.skip(isMobile, "תפריט עליון במחשב");
   await login(page, "manager@demo.test");
   const nav = page.getByRole("navigation", { name: "ניווט ראשי" });
-  await expect(nav.getByRole("link")).toHaveCount(5);
+  await expect(nav.getByRole("link")).toHaveCount(6);
   await expect(nav.getByRole("link", { name: "משתמשים" })).toHaveCount(0);
   await nav.getByRole("button", { name: "ניהול מערכת" }).click();
   await expect(nav.getByRole("link", { name: "משתמשים" })).toBeVisible();

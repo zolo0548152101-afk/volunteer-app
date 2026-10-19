@@ -43,6 +43,9 @@ export function PlacementEditor({ editable, studentName, initial, candidates, li
   });
   const [lines, setLines] = useState<Line[]>(() => initial.map(toLine));
   const [adding, setAdding] = useState<Line | null>(null);
+  // כרטיסים מקובצים כברירת מחדל: תקציר בלבד. "עריכה" פותחת את השדות של כרטיס אחד
+  const [openKeys, setOpenKeys] = useState<Set<string>>(new Set());
+  const toggleOpen = (key: string) => setOpenKeys((s) => { const n = new Set(s); if (n.has(key)) n.delete(key); else n.add(key); return n; });
   const [q, setQ] = useState("");
   const [day, setDay] = useState<Day | "">("");
   const [cat, setCat] = useState("");
@@ -106,6 +109,15 @@ export function PlacementEditor({ editable, studentName, initial, candidates, li
     setAdding({ key: nextKey(), windowId: c.windowId, slots, weekly, linked: true, days, hours: timeOf(c), report: n2(weekly / Math.max(1, days.length)), desc: c.taskDescription ?? "" });
   };
   const confirmAdd = () => { if (adding) { setLines((ls) => [...ls, adding]); setAdding(null); } };
+  /** שדות הכרטיס כשהוא מקובץ: נשלחים בטופס בלי להציג אותם */
+  const hiddenFields = (l: Line, i: number) => (
+    <>
+      <input type="hidden" name={`l_${i}_window`} value={l.windowId} />
+      {l.days.map((d) => <input key={d} type="hidden" name={`l_${i}_days`} value={d} />)}
+      <input type="hidden" name={`l_${i}_slots`} value={l.slots} /><input type="hidden" name={`l_${i}_weekly`} value={l.weekly} />
+      <input type="hidden" name={`l_${i}_hours`} value={l.hours} /><input type="hidden" name={`l_${i}_report`} value={l.report} /><input type="hidden" name={`l_${i}_desc`} value={l.desc} />
+    </>
+  );
 
   const inLines = new Set(lines.map((l) => l.windowId));
   const needle = q.trim().toLocaleLowerCase();
@@ -206,17 +218,34 @@ export function PlacementEditor({ editable, studentName, initial, candidates, li
               const m = meta.get(l.windowId)!;
               const u = ev.windows[l.windowId];
               const bad = issuesFor(l.windowId).length > 0;
+              const open = editable && openKeys.has(l.key);
               return (
-                <li key={l.key} className={`rounded-xl border p-4 ${bad ? "border-bad/60" : "border-border"}`}>
-                  <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                <li key={l.key} className={`rounded-xl border p-4 ${bad ? "border-bad/60" : open ? "border-primary ring-1 ring-primary/40" : "border-border"}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">{titleOf(m)}</div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
                       {weeks !== null && <span className="rounded-full bg-info-bg px-3 py-1 text-sm font-medium text-info-fg">{t("untilYearEnd", { hours: h0(l.weekly * weeks) })}</span>}
+                      {editable && <button type="button" aria-expanded={open} aria-controls={`${l.key}-body`} onClick={() => toggleOpen(l.key)}
+                        aria-label={`${open ? t("doneEditing") : t("edit")}: ${m.placeName} · ${m.label}`}
+                        className={`min-h-11 rounded-lg px-4 text-sm font-medium ${open ? "bg-primary text-primary-foreground" : "border border-border hover:bg-paper"}`}>{open ? t("doneEditing") : t("edit")}</button>}
                       {editable && <button type="button" onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} aria-label={t("removeAria", { name: `${m.placeName} · ${m.label}` })}
                         className="min-h-11 rounded-lg border border-bad/50 px-4 text-sm text-bad-fg hover:bg-bad-bg">{t("remove")}</button>}
                     </div>
                   </div>
-                  {editor(l, (p) => update(l.key, p), i)}
+                  <div id={`${l.key}-body`} className="mt-3">
+                    {open ? editor(l, (p) => update(l.key, p), i) : (
+                      <>
+                        {hiddenFields(l, i)}
+                        <p className="flex flex-wrap gap-x-4 gap-y-1 text-base">
+                          <span><span className="text-ink-3">{t("slots")}:</span> <b className="tabular-nums">{n2(l.slots)}</b></span>
+                          <span><span className="text-ink-3">{t("weekly")}:</span> <b className="tabular-nums">{n2(l.weekly)}</b></span>
+                          <span><span className="text-ink-3">{t("days")}:</span> <b>{l.days.map((d) => dayLabels[d]).join(", ") || "—"}</b></span>
+                          {l.hours && <span><span className="text-ink-3">{t("time")}:</span> <b dir="ltr">{l.hours}</b></span>}
+                        </p>
+                        {bad && <p className="mt-2 text-sm text-bad-fg">⛔ {t("collapsedError")}</p>}
+                      </>
+                    )}
+                  </div>
                   {u && <p className={`mt-2 text-sm ${u.remainingSlots < 0 || u.remainingHours < 0 ? "text-bad-fg" : "text-ink-3"}`}>{t("capacityLeft", { slots: n2(u.remainingSlots), hours: n2(u.remainingHours) })}</p>}
                 </li>
               );

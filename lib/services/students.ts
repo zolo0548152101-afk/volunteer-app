@@ -134,7 +134,7 @@ export async function submitApplication(db: Db, organizationId: string, input: A
         .returning({ id: users.id });
       const [year] = await tx.select({ id: academicYears.id }).from(academicYears).where(and(eq(academicYears.organizationId, organizationId), eq(academicYears.isCurrent, true))).limit(1);
       const progs = await tx.select({ id: programs.id }).from(programs).where(eq(programs.organizationId, organizationId)).limit(2);
-      await tx.insert(studentProfiles).values({ ...patch, userId: u.id, organizationId, academicYearId: year?.id ?? null, trackId: progs.length === 1 ? progs[0].id : null, profileCompletedAt: new Date() });
+      await tx.insert(studentProfiles).values({ ...patch, userId: u.id, organizationId, academicYearId: year?.id ?? null, trackId: progs.length === 1 ? progs[0].id : null, profileCompletedAt: new Date(), applicationStatus: "pending" });
       await saveValues(tx, { ...applicant, id: u.id }, "student", u.id, input.custom, { enforceRequired: true });
       await audited(tx, { organizationId, actorId: u.id }, { entity: "user", entityId: u.id, action: "apply" }, async () => null, async () => ({ email, roles: ["student"], status: "invited" }));
       return { created: true };
@@ -282,6 +282,8 @@ export async function listAwaitingInterview(db: Db, actor: SessionUser) {
     SELECT u.id, u.first_name, u.last_name, sp.city, u.created_at AS registered_at
     FROM users u JOIN student_profiles sp ON sp.user_id = u.id
     WHERE u.organization_id = ${actor.organizationId} AND u.status IN ('active', 'invited') AND sp.profile_completed_at IS NOT NULL
+      -- מועמד מטופס ההרשמה נכנס לתור רק אחרי אישור המנהל (null = נוסף ע"י הצוות)
+      AND (sp.application_status IS NULL OR sp.application_status = 'approved')
       AND NOT EXISTS (SELECT 1 FROM interviews i WHERE i.student_id = u.id AND i.status = 'finalized' AND i.kind = 'interview')
     ORDER BY u.created_at ASC`);
   return res.rows.map((r) => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, city: r.city, registeredAt: new Date(r.registered_at) }));

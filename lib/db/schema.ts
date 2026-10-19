@@ -35,6 +35,7 @@ export const userStatusEnum = pgEnum("user_status", ["active", "invited", "inact
 export const localeEnum = pgEnum("locale", ["he", "en"]);
 /** א' עד ו'. הערכים טכניים; התצוגה בעברית מ-i18n */
 export const dayEnum = pgEnum("day", ["sun", "mon", "tue", "wed", "thu", "fri"]);
+export const applicationStatusEnum = pgEnum("application_status", ["pending", "approved", "rejected"]);
 export const degreeTypeEnum = pgEnum("degree_type", ["bachelor", "master", "practical_engineer", "other"]);
 export const degreeYearEnum = pgEnum("degree_year", ["a", "b", "c", "d_plus"]);
 export const placeStatusEnum = pgEnum("place_status", ["active", "paused", "closed"]);
@@ -195,9 +196,16 @@ export const studentProfiles = pgTable(
     /** מפתח אחסון ב-Vercel Blob */
     bankDocument: text("bank_document"),
     profileCompletedAt: timestamp("profile_completed_at", { withTimezone: true }),
+    /**
+     * מועמדות מטופס ההרשמה הפתוח: pending = ממתין לבדיקה, approved = עבר לתור הראיונות, rejected = נדחה.
+     * null = לא הגיע מהטופס (נוסף ע"י הצוות), ונחשב מאושר.
+     */
+    applicationStatus: applicationStatusEnum("application_status"),
+    applicationDecidedAt: timestamp("application_decided_at", { withTimezone: true }),
+    applicationDecidedBy: uuid("application_decided_by").references(() => users.id),
     createdAt: createdAt(),
   },
-  (t) => [index("student_profiles_org_idx").on(t.organizationId)],
+  (t) => [index("student_profiles_org_idx").on(t.organizationId), index("student_profiles_application_idx").on(t.organizationId, t.applicationStatus)],
 );
 
 /* ───────────── 5.5 מקומות התנדבות ───────────── */
