@@ -9,7 +9,7 @@ export default async function InterviewerHome() {
   const [t, actor, format] = await Promise.all([getTranslations("queue"), requireRole("interviewer", "manager"), getFormatter()]);
   const queue = await listAwaitingInterview(db(), actor);
   return (
-    <main className="mx-auto w-full max-w-5xl p-4">
+    <main className="mx-auto w-full max-w-7xl p-4 lg:p-8">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <p className="mt-1 text-sm text-muted">{t("count", { n: queue.length })}</p>
       {queue.length === 0 && <p className="mt-3 text-muted">{t("empty")}</p>}

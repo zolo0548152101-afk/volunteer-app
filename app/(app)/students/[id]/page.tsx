@@ -53,7 +53,7 @@ export default async function StudentCard({ params, searchParams }: { params: Pr
   const customView = fields.length > 0 ? <div className="mt-3 border-t border-hairline pt-3"><CustomFields fields={fields.map((f) => ({ ...f, canEdit: false }))} values={values} /></div> : null;
 
   return (
-    <main className="mx-auto w-full max-w-6xl p-4">
+    <main className="mx-auto w-full max-w-7xl p-4 lg:p-8">
       <PageHeader crumbs={[{ label: t("listTitle"), href: "/students" }]} current={`${s.firstName} ${s.lastName}`} />
       <header className={`${card} flex flex-wrap items-start justify-between gap-4`}>
         <div className="flex min-w-0 items-center gap-3">

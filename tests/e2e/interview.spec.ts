@@ -35,18 +35,28 @@ test("מראיין רואה את התור, מנהל מראיין ומשבץ סט
   await expect(page).toHaveURL(/\/interviews\//);
 
   // הוספת החלון הראשון שמוצע, ושמירת טיוטה
-  await page.getByRole("button", { name: "הוספה לחוזה" }).first().click();
-  await expect(page.getByLabel("תקנים")).toBeVisible({ timeout: 20_000 });
-  // פאנל חי: שינוי כמות התקנים מעדכן את הבנקים והחריגה לפני כל שמירה
-  const slots = page.getByLabel("תקנים");
+  // חיפוש חי ברשימת המקומות הפנויים, בלי כפתור סינון
+  const search = page.getByRole("searchbox", { name: "חיפוש" });
+  await search.fill("zzzz-אין-כזה");
+  await expect(page.getByText("לא נמצא מקום פנוי שמתאים לחיפוש")).toBeVisible();
+  await search.fill("");
+  // הוספה בתוך השורה: קודם משחקים עם התקנים והשעות, אחר כך מוסיפים
+  await page.getByRole("button", { name: /^הוספה:/ }).first().click();
+  await page.getByRole("button", { name: "הוספה לשיבוץ" }).click();
+  const line = page.getByRole("region", { name: /המקומות של ליאן/ }).getByRole("listitem").first();
+  await expect(line.getByLabel("תקנים")).toBeVisible();
+  // תחזית חיה: שינוי התקנים מעדכן את החריגה ואת השעות עד סוף השנה לפני שמירה
+  const slots = line.getByLabel("תקנים");
   const original = await slots.inputValue();
   await slots.fill("999");
-  await expect(page.getByText("חריגה ממכסת התקנים בחלון")).toBeVisible();
+  await expect(line.getByText(/אין מספיק תקנים פנויים/)).toBeVisible();
   await slots.fill(original);
-  await expect(page.getByText("חריגה ממכסת התקנים בחלון")).toBeHidden();
+  await expect(line.getByText(/אין מספיק תקנים פנויים/)).toBeHidden();
+  await expect(page.getByText("יש שינויים שעוד לא נשמרו")).toBeVisible();
 
   await page.getByRole("button", { name: "שמירת טיוטה" }).click();
-  await expect(page.getByText("שני הבנקים")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "שעות עד סוף השנה" })).toBeVisible();
+  await expect(page.getByText("יש שינויים שעוד לא נשמרו")).toBeHidden();
   // נגישות מסך הראיון (המסך המורכב ביותר)
   const axe = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
   expect(axe.violations.filter((v) => v.impact === "critical" || v.impact === "serious").map((v) => `${v.id}: ${v.nodes.slice(0, 2).map((n) => n.target.join(" ")).join(" | ")}`)).toEqual([]);

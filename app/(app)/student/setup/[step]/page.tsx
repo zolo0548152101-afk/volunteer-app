@@ -25,7 +25,7 @@ export default async function SetupStep({ params, searchParams }: { params: Prom
   const last = n === STEPS.length;
   const values = last ? await loadValues(db(), actor.organizationId, actor.id, fields) : {};
   return (
-    <main className="mx-auto w-full max-w-xl p-4">
+    <main className="mx-auto w-full max-w-3xl p-4 lg:p-8">
       <p className="text-sm text-muted" aria-live="polite">{t("stepOf", { n, total: STEPS.length })}</p>
       <h1 className="mt-1 text-xl font-semibold">{t(`step.${section}`)}</h1>
       <ProfileError code={error} />

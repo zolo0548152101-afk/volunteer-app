@@ -26,7 +26,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const primary = "inline-flex min-h-10 items-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground";
   const secondary = "inline-flex min-h-10 items-center rounded-lg border border-border bg-card px-4 text-sm hover:bg-paper";
   return (
-    <main className="mx-auto w-full max-w-5xl p-4">
+    <main className="mx-auto w-full max-w-7xl p-4 lg:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-xl font-semibold">{t("title")} <span className="text-base font-normal text-ink-3">({list.length})</span></h1>
         <div className="flex flex-wrap gap-2">

@@ -38,7 +38,7 @@ export default async function ReportPage({ params, searchParams }: { params: Pro
   ];
   const sortKind = (c: Column) => (c.type === "text" || c.type === "date" ? "text" : "num");
   return (
-    <main className="mx-auto w-full max-w-5xl p-4">
+    <main className="mx-auto w-full max-w-7xl p-4 lg:p-8">
       <PageHeader crumbs={[{ label: t("dashboardTitle"), href: "/analytics" }]} current={t(`kinds.${kind}`)} />
       <h1 className="text-xl font-semibold">{t(`kinds.${kind}`)}</h1>
       {table.yearName && <p className="text-sm text-muted">{t("year", { name: table.yearName })}</p>}

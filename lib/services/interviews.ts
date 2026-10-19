@@ -289,9 +289,12 @@ export async function listCandidateWindows(db: Db, actor: SessionUser, studentId
     .sort((a, b) => b.score - a.score || a.placeName.localeCompare(b.placeName, "he"));
 }
 
+/** פרטי החלון והמקום של שורת שיבוץ, להצגה ולעריכה במסך השיבוץ */
+export type LineWindow = { placeId: string; city: string | null; category: string | null; days: Day[]; startTime: string | null; endTime: string | null; hoursPerSlot: number; slots: number; taskDescription: string | null };
+
 export type DraftView = {
   interview: typeof interviews.$inferSelect;
-  lines: (typeof placements.$inferSelect & { placeName: string; windowLabel: string })[];
+  lines: (typeof placements.$inferSelect & { placeName: string; windowLabel: string; window: LineWindow })[];
   evaluation: ContractEvaluation;
   live: LiveEvalInput;
 };
@@ -306,12 +309,16 @@ export async function getDraft(db: Db, actor: SessionUser, interviewId: string):
     // שיבוץ מחדש הוא כלי צוות: הוא מציג את קיבולת המוסד, שסטודנט לא רואה (גם לא בשיבוץ של עצמו)
     if (!actor.roles.some((r) => r !== "student")) throw new ForbiddenError();
   }
-  const lines = await db.select({ p: placements, placeName: volunteerPlaces.name, windowLabel: placeTimeWindows.label }).from(placements)
+  const lines = await db.select({
+    p: placements, placeName: volunteerPlaces.name, windowLabel: placeTimeWindows.label,
+    window: { placeId: volunteerPlaces.id, city: volunteerPlaces.city, category: volunteerPlaces.category, days: placeTimeWindows.days, startTime: placeTimeWindows.startTime, endTime: placeTimeWindows.endTime,
+      hoursPerSlot: placeTimeWindows.hoursPerSlot, slots: placeTimeWindows.slots, taskDescription: placeTimeWindows.taskDescription },
+  }).from(placements)
     .innerJoin(volunteerPlaces, eq(volunteerPlaces.id, placements.placeId)).innerJoin(placeTimeWindows, eq(placeTimeWindows.id, placements.timeWindowId))
     .where(eq(placements.interviewId, interviewId)).orderBy(asc(placements.createdAt));
   const evaluation = await evaluate(db, actor.organizationId, iv.studentId, lines.filter((l) => !l.p.isActive || iv.status === "draft").map((l) => ({ timeWindowId: l.p.timeWindowId, slots: l.p.slots, weeklyHours: l.p.weeklyHours })));
   const live = await liveEvalInput(db, actor.organizationId, iv.studentId, lines.map((l) => l.p.timeWindowId));
-  return { interview: iv, lines: lines.map((l) => ({ ...l.p, placeName: l.placeName, windowLabel: l.windowLabel })), evaluation, live };
+  return { interview: iv, lines: lines.map((l) => ({ ...l.p, placeName: l.placeName, windowLabel: l.windowLabel, window: { ...l.window, days: l.window.days as Day[] } })), evaluation, live };
 }
 
 /** היסטוריית ראיונות ושיבוצים של סטודנט (כרטיס הסטודנט) */

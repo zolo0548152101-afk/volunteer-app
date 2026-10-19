@@ -16,7 +16,7 @@ export default async function MyReports({ searchParams }: { searchParams: Promis
   const badge = (st: (typeof list)[number]["status"]) => <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${tone[st]}`}>{t(`status.${st}`)}</span>;
   const search = (r: (typeof list)[number]) => [formatDay(format, r.volunteerDate), r.volunteerDate, r.reportType === "absence" ? t("absence") : r.placeName, t(`status.${r.status}`), r.reportedHours, r.coordinatorNotes].filter(Boolean).join(" ");
   return (
-    <main className="mx-auto w-full max-w-2xl p-4">
+    <main className="mx-auto w-full max-w-4xl p-4 lg:p-8">
       <PageHeader crumbs={[{ label: tn("home"), href: "/student" }]} current={t("title")} />
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       {sp.sent && <Flash tone="status" className="mt-2 rounded-lg border border-ok/50 p-3 text-sm text-ok-fg">{t("sent")}</Flash>}

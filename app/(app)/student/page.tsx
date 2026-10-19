@@ -16,7 +16,7 @@ export default async function Page() {
   const pct = (n: number) => (h.target ? Math.min(100, Math.round((n / h.target) * 100)) : 0);
   const left = h.next ? Math.round((h.next.hours - h.approved) * 100) / 100 : 0;
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-5 p-4">
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-5 p-4 lg:p-8">
       <header>
         <h1 className="text-xl font-semibold">{actor.name}</h1>
         <p className="mt-1 text-muted">{p.coordinatorName ? t("student.withCoordinator", { name: p.coordinatorName }) : t("student.waiting")}</p>

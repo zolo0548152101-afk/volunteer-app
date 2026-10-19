@@ -27,7 +27,7 @@ export default async function ProfilePage({ searchParams }: { searchParams: Prom
     </form>
   );
   return (
-    <main className="mx-auto w-full max-w-2xl p-4">
+    <main className="mx-auto w-full max-w-4xl p-4 lg:p-8">
       <h1 className="text-xl font-semibold">{t("title")}</h1>
       <ProfileError code={error} />
       <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
