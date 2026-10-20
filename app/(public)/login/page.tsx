@@ -1,9 +1,13 @@
+import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { LoginForm } from "@/components/auth/login-form";
 import { setLocale } from "@/lib/actions/locale";
+import { devLoginEnabled } from "@/lib/dev-login";
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
-  const { next } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; password?: string }> }) {
+  const { next, password } = await searchParams;
+  // בסביבת בדיקה כל הפניה לכניסה (יציאה, חיבור שפג) מגיעה לבחירת המשתמש; ?password=1 מציג את הטופס הרגיל
+  if (devLoginEnabled() && !password) redirect("/dev-login");
   const t = await getTranslations();
   const locale = await getLocale();
   const otherLocale = locale === "he" ? "en" : "he";

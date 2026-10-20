@@ -31,7 +31,8 @@
     "groupAdmin": "Administration",
     "admin": "Administration",
     "userMenu": "User menu",
-    "applicants": "Applicants"
+    "applicants": "Applicants",
+    "switchUser": "Switch user"
   },
   "auth": {
     "loginTitle": "Sign in",
@@ -1062,7 +1063,8 @@
     "title": "Sign in as a demo user",
     "hint": "Test environment only, no password. Pick who you are right now.",
     "empty": "No demo users in this environment",
-    "enter": "Enter"
+    "enter": "Enter",
+    "passwordLogin": "Sign in with a password"
   },
   "listView": {
     "search": "Search",

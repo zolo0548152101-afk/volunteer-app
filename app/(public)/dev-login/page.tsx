@@ -45,6 +45,7 @@ export default async function DevLoginPage() {
           ))}
         </section>
       ))}
+      <a href="/login?password=1" className="inline-flex min-h-11 items-center self-start text-sm underline">{t("passwordLogin")}</a>
     </main>
   );
 }

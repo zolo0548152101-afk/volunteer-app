@@ -11,6 +11,7 @@ import { UserMenu } from "@/components/nav/user-menu";
 import { Toaster } from "@/components/toast";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { BottomNav, TopNav, navFor } from "@/components/nav/app-nav";
+import { devLoginEnabled } from "@/lib/dev-login";
 
 /**
  * המעטפת של כל המסכים המחוברים: סרגל צד במחשב, כותרת דקה + ניווט תחתון בטלפון.
@@ -40,6 +41,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <button type="submit" className={item} lang={other}>{other === "en" ? "English" : "עברית"}</button>
         </form>
         <Link href="/accessibility" className={item}>{tA("title")}</Link>
+        {devLoginEnabled() && <Link href="/dev-login" className={item}>{t("switchUser")}</Link>}
         <hr className="my-1 border-hairline" />
         <form action={logoutAction}><button type="submit" className={`${item} font-medium text-bad-fg hover:bg-bad-bg`}>{t("logout")}</button></form>
       </div>
